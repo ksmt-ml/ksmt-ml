@@ -1,0 +1,11 @@
+dataset_id	logic	archive	benchmarks	sha256
+smtlib-2025-ten-archive-v1	LIA	LIA.tar.zst	536	4b402d114016530fce7677b7c3f4066b567f3aa0dda4d5bd23e7c7b92545adcb
+smtlib-2025-ten-archive-v1	NIA	NIA.tar.zst	257	10151c3cd27216e74d6b1dae417a478e8de2cd1515a286878a52f0b99187e260
+smtlib-2025-ten-archive-v1	NRA	NRA.tar.zst	3819	d6a0f58f68a7fd339242c16a04eb09b6432771152dcdeaa03b666bb5223b34ed
+smtlib-2025-ten-archive-v1	QF_ALIA	QF_ALIA.tar.zst	176	a66a82150d4506149768fbfaa1b22a31d7ce732f1d584532651b608bcd411b2c
+smtlib-2025-ten-archive-v1	QF_AUFBV	QF_AUFBV.tar.zst	75	38f094ace203ae8c01cb78ebfd5a53f6845a696f34f31a9620f50728dfa6334a
+smtlib-2025-ten-archive-v1	QF_AUFLIA	QF_AUFLIA.tar.zst	1303	c2c164258ab5008b9b9142f64ed3dd0b39a1df7f24925216bb74a7b08fb541c1
+smtlib-2025-ten-archive-v1	QF_AX	QF_AX.tar.zst	551	b2ade263451a72be196c5f5bb5676d6b6b1792512171de87e711de905a64b761
+smtlib-2025-ten-archive-v1	QF_BVFP	QF_BVFP.tar.zst	17250	de61c8ddafa17a99678aeb9a42bd856b1cead9d1664a4669990b35edf992dfc1
+smtlib-2025-ten-archive-v1	QF_FP	QF_FP.tar.zst	40406	ade37b8ae18583bf5bdce9243a745d592c38b146bfab5f957ff708a0d496f41f
+smtlib-2025-ten-archive-v1	QF_FPLRA	QF_FPLRA.tar.zst	59	81ba7c26033c1fc54dce1ba6f022d2278e82ff8c98539e45922cf4e26a3c6969

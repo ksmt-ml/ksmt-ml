@@ -1,0 +1,28 @@
+fixture	feature_id	expected_value	reason
+boolean.smt2	2	1	one assert command
+boolean.smt2	3	1	one check-sat command
+boolean.smt2	35	1	one true literal
+arrays.smt2	46	1	one Array sort occurrence
+arrays.smt2	47	2	two select occurrences
+arrays.smt2	48	2	two store occurrences
+arrays.smt2	146	2	two selects over one referenced array expression
+arrays.smt2	147	2	one maximal store chain of depth two
+bitvectors.smt2	49	2	two BitVec sort occurrences
+bitvectors.smt2	56	2	two bvadd occurrences
+bitvectors.smt2	148	2	one maximal BV adder chain containing two add nodes
+bitvectors.smt2	149	2	median of the single BV adder chain
+bitvectors.smt2	150	0	population deviation of one chain
+arithmetic.smt2	131	1	one Int sort occurrence
+arithmetic.smt2	133	1	one addition
+arithmetic.smt2	141	1	one greater-than comparison
+quantifiers.smt2	32	1	one exists expression
+quantifiers.smt2	33	1	one forall expression
+quantifiers.smt2	131	3	three Int binder sorts
+quantifiers.smt2	151	2	two forall-bound variables
+quantifiers.smt2	152	1	one exists-bound variable
+quantifiers.smt2	153	0.5	exists-to-forall bound-variable ratio
+quantifiers.smt2	154	1.5	mean nesting levels one and two
+uf.smt2	8	1	one declare-fun command
+uf.smt2	155	2	one applied binary uninterpreted function
+uf.smt2	156	2	two applications of the applied function
+floating-point.smt2	86	1	one FloatingPoint sort occurrence

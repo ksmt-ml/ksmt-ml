@@ -1,0 +1,15 @@
+.gradle/
+build/
+.venv/
+.idea/
+*.iml
+__pycache__/
+*.py[cod]
+.DS_Store
+.ipynb_checkpoints/
+
+data/raw/
+data/processed/
+artifacts/
+models/
+experiments/runs/

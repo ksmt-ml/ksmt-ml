@@ -1,0 +1,534 @@
+cvc5 version: 1.3.4
+option count: 531
+
+OptionInfo{ abstract-values | bool | false | default false }
+OptionInfo{ ackermann | bool | false | default false }
+OptionInfo{ append-learned-literals-to-cubes | bool | false | default false }
+OptionInfo{ approx-branch-depth | int64_t | 200 | default 200 }
+OptionInfo{ arith-brab | bool | true | default true }
+OptionInfo{ arith-eq-solver | bool | false | default false }
+OptionInfo{ arith-exp | bool | true | default true }
+OptionInfo{ arith-prop | mode | both | default both | modes: bi, both, none, unate }
+OptionInfo{ arith-prop-clauses | uint64_t | 8 | default 8 }
+OptionInfo{ arith-rewrite-equalities | bool | false | default false }
+OptionInfo{ arith-static-learning | bool | true | default true }
+OptionInfo{ arrays-eager-index | bool | true | default true }
+OptionInfo{ arrays-eager-lemmas | bool | false | default false }
+OptionInfo{ arrays-exp | set by user | bool | true | default false }
+OptionInfo{ arrays-optimize-linear | bool | true | default true }
+OptionInfo{ arrays-prop | int64_t | 2 | default 2 }
+OptionInfo{ arrays-reduce-sharing | bool | false | default false }
+OptionInfo{ arrays-weak-equiv | bool | false | default false }
+OptionInfo{ assign-function-values | bool | true | default true }
+OptionInfo{ bags | bool | true | default true }
+OptionInfo{ bitblast | mode | lazy | default lazy | modes: eager, lazy }
+OptionInfo{ bitwise-eq | bool | false | default false }
+OptionInfo{ bool-to-bv | mode | off | default off | modes: all, ite, off }
+OptionInfo{ bv-assert-input | bool | false | default false }
+OptionInfo{ bv-eager-eval | bool | false | default false }
+OptionInfo{ bv-eq-engine | bool | true | default true }
+OptionInfo{ bv-gauss-elim | bool | false | default false }
+OptionInfo{ bv-intro-pow2 | bool | false | default false }
+OptionInfo{ bv-print-consts-as-indexed-symbols | bool | false | default false }
+OptionInfo{ bv-propagate | bool | true | default true }
+OptionInfo{ bv-rw-extend-eq | bool | false | default false }
+OptionInfo{ bv-sat-solver | mode | cadical | default cadical | modes: cadical, cryptominisat, kissat }
+OptionInfo{ bv-solver, proofs | mode | bitblast | default bitblast | modes: bitblast, bitblast-internal }
+OptionInfo{ bv-to-bool | bool | false | default false }
+OptionInfo{ bv-to-int-use-pow2 | bool | false | default false }
+OptionInfo{ bvand-integer-granularity | uint64_t | 1 | default 1 | 1 <= x <= 8 }
+OptionInfo{ cbqi | bool | true | default true }
+OptionInfo{ cbqi-all-conflict | bool | false | default false }
+OptionInfo{ cbqi-mode | mode | prop-eq | default prop-eq | modes: conflict, prop-eq }
+OptionInfo{ cbqi-skip-rd | bool | false | default false }
+OptionInfo{ cbqi-tconstraint | bool | false | default false }
+OptionInfo{ cbqi-vo-exp | bool | false | default false }
+OptionInfo{ cdt-bisimilar | bool | true | default true }
+OptionInfo{ cegis-sample | mode | none | default none | modes: none, trust, use }
+OptionInfo{ cegqi | bool | false | default false }
+OptionInfo{ cegqi-all | bool | false | default false }
+OptionInfo{ cegqi-bv, proofs | bool | true | default true }
+OptionInfo{ cegqi-bv-ineq | mode | eq-boundary | default eq-boundary | modes: eq-boundary, eq-slack, keep }
+OptionInfo{ cegqi-bv-interleave-value | bool | false | default false }
+OptionInfo{ cegqi-bv-linear | bool | true | default true }
+OptionInfo{ cegqi-bv-rm-extract | bool | true | default true }
+OptionInfo{ cegqi-bv-solve-nl | bool | false | default false }
+OptionInfo{ cegqi-full | bool | false | default false }
+OptionInfo{ cegqi-inf-int | bool | false | default false }
+OptionInfo{ cegqi-inf-real | bool | false | default false }
+OptionInfo{ cegqi-innermost | bool | true | default true }
+OptionInfo{ cegqi-midpoint, proofs | bool | false | default false }
+OptionInfo{ cegqi-min-bounds | bool | false | default false }
+OptionInfo{ cegqi-multi-inst | bool | false | default false }
+OptionInfo{ cegqi-nested-qe, proofs | bool | false | default false }
+OptionInfo{ cegqi-nopt | bool | true | default true }
+OptionInfo{ cegqi-round-up-lia | bool | false | default false }
+OptionInfo{ partition-check, check | mode | standard | default standard | modes: full, standard }
+OptionInfo{ check-abducts | bool | false | default false }
+OptionInfo{ check-interpolants | bool | false | default false }
+OptionInfo{ check-model-subsolver | bool | true | default true }
+OptionInfo{ check-models | bool | false | default false }
+OptionInfo{ check-proof-steps | bool | false | default false }
+OptionInfo{ check-proofs | bool | false | default false }
+OptionInfo{ check-proofs-complete | bool | false | default false }
+OptionInfo{ check-synth-sol | bool | false | default false }
+OptionInfo{ check-unsat-cores | bool | false | default false }
+OptionInfo{ checks-before-partition | uint64_t | 1 | default 1 }
+OptionInfo{ checks-between-partitions | uint64_t | 1 | default 1 }
+OptionInfo{ collect-pivot-stats | bool | false | default false }
+OptionInfo{ compute-partitions | uint64_t | 0 | default 0 }
+OptionInfo{ cond-var-split-quant | mode | on | default on | modes: agg, off, on }
+OptionInfo{ condense-function-values | bool | true | default true }
+OptionInfo{ conflict-process | mode | none | default none | modes: min, min-ext, none }
+OptionInfo{ conjecture-gen | bool | false | default false }
+OptionInfo{ conjecture-gen-gt-enum | int64_t | 50 | default 50 }
+OptionInfo{ conjecture-gen-max-depth | int64_t | 3 | default 3 }
+OptionInfo{ conjecture-gen-per-round | int64_t | 1 | default 1 }
+OptionInfo{ cons-exp-triggers | bool | false | default false }
+OptionInfo{ copyright | bool | false | default false }
+OptionInfo{ cut-all-bounded | bool | false | default false }
+OptionInfo{ dag-thresh | int64_t | 1 | default 1 | 0 <= x }
+OptionInfo{ datatypes-exp | bool | true | default true }
+OptionInfo{ debug-check-models | bool | false | default false }
+OptionInfo{ decision, decision-mode | mode | internal | default internal | modes: internal, justification, stoponly }
+OptionInfo{ decision, decision-mode | mode | internal | default internal | modes: internal, justification, stoponly }
+OptionInfo{ deep-restart | mode | none | default none | modes: all, input, input-and-prop, input-and-solvable, none }
+OptionInfo{ deep-restart-factor | double | 3 | default 3 | 0 <= x <= 1000 }
+OptionInfo{ default-function-value-mode | mode | first | default first | modes: first, first-enum, hole }
+OptionInfo{ err, diagnostic-output-channel | void }
+OptionInfo{ difficulty-mode | mode | lemma-literal-all | default lemma-literal-all | modes: lemma-literal, lemma-literal-all, model-check }
+OptionInfo{ dio-decomps | bool | false | default false }
+OptionInfo{ dio-solver | bool | true | default true }
+OptionInfo{ dio-turns | int64_t | 10 | default 10 }
+OptionInfo{ dt-binary-split | bool | false | default false }
+OptionInfo{ dt-blast-splits | bool | false | default false }
+OptionInfo{ dt-cyclic | bool | true | default true }
+OptionInfo{ dt-infer-as-lemmas | bool | false | default false }
+OptionInfo{ dt-nested-rec | bool | false | default false }
+OptionInfo{ dt-polite-optimize | bool | true | default true }
+OptionInfo{ dt-share-sel | bool | false | default false }
+OptionInfo{ dt-stc-ind | bool | false | default false }
+OptionInfo{ dt-var-exp-quant | bool | true | default true }
+OptionInfo{ dump-difficulty | bool | false | default false }
+OptionInfo{ dump-instantiations | bool | false | default false }
+OptionInfo{ dump-instantiations-debug | bool | false | default false }
+OptionInfo{ dump-models | bool | false | default false }
+OptionInfo{ dump-proofs | bool | false | default false }
+OptionInfo{ dump-unsat-cores | bool | false | default false }
+OptionInfo{ dump-unsat-cores-lemmas | bool | false | default false }
+OptionInfo{ e-matching | bool | true | default true }
+OptionInfo{ eager-arith-bv-conv | bool | false | default false }
+OptionInfo{ early-exit | bool | true | default true }
+OptionInfo{ early-ite-removal | bool | false | default false }
+OptionInfo{ ee-mode | mode | distributed | default distributed | modes: central, distributed }
+OptionInfo{ elim-taut-quant | bool | true | default true }
+OptionInfo{ enum-inst | bool | false | default false }
+OptionInfo{ enum-inst-interleave | bool | false | default false }
+OptionInfo{ enum-inst-limit | int64_t | -1 | default -1 }
+OptionInfo{ enum-inst-rd | bool | true | default true }
+OptionInfo{ enum-inst-stratify | bool | false | default false }
+OptionInfo{ enum-inst-sum | bool | false | default false }
+OptionInfo{ err, diagnostic-output-channel | void }
+OptionInfo{ error-selection-rule | mode | min | default min | modes: max, min, sum, varord }
+OptionInfo{ expr-depth | int64_t | -1 | default -1 | -1 <= x }
+OptionInfo{ ext-rew-prep | mode | off | default off | modes: agg, off, use }
+OptionInfo{ ext-rewrite-quant, proofs | bool | false | default false }
+OptionInfo{ fc-penalties | bool | false | default false }
+OptionInfo{ ff | bool | true | default true }
+OptionInfo{ ff-bitsum | bool | false | default false }
+OptionInfo{ ff-elim-disjunctive-bit | bool | true | default true }
+OptionInfo{ ff-field-polys | bool | false | default false }
+OptionInfo{ ff-solver | mode | gb | default gb | modes: gb, split }
+OptionInfo{ ff-trace-gb | bool | true | default true }
+OptionInfo{ filename | string | "" | default "" }
+OptionInfo{ filesystem-access | bool | true | default true }
+OptionInfo{ finite-model-find | bool | false | default false }
+OptionInfo{ flatten-ho-chains | bool | false | default false }
+OptionInfo{ fmf-bound | bool | false | default false }
+OptionInfo{ fmf-bound-blast | bool | false | default false }
+OptionInfo{ fmf-bound-lazy | bool | false | default false }
+OptionInfo{ fmf-fun | bool | false | default false }
+OptionInfo{ fmf-fun-rlv | bool | false | default false }
+OptionInfo{ fmf-mbqi | mode | fmc | default fmc | modes: fmc, none, trust }
+OptionInfo{ fmf-type-completion-thresh | int64_t | 1000 | default 1000 }
+OptionInfo{ force-logic | string | "" | default "" }
+OptionInfo{ force-no-limit-cpu-while-dump | bool | false | default false }
+OptionInfo{ foreign-theory-rewrite | bool | false | default false }
+OptionInfo{ fp | bool | true | default true }
+OptionInfo{ fp-exp | set by user | bool | true | default false }
+OptionInfo{ fp-lazy-wb | bool | false | default false }
+OptionInfo{ fresh-binders | bool | false | default false }
+OptionInfo{ fresh-declarations | bool | true | default true }
+OptionInfo{ full-saturate-quant | bool | false | default false }
+OptionInfo{ full-sygus-verify | bool | false | default false }
+OptionInfo{ global-declarations | bool | false | default false }
+OptionInfo{ global-negate | bool | false | default false }
+OptionInfo{ help | bool | false | default false }
+OptionInfo{ help-option-categories | bool | false | default false }
+OptionInfo{ help-regular | bool | false | default false }
+OptionInfo{ heuristic-pivots | int64_t | 0 | default 0 }
+OptionInfo{ ho-elim | bool | false | default false }
+OptionInfo{ ho-elim-store-ax | bool | true | default true }
+OptionInfo{ ho-matching | bool | true | default true }
+OptionInfo{ ho-merge-term-db | bool | true | default true }
+OptionInfo{ iand-mode | mode | value | default value | modes: bitwise, sum, value }
+OptionInfo{ ieval | mode | use | default use | modes: off, use, use-learn }
+OptionInfo{ in | void }
+OptionInfo{ increment-triggers | bool | true | default true }
+OptionInfo{ incremental | bool | true | default true }
+OptionInfo{ lang, input-language | void }
+OptionInfo{ inst-local | bool | false | default false }
+OptionInfo{ inst-max-level | int64_t | -1 | default -1 }
+OptionInfo{ inst-max-rounds | int64_t | -1 | default -1 }
+OptionInfo{ inst-no-entail | bool | true | default true }
+OptionInfo{ inst-when | mode | full-last-call | default full-last-call | modes: full, full-delay, full-delay-last-call, full-last-call, last-call }
+OptionInfo{ inst-when-phase | int64_t | 2 | default 2 }
+OptionInfo{ int-wf-ind | bool | false | default false }
+OptionInfo{ interactive | bool | false | default false }
+OptionInfo{ produce-assertions, interactive-mode | bool | true | default true }
+OptionInfo{ interpolants-mode | mode | default | default default | modes: all, assumptions, conjecture, default, shared }
+OptionInfo{ ite-dtt-split-quant | bool | false | default false }
+OptionInfo{ ite-lift-quant | mode | simple | default simple | modes: all, none, simple }
+OptionInfo{ ite-simp | bool | false | default false }
+OptionInfo{ jh-rlv-order | bool | false | default false }
+OptionInfo{ jh-skolem | mode | first | default first | modes: first, last }
+OptionInfo{ jh-skolem-rlv | mode | assert | default assert | modes: always, assert }
+OptionInfo{ lang, input-language | void }
+OptionInfo{ learned-rewrite, proofs, unsat-cores | bool | false | default false }
+OptionInfo{ leibniz-elim | bool | false | default false }
+OptionInfo{ lemma-inprocess | mode | none | default none | modes: full, light, none }
+OptionInfo{ lemma-inprocess-infer-eq-lit | bool | false | default false }
+OptionInfo{ lemma-inprocess-subs | mode | simple | default simple | modes: all, simple }
+OptionInfo{ lemmas-on-replay-failure | bool | false | default false }
+OptionInfo{ lfsc-expand-trust | bool | false | default false }
+OptionInfo{ lfsc-flatten | bool | false | default false }
+OptionInfo{ literal-matching | mode | use | default use | modes: agg, agg-predicate, none, use }
+OptionInfo{ macros-quant, proofs | bool | false | default false }
+OptionInfo{ macros-quant-mode, proofs | mode | ground-uf | default ground-uf | modes: all, ground, ground-uf }
+OptionInfo{ maxCutsInContext | uint64_t | 65535 | default 65535 }
+OptionInfo{ mbqi | bool | false | default false }
+OptionInfo{ mbqi-check-timeout | uint64_t | 500 | default 500 }
+OptionInfo{ mbqi-enum | bool | false | default false }
+OptionInfo{ mbqi-enum-choice-grammar | bool | false | default false }
+OptionInfo{ mbqi-enum-choice-grammar-all | bool | false | default false }
+OptionInfo{ mbqi-enum-ext-vars-grammar | bool | true | default true }
+OptionInfo{ mbqi-enum-free-syms-grammar | bool | true | default true }
+OptionInfo{ mbqi-enum-global-syms-grammar | bool | true | default true }
+OptionInfo{ mbqi-interleave | bool | false | default false }
+OptionInfo{ mbqi-nested-check | bool | true | default true }
+OptionInfo{ mbqi-one-inst-per-round | bool | false | default false }
+OptionInfo{ minimal-unsat-cores | bool | false | default false }
+OptionInfo{ minisat-dump-dimacs | bool | false | default false }
+OptionInfo{ minisat-simplification | mode | all | default all | modes: all, clause-elim, none }
+OptionInfo{ miniscope-quant | mode | conj-and-fv | default conj-and-fv | modes: agg, conj, conj-and-fv, fv, off }
+OptionInfo{ miniscope-quant-user | bool | false | default false }
+OptionInfo{ miplib-trick | bool | false | default false }
+OptionInfo{ miplib-trick-subs | uint64_t | 1 | default 1 }
+OptionInfo{ model-based-arith-bv-conv | bool | false | default false }
+OptionInfo{ model-cores | mode | none | default none | modes: non-implied, none, simple }
+OptionInfo{ model-u-print | mode | none | default none | modes: decl-fun, decl-sort-and-fun, dt, none }
+OptionInfo{ model-var-elim-uneval | bool | true | default true }
+OptionInfo{ multi-trigger-cache | bool | false | default false }
+OptionInfo{ multi-trigger-linear | bool | true | default true }
+OptionInfo{ multi-trigger-priority | bool | false | default false }
+OptionInfo{ multi-trigger-when-single | bool | false | default false }
+OptionInfo{ new-prop | bool | true | default true }
+OptionInfo{ nl-cov, proofs | bool | true | default true }
+OptionInfo{ nl-cov-force | bool | false | default false }
+OptionInfo{ nl-cov-lift | mode | regular | default regular | modes: lazard, regular }
+OptionInfo{ nl-cov-linear-model | mode | none | default none | modes: initial, none, persistent }
+OptionInfo{ nl-cov-proj | mode | mccallum | default mccallum | modes: lazard, lazard-mod, mccallum }
+OptionInfo{ nl-cov-prune | bool | false | default false }
+OptionInfo{ nl-cov-var-elim | bool | true | default true }
+OptionInfo{ nl-ext | mode | full | default full | modes: full, light, none }
+OptionInfo{ nl-ext-ent-conf | bool | false | default false }
+OptionInfo{ nl-ext-factor | bool | true | default true }
+OptionInfo{ nl-ext-flatten-mon | bool | true | default true }
+OptionInfo{ nl-ext-inc-prec | bool | true | default true }
+OptionInfo{ nl-ext-purify | bool | false | default false }
+OptionInfo{ nl-ext-rbound | bool | false | default false }
+OptionInfo{ nl-ext-rewrite | bool | true | default true }
+OptionInfo{ nl-ext-split-zero | bool | false | default false }
+OptionInfo{ nl-ext-tf-taylor-deg | int64_t | 4 | default 4 }
+OptionInfo{ nl-ext-tf-tplanes | bool | true | default true }
+OptionInfo{ nl-ext-tplanes | bool | true | default true }
+OptionInfo{ nl-ext-tplanes-interleave | bool | false | default false }
+OptionInfo{ nl-icp | bool | false | default false }
+OptionInfo{ nl-rlv | mode | none | default none | modes: always, interleave, none }
+OptionInfo{ nl-rlv-assert-bounds | bool | false | default false }
+OptionInfo{ on-repeat-ite-simp | bool | false | default false }
+OptionInfo{ opt-res-reconstruction-size | bool | true | default true }
+OptionInfo{ oracles | bool | false | default false }
+OptionInfo{ out, regular-output-channel | void }
+OptionInfo{ output | void }
+OptionInfo{ output-lang, output-language | void }
+OptionInfo{ output-lang, output-language | void }
+OptionInfo{ output-print-defs | bool | true | default true }
+OptionInfo{ parse-only | bool | false | default false }
+OptionInfo{ parse-skolem-definitions | bool | false | default false }
+OptionInfo{ parsing-mode | mode | default | default default | modes: default, lenient, strict }
+OptionInfo{ partial-triggers | bool | false | default false }
+OptionInfo{ partition-strategy, partition | mode | decision-scatter | default decision-scatter | modes: decision-cube, decision-scatter, heap-cube, heap-scatter, lemma-cube, lemma-scatter }
+OptionInfo{ partition-check, check | mode | standard | default standard | modes: full, standard }
+OptionInfo{ partition-conflict-size | uint64_t | 0 | default 0 }
+OptionInfo{ partition-start-time | uint64_t | 30 | default 30 }
+OptionInfo{ partition-strategy, partition | mode | decision-scatter | default decision-scatter | modes: decision-cube, decision-scatter, heap-cube, heap-scatter, lemma-cube, lemma-scatter }
+OptionInfo{ partition-time-interval | double | 1 | default 1 }
+OptionInfo{ partition-tlimit | uint64_t | 60 | default 60 }
+OptionInfo{ partition-when | mode | tlimit | default tlimit | modes: climit, tlimit }
+OptionInfo{ write-partitions-to, partitions-out | void }
+OptionInfo{ pb-rewrites | bool | false | default false }
+OptionInfo{ pivot-threshold | uint64_t | 2 | default 2 }
+OptionInfo{ plugin-notify-sat-clause-in-solve | bool | true | default true }
+OptionInfo{ plugin-share-skolems | bool | true | default true }
+OptionInfo{ pool-inst | bool | true | default true }
+OptionInfo{ portfolio-dry-run | bool | false | default false }
+OptionInfo{ portfolio-jobs | uint64_t | 1 | default 1 }
+OptionInfo{ pp-assert-max-sub-size | uint64_t | 2 | default 2 }
+OptionInfo{ pre-skolem-quant | mode | off | default off | modes: agg, off, on }
+OptionInfo{ pre-skolem-quant-nested | bool | true | default true }
+OptionInfo{ prenex-quant | mode | simple | default simple | modes: none, norm, simple }
+OptionInfo{ prenex-quant-user | bool | false | default false }
+OptionInfo{ preprocess-only | bool | false | default false }
+OptionInfo{ preregister-mode | mode | eager | default eager | modes: eager, lazy }
+OptionInfo{ print-arith-lit-token | bool | false | default false }
+OptionInfo{ print-cores-full | bool | false | default false }
+OptionInfo{ print-dot-clusters | bool | false | default false }
+OptionInfo{ print-inst | mode | list | default list | modes: list, num }
+OptionInfo{ print-inst-full | bool | true | default true }
+OptionInfo{ print-skolem-definitions | bool | false | default false }
+OptionInfo{ print-success | bool | false | default false }
+OptionInfo{ produce-abducts | bool | false | default false }
+OptionInfo{ produce-assertions, interactive-mode | bool | true | default true }
+OptionInfo{ produce-assignments | bool | false | default false }
+OptionInfo{ produce-difficulty | bool | false | default false }
+OptionInfo{ produce-interpolants | bool | false | default false }
+OptionInfo{ produce-learned-literals | bool | false | default false }
+OptionInfo{ produce-models | set by user | bool | true | default false }
+OptionInfo{ produce-proofs | bool | false | default false }
+OptionInfo{ produce-unsat-assumptions | bool | false | default false }
+OptionInfo{ produce-unsat-cores | set by user | bool | true | default false }
+OptionInfo{ proof-alethe-define-skolems | bool | false | default false }
+OptionInfo{ proof-alethe-res-pivots | bool | false | default false }
+OptionInfo{ proof-alethe-testing | bool | false | default false }
+OptionInfo{ proof-allow-trust | bool | true | default true }
+OptionInfo{ proof-chain-m-res | bool | true | default true }
+OptionInfo{ proof-check | mode | none | default none | modes: eager, eager-simple, lazy, none }
+OptionInfo{ proof-dag-global | bool | true | default true }
+OptionInfo{ proof-dot-dag | bool | false | default false }
+OptionInfo{ proof-elim-subtypes | bool | true | default true }
+OptionInfo{ proof-format-mode | mode | cpc | default cpc | modes: alethe, cpc, dot, lfsc, none }
+OptionInfo{ proof-granularity | mode | macro | default macro | modes: dsl-rewrite, dsl-rewrite-strict, macro, rewrite, theory-rewrite }
+OptionInfo{ proof-log | bool | false | default false }
+OptionInfo{ proof-mode | mode | off | default off | modes: full-proof, full-proof-strict, off, pp-only, sat-proof }
+OptionInfo{ proof-pedantic | uint64_t | 0 | default 0 | x <= 100 }
+OptionInfo{ proof-pp-merge | bool | true | default true }
+OptionInfo{ proof-pre-simp-lookahead | uint64_t | 2 | default 2 }
+OptionInfo{ proof-print-conclusion | bool | false | default false }
+OptionInfo{ proof-print-reference | bool | false | default false }
+OptionInfo{ proof-prune-input | bool | false | default false }
+OptionInfo{ proof-rewrite-rcons-rec-limit | uint64_t | 5 | default 5 }
+OptionInfo{ proof-rewrite-rcons-step-limit | uint64_t | 1000 | default 1000 }
+OptionInfo{ prop-proof-mode | mode | proof | default proof | modes: proof, sat-external-prove }
+OptionInfo{ prop-row-length | uint64_t | 16 | default 16 }
+OptionInfo{ purify-triggers | bool | false | default false }
+OptionInfo{ quant-alpha-equiv | bool | true | default true }
+OptionInfo{ quant-dsplit | mode | default | default default | modes: agg, default, none }
+OptionInfo{ quant-fun-wd | bool | false | default false }
+OptionInfo{ quant-ind | bool | false | default false }
+OptionInfo{ quant-rep-mode | mode | first | default first | modes: depth, ee, first }
+OptionInfo{ quiet | void }
+OptionInfo{ random-freq, random-frequency | double | 0 | default 0 | 0 <= x <= 1 }
+OptionInfo{ random-freq, random-frequency | double | 0 | default 0 | 0 <= x <= 1 }
+OptionInfo{ random-partitioning | bool | false | default false }
+OptionInfo{ seed, random-seed | uint64_t | 0 | default 0 }
+OptionInfo{ re-elim, proofs | mode | off | default off | modes: agg, off, on }
+OptionInfo{ re-first-class | bool | false | default false }
+OptionInfo{ re-inter-mode | mode | none | default none | modes: all, constant, none, one-constant }
+OptionInfo{ register-quant-body-terms | bool | false | default false }
+OptionInfo{ out, regular-output-channel | void }
+OptionInfo{ relational-triggers | bool | false | default false }
+OptionInfo{ relevance-filter | bool | false | default false }
+OptionInfo{ relevant-triggers | bool | false | default false }
+OptionInfo{ rels-exp | bool | true | default true }
+OptionInfo{ repeat-simp | bool | false | default false }
+OptionInfo{ replay-early-close-depth | int64_t | 1 | default 1 }
+OptionInfo{ replay-lemma-reject-cut | uint64_t | 25500 | default 25500 }
+OptionInfo{ replay-num-err-penalty | int64_t | 4194304 | default 4194304 }
+OptionInfo{ replay-reject-cut | uint64_t | 25500 | default 25500 }
+OptionInfo{ rlimit-per, reproducible-resource-limit | uint64_t | 0 | default 0 }
+OptionInfo{ restart-int-base | uint64_t | 25 | default 25 }
+OptionInfo{ restart-int-inc | double | 3 | default 3 | 0 <= x }
+OptionInfo{ restrict-pivots | bool | true | default true }
+OptionInfo{ revert-arith-models-on-unsat | bool | false | default false }
+OptionInfo{ rlimit | uint64_t | 0 | default 0 }
+OptionInfo{ rlimit-per, reproducible-resource-limit | uint64_t | 0 | default 0 }
+OptionInfo{ rr-turns | int64_t | 3 | default 3 }
+OptionInfo{ rweight | void }
+OptionInfo{ safe-mode | mode | unrestricted | default unrestricted | modes: safe, stable, unrestricted }
+OptionInfo{ sat-proof-min-dimacs | bool | true | default true }
+OptionInfo{ sat-random-seed | uint64_t | 0 | default 0 }
+OptionInfo{ sat-solver | mode | minisat | default minisat | modes: cadical, minisat }
+OptionInfo{ se-solve-int | bool | false | default false }
+OptionInfo{ seed, random-seed | uint64_t | 0 | default 0 }
+OptionInfo{ segv-spin | bool | false | default false }
+OptionInfo{ semantic-checks | bool | true | default true }
+OptionInfo{ sep | bool | true | default true }
+OptionInfo{ sep-min-refine | bool | false | default false }
+OptionInfo{ sep-pre-skolem-emp | bool | false | default false }
+OptionInfo{ seq-array | mode | none | default none | modes: eager, lazy, none }
+OptionInfo{ sets-card-exp | bool | true | default true }
+OptionInfo{ sets-exp | bool | false | default false }
+OptionInfo{ sets-proxy-lemmas | bool | false | default false }
+OptionInfo{ show-config | bool | false | default false }
+OptionInfo{ show-trace-tags | bool | false | default false }
+OptionInfo{ simp-ite-compress | bool | false | default false }
+OptionInfo{ simp-with-care | bool | false | default false }
+OptionInfo{ simplex-check-period | uint64_t | 200 | default 200 }
+OptionInfo{ simplification, simplification-mode | mode | batch | default batch | modes: batch, none }
+OptionInfo{ simplification-bcp | bool | false | default false }
+OptionInfo{ simplification, simplification-mode | mode | batch | default batch | modes: batch, none }
+OptionInfo{ soi-qe | bool | false | default false }
+OptionInfo{ solve-bv-as-int, proofs | mode | off | default off | modes: bitwise, bv, iand, off, sum }
+OptionInfo{ solve-int-as-bv | uint64_t | 0 | default 0 | x <= 4294967295 }
+OptionInfo{ solve-real-as-int | bool | false | default false }
+OptionInfo{ sort-inference | bool | false | default false }
+OptionInfo{ standard-effort-variable-order-pivots | int64_t | -1 | default -1 }
+OptionInfo{ static-learning | bool | true | default true }
+OptionInfo{ stats | bool | false | default false }
+OptionInfo{ stats-all | bool | false | default false }
+OptionInfo{ stats-every-query | bool | false | default false }
+OptionInfo{ stats-internal | bool | false | default false }
+OptionInfo{ strict-parsing | bool | false | default false }
+OptionInfo{ strings-alpha-card | uint64_t | 196608 | default 196608 | x <= 196608 }
+OptionInfo{ strings-check-entail-len | bool | true | default true }
+OptionInfo{ strings-deq-ext | bool | false | default false }
+OptionInfo{ strings-eager-eval | bool | true | default true }
+OptionInfo{ strings-eager-len-re, proofs | bool | false | default false }
+OptionInfo{ strings-eager-reg | bool | true | default true }
+OptionInfo{ strings-eager-solver | bool | true | default true }
+OptionInfo{ strings-exp | bool | false | default false }
+OptionInfo{ strings-ff | bool | true | default true }
+OptionInfo{ strings-fmf | bool | false | default false }
+OptionInfo{ strings-infer-as-lemmas | bool | false | default false }
+OptionInfo{ strings-infer-sym | bool | true | default true }
+OptionInfo{ strings-lazy-pp, proofs | bool | true | default true }
+OptionInfo{ strings-len-norm | bool | true | default true }
+OptionInfo{ strings-mbr | bool | true | default true }
+OptionInfo{ strings-model-max-len | uint64_t | 65536 | default 65536 | x <= 2147483647 }
+OptionInfo{ strings-process-loop-mode | mode | full | default full | modes: abort, full, none, simple, simple-abort }
+OptionInfo{ strings-re-derive-conf | bool | false | default false }
+OptionInfo{ strings-re-posc-eager | bool | false | default false }
+OptionInfo{ strings-rec-arith-approx | bool | false | default false }
+OptionInfo{ strings-regexp-inclusion | bool | true | default true }
+OptionInfo{ strings-rexplain-lemmas | bool | true | default true }
+OptionInfo{ sub-cbqi, proofs | bool | false | default false }
+OptionInfo{ sub-cbqi-timeout | uint64_t | 0 | default 0 }
+OptionInfo{ sygus | bool | false | default false }
+OptionInfo{ sygus-abort-size | int64_t | -1 | default -1 }
+OptionInfo{ sygus-add-const-grammar | bool | true | default true }
+OptionInfo{ sygus-arg-relevant | bool | false | default false }
+OptionInfo{ sygus-auto-unfold | bool | true | default true }
+OptionInfo{ sygus-bool-ite-return-const | bool | true | default true }
+OptionInfo{ sygus-core-connective | bool | true | default true }
+OptionInfo{ sygus-crepair-abort | bool | false | default false }
+OptionInfo{ sygus-enum | mode | auto | default auto | modes: auto, fast, random, smart, var-agnostic }
+OptionInfo{ sygus-enum-fast-num-consts | uint64_t | 5 | default 5 }
+OptionInfo{ sygus-enum-random-p | double | 0.5 | default 0.5 | 0 <= x <= 1 }
+OptionInfo{ sygus-eval-unfold | mode | single-bool | default single-bool | modes: multi, none, single, single-bool }
+OptionInfo{ sygus-expr-miner-check-timeout | uint64_t | 0 | default 0 }
+OptionInfo{ sygus-fair | mode | dt-size | default dt-size | modes: direct, dt-height-bound, dt-size, dt-size-bound, none }
+OptionInfo{ sygus-fair-max | bool | true | default true }
+OptionInfo{ sygus-filter-sol | mode | none | default none | modes: none, strong, weak }
+OptionInfo{ sygus-filter-sol-rev | bool | false | default false }
+OptionInfo{ sygus-grammar-cons | mode | simple | default simple | modes: any-const, any-term, any-term-concise, simple }
+OptionInfo{ sygus-grammar-ho-partial | bool | false | default false }
+OptionInfo{ sygus-grammar-norm | bool | false | default false }
+OptionInfo{ sygus-grammar-use-disj | bool | true | default true }
+OptionInfo{ sygus-inference | mode | off | default off | modes: off, on, try }
+OptionInfo{ sygus-inst | bool | false | default false }
+OptionInfo{ sygus-inst-mode | mode | priority-inst | default priority-inst | modes: interleave, priority-eval, priority-inst }
+OptionInfo{ sygus-inst-scope | mode | in | default in | modes: both, in, out }
+OptionInfo{ sygus-inst-term-sel | mode | min | default min | modes: both, max, min }
+OptionInfo{ sygus-inv-templ | mode | post | default post | modes: none, post, pre }
+OptionInfo{ sygus-inv-templ-when-sg | bool | false | default false }
+OptionInfo{ sygus-min-grammar | bool | true | default true }
+OptionInfo{ sygus-out | mode | sygus-standard | default sygus-standard | modes: status, status-and-def, sygus-standard }
+OptionInfo{ sygus-pbe | bool | true | default true }
+OptionInfo{ sygus-pbe-multi-fair | bool | false | default false }
+OptionInfo{ sygus-pbe-multi-fair-diff | int64_t | 0 | default 0 }
+OptionInfo{ sygus-qe-preproc | bool | false | default false }
+OptionInfo{ sygus-query-gen | mode | basic | default basic | modes: basic, sample-sat, unsat }
+OptionInfo{ sygus-query-gen-dump-files | mode | none | default none | modes: all, none, unsolved }
+OptionInfo{ sygus-query-gen-filter-solved | bool | false | default false }
+OptionInfo{ sygus-query-gen-thresh | uint64_t | 5 | default 5 }
+OptionInfo{ sygus-rec-fun | bool | true | default true }
+OptionInfo{ sygus-rec-fun-eval-limit | uint64_t | 1000 | default 1000 }
+OptionInfo{ sygus-rec-fun-infer | bool | true | default true }
+OptionInfo{ sygus-repair-const | bool | true | default true }
+OptionInfo{ sygus-repair-const-timeout | uint64_t | 0 | default 0 }
+OptionInfo{ sygus-rewriter | mode | extended | default extended | modes: basic, extended, none }
+OptionInfo{ sygus-rr-synth-accel | bool | false | default false }
+OptionInfo{ sygus-rr-synth-check | bool | true | default true }
+OptionInfo{ sygus-rr-synth-filter-cong | bool | true | default true }
+OptionInfo{ sygus-rr-synth-filter-match | bool | true | default true }
+OptionInfo{ sygus-rr-synth-filter-nl | bool | false | default false }
+OptionInfo{ sygus-rr-synth-filter-order | bool | true | default true }
+OptionInfo{ sygus-rr-synth-input-nvars | int64_t | 3 | default 3 }
+OptionInfo{ sygus-rr-synth-rec | bool | false | default false }
+OptionInfo{ sygus-sample-fp-uniform | bool | false | default false }
+OptionInfo{ sygus-sample-grammar | bool | true | default true }
+OptionInfo{ sygus-samples | int64_t | 1000 | default 1000 }
+OptionInfo{ sygus-si | mode | none | default none | modes: all, none, use }
+OptionInfo{ sygus-si-abort | bool | false | default false }
+OptionInfo{ sygus-si-rcons | mode | all | default all | modes: all, all-limit, none, try }
+OptionInfo{ sygus-si-rcons-limit | int64_t | 10000 | default 10000 }
+OptionInfo{ sygus-si-rcons-p | double | 0.5 | default 0.5 | 0 <= x <= 1 }
+OptionInfo{ sygus-simple-sym-break | mode | agg | default agg | modes: agg, basic, none }
+OptionInfo{ sygus-stream | bool | false | default false }
+OptionInfo{ sygus-sym-break-lazy | bool | true | default true }
+OptionInfo{ sygus-sym-break-pbe | bool | true | default true }
+OptionInfo{ sygus-sym-break-rlv | bool | true | default true }
+OptionInfo{ sygus-unif-cond-independent-no-repeat-sol | bool | true | default true }
+OptionInfo{ sygus-unif-pi | mode | none | default none | modes: complete, cond-enum, cond-enum-igain, none }
+OptionInfo{ sygus-unif-shuffle-cond | bool | false | default false }
+OptionInfo{ sygus-verify-inst-max-rounds | int64_t | 10 | default 10 }
+OptionInfo{ sygus-verify-timeout | uint64_t | 0 | default 0 }
+OptionInfo{ symmetry-breaker, proofs | bool | true | default true }
+OptionInfo{ tc-mode | mode | care-graph | default care-graph | modes: care-graph }
+OptionInfo{ term-db-mode | mode | relevant-all-delay | default relevant-all-delay | modes: all, relevant, relevant-all-delay }
+OptionInfo{ term-sort-overload | bool | true | default true }
+OptionInfo{ theoryof-mode | mode | type | default type | modes: term, type }
+OptionInfo{ timeout-core-timeout | uint64_t | 10000 | default 10000 }
+OptionInfo{ tlimit | uint64_t | 0 | default 0 }
+OptionInfo{ tlimit-per | uint64_t | 0 | default 0 }
+OptionInfo{ trace | void }
+OptionInfo{ trigger-active-sel | mode | all | default all | modes: all, max, min }
+OptionInfo{ trigger-sel | mode | min | default min | modes: all, max, min, min-s-all, min-s-max }
+OptionInfo{ type-checking | bool | true | default true }
+OptionInfo{ uf-card-exp | bool | true | default true }
+OptionInfo{ uf-ho-exp | bool | true | default true }
+OptionInfo{ uf-ho-ext | bool | true | default true }
+OptionInfo{ uf-lambda-qe | bool | false | default false }
+OptionInfo{ uf-lazy-ll | bool | true | default true }
+OptionInfo{ uf-ss | mode | full | default full | modes: full, no-minimal, none }
+OptionInfo{ uf-ss-abort-card | int64_t | -1 | default -1 }
+OptionInfo{ uf-ss-fair | bool | true | default true }
+OptionInfo{ uf-ss-fair-monotone | bool | false | default false }
+OptionInfo{ unate-lemmas | mode | all | default all | modes: all, eqs, ineqs, none }
+OptionInfo{ unconstrained-simp | bool | false | default false }
+OptionInfo{ unsat-cores-mode | mode | off | default off | modes: assumptions, off, sat-proof }
+OptionInfo{ use-approx | bool | false | default false }
+OptionInfo{ use-fcsimplex | bool | false | default false }
+OptionInfo{ use-portfolio | bool | false | default false }
+OptionInfo{ use-soi | bool | false | default false }
+OptionInfo{ user-pat | mode | trust | default trust | modes: ignore, interleave, resort, strict, trust, use }
+OptionInfo{ user-pool | mode | trust | default trust | modes: ignore, trust, use }
+OptionInfo{ var-elim-quant | bool | true | default true }
+OptionInfo{ var-ent-eq-elim-quant, proofs | bool | true | default true }
+OptionInfo{ var-ineq-elim-quant | bool | true | default true }
+OptionInfo{ verbose | void }
+OptionInfo{ verbosity | int64_t | 0 | default 0 }
+OptionInfo{ version | bool | false | default false }
+OptionInfo{ wf-checking | bool | true | default true }
+OptionInfo{ write-partitions-to, partitions-out | void }

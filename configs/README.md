@@ -6,11 +6,14 @@ outputs so a registry entry can identify the exact inputs used.
 
 - `datasets/` records public benchmark selections, expected file counts, and
   archive checksums.
-- Future solver action spaces belong in `solvers/` and must include the cvc5
+- Solver action spaces belong in `solvers/` and must include the cvc5
   version, default configuration, and every allowed option/value.
-- Future experiment specifications belong in `experiments/` and should point
+- Experiment specifications belong in `experiments/` and should point
   to a dataset manifest, feature schema, action-space version, split strategy,
   timeout, and random seed.
+
+Creation order, milestones, and acceptance gates are maintained only in
+[`../PROJECT_PLAN.md`](../PROJECT_PLAN.md).
 
 Large benchmarks, feature tables, runtime measurements, and trained models do
 not belong here; their local locations are ignored according to the policies in

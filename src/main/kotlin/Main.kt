@@ -99,7 +99,7 @@ fun main(args: Array<String>) {
 private fun printUsage() = println(usage())
 
 private fun usage(): String = """
-    ksmt-ml experimental command-line tools
+    ksmt-ml command-line tools
 
     Usage:
       --extract-features INPUT.smt2 [OUTPUT.json]

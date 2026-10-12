@@ -1,8 +1,9 @@
-# Feature clusters and initial selection
+# Feature clusters and profiles
 
-The 157-position KSMT-native vector is useful as an interchange format, but
-it should not be the default model input. Many positions are protocol commands
-or theory-specific operators that are constant for a single SMT-LIB logic.
+The 157-position KSMT-native vector is the input to the first claim-bearing
+baseline. The groupings below are descriptive views for diagnostics and named
+sensitivity variants: many positions are protocol commands or theory-specific
+operators that are constant within a single SMT-LIB logic.
 
 ## Clusters
 
@@ -35,15 +36,8 @@ or theory-specific operators that are constant for a single SMT-LIB logic.
 `QF_AUFLIA_BASELINE` contains 41 features. It extends the ALIA profile with UF
 declaration/definition frequencies, average UF arity, and average applications.
 
-These profiles are starting points, not final feature selection. After the first
-dataset extraction, apply the following procedure on training folds only:
-
-1. Remove unavailable and zero-variance columns.
-2. Remove data-dependent exact duplicate columns using training folds only.
-3. Fit a simple tree model and calculate permutation importance.
-4. Perform cluster ablations: remove one entire theory cluster at a time.
-5. Keep a smaller profile only if grouped cross-validation PAR-2 does not
-   degrade materially.
-
-Do not select features on the final test split. Related benchmarks from the same
-family should remain in the same fold to avoid leakage.
+These profiles are code-level convenience views over the immutable 157-value
+schema, not a completed feature-selection result. The claim-bearing EHM starts
+with all 157 values; any compact-profile comparison follows the leakage rules in
+[`experiment-protocol.md`](experiment-protocol.md) and is scheduled through
+[`PROJECT_PLAN.md`](../PROJECT_PLAN.md).

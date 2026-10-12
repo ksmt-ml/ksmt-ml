@@ -1,0 +1,458 @@
+{
+  "actionSpace": {
+    "actions": [
+      {
+        "id": 0,
+        "name": "default",
+        "options": {}
+      },
+      {
+        "id": 1,
+        "name": "arrays-eager-lemmas",
+        "options": {
+          "arrays-eager-lemmas": "true"
+        }
+      },
+      {
+        "id": 2,
+        "name": "arith-prop-unate",
+        "options": {
+          "arith-prop": "unate"
+        }
+      },
+      {
+        "id": 3,
+        "name": "decision-justification",
+        "options": {
+          "decision": "justification"
+        }
+      }
+    ],
+    "id": "cvc5-policy-prototype-actions-v1",
+    "solver": "cvc5",
+    "solverVersion": "1.3.4",
+    "validatedForPerformance": false
+  },
+  "bundleFormat": "ksmt-ml-onnx-bundle-v1",
+  "bundleId": "cvc5-policy-prototype-v1",
+  "input": {
+    "dtype": "float32",
+    "featureIdBase": 1,
+    "featureSchema": "ksmt-machsmt-inspired-v1",
+    "invalidInputPolicy": "reject; caller must use an explicit fallback",
+    "name": "features",
+    "shape": [
+      "batch",
+      157
+    ],
+    "valueContract": "finite and non-negative raw v1 feature values"
+  },
+  "limitations": [
+    "The graph is not trained and has no performance claim.",
+    "The prototype action space is an interface fixture, not E0005 evidence.",
+    "The 30-parameter vocabulary is fixed, but the prototype actions set only one option at a time.",
+    "The caller must verify featureSchema before inference.",
+    "NaN, infinity, negative values, and partial feature rows are rejected."
+  ],
+  "model": {
+    "file": "model.onnx",
+    "kind": "hand-authored-linear-heuristic",
+    "onnxIrVersion": 8,
+    "opset": 17,
+    "producer": "ksmt-ml",
+    "sha256": "df657ea0e938b4d9c5b579b6611d072548a87faf31a53218342179ed59baa02e"
+  },
+  "outputs": [
+    {
+      "dtype": "float32",
+      "name": "action_scores",
+      "semantics": "diagnostic preference scores; greater is preferred",
+      "shape": [
+        "batch",
+        4
+      ]
+    },
+    {
+      "dtype": "int64",
+      "name": "action_id",
+      "semantics": "argmax(action_scores); ties select the lowest id",
+      "shape": [
+        "batch"
+      ]
+    },
+    {
+      "dtype": "int64",
+      "name": "config_values",
+      "semantics": "encoded parameter values in parameters order",
+      "shape": [
+        "batch",
+        30
+      ]
+    },
+    {
+      "dtype": "bool",
+      "name": "config_mask",
+      "semantics": "true only when the corresponding option must be set",
+      "shape": [
+        "batch",
+        30
+      ]
+    }
+  ],
+  "parameters": [
+    {
+      "default": "internal",
+      "encoding": {
+        "internal": 0,
+        "justification": 1,
+        "stoponly": 2
+      },
+      "group": "general",
+      "index": 0,
+      "name": "decision",
+      "type": "enum"
+    },
+    {
+      "default": "batch",
+      "encoding": {
+        "batch": 0,
+        "none": 1
+      },
+      "group": "general",
+      "index": 1,
+      "name": "simplification",
+      "type": "enum"
+    },
+    {
+      "default": "minisat",
+      "encoding": {
+        "cadical": 1,
+        "minisat": 0
+      },
+      "group": "general",
+      "index": 2,
+      "name": "sat-solver",
+      "type": "enum"
+    },
+    {
+      "default": "none",
+      "encoding": {
+        "all": 1,
+        "input": 2,
+        "input-and-prop": 3,
+        "input-and-solvable": 4,
+        "none": 0
+      },
+      "group": "general",
+      "index": 3,
+      "name": "deep-restart",
+      "type": "enum"
+    },
+    {
+      "default": "none",
+      "encoding": {
+        "full": 2,
+        "light": 1,
+        "none": 0
+      },
+      "group": "general",
+      "index": 4,
+      "name": "lemma-inprocess",
+      "type": "enum"
+    },
+    {
+      "default": "eager",
+      "encoding": {
+        "eager": 0,
+        "lazy": 1
+      },
+      "group": "general",
+      "index": 5,
+      "name": "preregister-mode",
+      "type": "enum"
+    },
+    {
+      "default": "both",
+      "encoding": {
+        "bi": 3,
+        "both": 0,
+        "none": 1,
+        "unate": 2
+      },
+      "group": "arithmetic",
+      "index": 6,
+      "name": "arith-prop",
+      "type": "enum"
+    },
+    {
+      "default": "false",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "arithmetic",
+      "index": 7,
+      "name": "arith-rewrite-equalities",
+      "type": "bool"
+    },
+    {
+      "default": "true",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "arithmetic",
+      "index": 8,
+      "name": "arith-static-learning",
+      "type": "bool"
+    },
+    {
+      "default": "false",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "arithmetic",
+      "index": 9,
+      "name": "miplib-trick",
+      "type": "bool"
+    },
+    {
+      "default": "all",
+      "encoding": {
+        "all": 0,
+        "eqs": 1,
+        "ineqs": 2,
+        "none": 3
+      },
+      "group": "arithmetic",
+      "index": 10,
+      "name": "unate-lemmas",
+      "type": "enum"
+    },
+    {
+      "default": "full",
+      "encoding": {
+        "full": 0,
+        "light": 1,
+        "none": 2
+      },
+      "group": "arithmetic",
+      "index": 11,
+      "name": "nl-ext",
+      "type": "enum"
+    },
+    {
+      "default": "true",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "arithmetic",
+      "index": 12,
+      "name": "nl-cov",
+      "type": "bool"
+    },
+    {
+      "default": "true",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "arrays",
+      "index": 13,
+      "name": "arrays-eager-index",
+      "type": "bool"
+    },
+    {
+      "default": "false",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "arrays",
+      "index": 14,
+      "name": "arrays-eager-lemmas",
+      "type": "bool"
+    },
+    {
+      "default": "true",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "arrays",
+      "index": 15,
+      "name": "arrays-optimize-linear",
+      "type": "bool"
+    },
+    {
+      "default": "false",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "arrays",
+      "index": 16,
+      "name": "arrays-reduce-sharing",
+      "type": "bool"
+    },
+    {
+      "default": "false",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "arrays",
+      "index": 17,
+      "name": "arrays-weak-equiv",
+      "type": "bool"
+    },
+    {
+      "default": "lazy",
+      "encoding": {
+        "eager": 1,
+        "lazy": 0
+      },
+      "group": "bitvectors",
+      "index": 18,
+      "name": "bitblast",
+      "type": "enum"
+    },
+    {
+      "default": "cadical",
+      "encoding": {
+        "cadical": 0,
+        "cryptominisat": 1,
+        "kissat": 2
+      },
+      "group": "bitvectors",
+      "index": 19,
+      "name": "bv-sat-solver",
+      "type": "enum"
+    },
+    {
+      "default": "false",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "bitvectors",
+      "index": 20,
+      "name": "bv-eager-eval",
+      "type": "bool"
+    },
+    {
+      "default": "false",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "bitvectors",
+      "index": 21,
+      "name": "bv-gauss-elim",
+      "type": "bool"
+    },
+    {
+      "default": "true",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "bitvectors",
+      "index": 22,
+      "name": "bv-propagate",
+      "type": "bool"
+    },
+    {
+      "default": "off",
+      "encoding": {
+        "bitwise": 1,
+        "bv": 2,
+        "iand": 3,
+        "off": 0,
+        "sum": 4
+      },
+      "group": "bitvectors",
+      "index": 23,
+      "name": "solve-bv-as-int",
+      "type": "enum"
+    },
+    {
+      "default": "true",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "quantifiers",
+      "index": 24,
+      "name": "cbqi",
+      "type": "bool"
+    },
+    {
+      "default": "prop-eq",
+      "encoding": {
+        "conflict": 1,
+        "prop-eq": 0
+      },
+      "group": "quantifiers",
+      "index": 25,
+      "name": "cbqi-mode",
+      "type": "enum"
+    },
+    {
+      "default": "true",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "quantifiers",
+      "index": 26,
+      "name": "e-matching",
+      "type": "bool"
+    },
+    {
+      "default": "false",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "quantifiers",
+      "index": 27,
+      "name": "finite-model-find",
+      "type": "bool"
+    },
+    {
+      "default": "false",
+      "encoding": {
+        "false": 0,
+        "true": 1
+      },
+      "group": "quantifiers",
+      "index": 28,
+      "name": "mbqi",
+      "type": "bool"
+    },
+    {
+      "default": "conj-and-fv",
+      "encoding": {
+        "agg": 1,
+        "conj": 2,
+        "conj-and-fv": 0,
+        "fv": 3,
+        "off": 4
+      },
+      "group": "quantifiers",
+      "index": 29,
+      "name": "miniscope-quant",
+      "type": "enum"
+    }
+  ],
+  "purpose": "Freeze and test the batched ONNX/JVM interface before a learned solver-selection model exists.",
+  "selection": {
+    "operation": "argmax",
+    "scoreOutput": "action_scores",
+    "selectedActionOutput": "action_id"
+  },
+  "status": "interface-prototype"
+}

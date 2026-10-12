@@ -21,6 +21,16 @@ if [[ "$actual_wrapper_sha256" != "$GRADLE_WRAPPER_JAR_SHA256" ]]; then
   failed=1
 fi
 
+if [[ -f "model-bundles/cvc5-policy-prototype-v1/sha256sums.txt" ]]; then
+  if ! (
+    cd model-bundles/cvc5-policy-prototype-v1
+    sha256sum --check --strict --status sha256sums.txt
+  ); then
+    printf 'ONNX prototype bundle checksum mismatch\n' >&2
+    failed=1
+  fi
+fi
+
 while IFS= read -r -d '' path; do
   for prefix in "${FORBIDDEN_PREFIXES[@]}"; do
     if [[ "$path" == "$prefix"* ]]; then

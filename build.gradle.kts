@@ -13,6 +13,8 @@ repositories {
 dependencies {
     implementation("io.ksmt:ksmt-core:0.6.7")
     implementation("io.ksmt:ksmt-cvc5:0.6.7")
+    implementation("com.microsoft.onnxruntime:onnxruntime:1.31.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
 
     // Z3 is used only for parsing SMT-LIB files.
     implementation("io.ksmt:ksmt-z3:0.6.7")

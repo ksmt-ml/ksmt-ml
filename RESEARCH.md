@@ -19,6 +19,8 @@ SMT-LIB -> KSMT-backed feature extraction -> feature table -> basic analysis
 ```
 
 It does not yet contain a solver runtime matrix or a trained selector.
+The committed ONNX policy is an infrastructure interface fixture with
+hand-authored weights, not an experiment result or learned baseline.
 
 ## Established decisions
 
@@ -27,14 +29,16 @@ It does not yet contain a solver runtime matrix or a trained selector.
 2. **Versioned schemas.** `ksmt-machsmt-inspired-v1` is the first frozen local
    contract: 145 unique grammar counts, 11 structural values, and source size.
    Later semantic or ordering changes require a new schema identifier.
-3. **Logic-aware modeling.** Theory-specific profiles are preferred over
-   feeding every one of the 157 positions to every model.
+3. **Paper-derived baseline first.** The first EHM uses the complete 157-value
+   vector. Per-logic models and compact theory-specific profiles are evaluated
+   as named variants, not silently substituted into the baseline.
 4. **Family-grouped evaluation.** Related benchmarks from one `(logic, family)`
    group must not cross train/test boundaries.
 5. **Simple baselines first.** Default, SBS, and VBS must be measured before a
    learned model. Tree-based regression/classification precedes neural models.
-6. **Portable inference later.** ONNX is the intended model handoff format, but
-   only after the selector demonstrates value and Python/JVM parity is tested.
+6. **Portable inference boundary.** ONNX is the model handoff format. The
+   committed fixture validates the interface only; a trained bundle is eligible
+   for deployment only after performance evidence and Python/JVM parity.
 
 ## Evidence from the feature-distribution run
 
@@ -76,24 +80,8 @@ clusters add sparsity and leakage opportunities.
 Random file-level splits are expected to overestimate selector quality relative
 to `(logic, family)` grouped splits.
 
-## Planned experiment sequence
+## Plan ownership
 
-1. `E0002`: feature fidelity under provisional `v0` (superseded but retained
-   as history).
-2. `E0003`: corpus extraction and distribution analysis under provisional
-   `v0` (superseded but retained as history).
-3. `E0004`: frozen-`v1` contract tests and corpus data review.
-4. `E0005`: review and freeze a semantically safe cvc5 action catalog using
-   development families only.
-5. `E0006`: collect the isolated, family-grouped runtime matrix.
-6. `E0007`: calculate Default/SBS/VBS and apply the pre-registered ML gate.
-7. `E0008`: reproduce the MachSMT empirical-hardness-model baseline only after
-   that gate passes.
-8. `E0009+`: compare other models, then expand logics, actions, and solvers one
-   axis at a time.
-
-## Open questions
-
-- Which cvc5 options create meaningful algorithmic diversity without changing
-  semantics or enabling diagnostic/output behavior?
-- What wall-clock timeout and repetition policy fit the available hardware?
+Milestones, future experiments, engineering hardening, and open decisions are
+maintained only in [`PROJECT_PLAN.md`](PROJECT_PLAN.md). The machine-readable
+status of individual runs remains in `experiments/registry.csv`.

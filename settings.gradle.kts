@@ -13,12 +13,12 @@ dependencyResolutionManagement {
     }
 }
 
-val useLocalKsmt = providers.gradleProperty("useLocalKsmt").orNull == "true"
-val localKsmtDirectory = file("../ksmt")
+val ksmtSourcePath = providers.gradleProperty("ksmtSourcePath").orNull
 
-if (useLocalKsmt) {
-    require(localKsmtDirectory.resolve("settings.gradle.kts").isFile) {
-        "Local KSMT checkout was requested, but ../ksmt/settings.gradle.kts does not exist"
+if (ksmtSourcePath != null) {
+    val ksmtSourceDirectory = file(ksmtSourcePath)
+    require(ksmtSourceDirectory.resolve("settings.gradle.kts").isFile) {
+        "KSMT source path does not contain settings.gradle.kts: $ksmtSourcePath"
     }
-    includeBuild(localKsmtDirectory)
+    includeBuild(ksmtSourceDirectory)
 }

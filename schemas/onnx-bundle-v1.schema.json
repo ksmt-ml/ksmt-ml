@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ksmt-ml/ksmt-ml/schemas/onnx-bundle-v1.schema.json",
+  "title": "ksmt-ml ONNX bundle manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bundleFormat",
+    "bundleId",
+    "status",
+    "purpose",
+    "model",
+    "input",
+    "outputs",
+    "parameters",
+    "actionSpace",
+    "selection",
+    "limitations"
+  ],
+  "properties": {
+    "bundleFormat": {
+      "const": "ksmt-ml-onnx-bundle-v1"
+    },
+    "bundleId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["interface-prototype", "candidate", "validated", "retired"]
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "sha256",
+        "onnxIrVersion",
+        "opset",
+        "producer",
+        "kind"
+      ],
+      "properties": {
+        "file": {"type": "string", "pattern": "^[^/]+\\.onnx$"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "onnxIrVersion": {"type": "integer", "minimum": 1},
+        "opset": {"type": "integer", "minimum": 1},
+        "producer": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "minLength": 1}
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "dtype",
+        "shape",
+        "featureSchema",
+        "featureIdBase",
+        "valueContract",
+        "invalidInputPolicy"
+      ],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "dtype": {"type": "string", "enum": ["float32", "float64"]},
+        "shape": {"$ref": "#/$defs/shape"},
+        "featureSchema": {"type": "string", "minLength": 1},
+        "featureIdBase": {"type": "integer", "enum": [0, 1]},
+        "valueContract": {"type": "string", "minLength": 1},
+        "invalidInputPolicy": {"type": "string", "minLength": 1}
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "dtype", "shape", "semantics"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "dtype": {
+            "type": "string",
+            "enum": ["float32", "float64", "int64", "bool"]
+          },
+          "shape": {"$ref": "#/$defs/shape"},
+          "semantics": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["index", "name", "group", "type", "default", "encoding"],
+        "properties": {
+          "index": {"type": "integer", "minimum": 0},
+          "name": {"type": "string", "minLength": 1},
+          "group": {"type": "string", "minLength": 1},
+          "type": {"type": "string", "enum": ["bool", "enum", "integer"]},
+          "default": {"type": "string", "minLength": 1},
+          "encoding": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {"type": "integer"}
+          }
+        }
+      }
+    },
+    "actionSpace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "solver", "solverVersion", "validatedForPerformance", "actions"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "solver": {"type": "string", "minLength": 1},
+        "solverVersion": {"type": "string", "minLength": 1},
+        "validatedForPerformance": {"type": "boolean"},
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "options"],
+            "properties": {
+              "id": {"type": "integer", "minimum": 0},
+              "name": {"type": "string", "minLength": 1},
+              "options": {
+                "type": "object",
+                "additionalProperties": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation", "scoreOutput", "selectedActionOutput"],
+      "properties": {
+        "operation": {"type": "string", "enum": ["argmax", "argmin"]},
+        "scoreOutput": {"type": "string", "minLength": 1},
+        "selectedActionOutput": {"type": "string", "minLength": 1}
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "$defs": {
+    "shape": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {"type": "integer", "minimum": 1},
+          {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"}
+        ]
+      }
+    }
+  }
+}

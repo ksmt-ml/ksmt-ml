@@ -81,8 +81,9 @@ holdout splits, though uncertainty must still be reported at family level.
 There are no exact-content duplicate hashes within this 2,015-row pilot. The
 ten-archive corpus as a whole has three duplicate-hash pairs (six rows), which
 must be co-located or deduplicated before any broader split. Hash equality does
-not rule out renamed or lightly transformed near-duplicates, so the reviewed
-pilot split remains a separate roadmap gate.
+not rule out renamed or lightly transformed near-duplicates. The reviewed
+pilot split therefore remains an explicit gate in
+[`PROJECT_PLAN.md`](../PROJECT_PLAN.md).
 
 The other sampled logics remain descriptive or stress-test cohorts until their
 family coverage improves. In particular, the largest family contributes 99.0%

@@ -1,7 +1,0 @@
-(set-logic QF_UFLIA)
-(set-info :status sat)
-(declare-const x Int)
-(declare-const y Int)
-(declare-fun f (Int Int) Int)
-(assert (= (f x y) (f y x)))
-(check-sat)

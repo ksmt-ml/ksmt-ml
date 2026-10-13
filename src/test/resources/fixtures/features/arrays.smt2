@@ -1,7 +1,0 @@
-(set-logic QF_ALIA)
-(set-info :status sat)
-(declare-const a (Array Int Int))
-(declare-const i Int)
-(assert (= (select a i) (select a 0)))
-(assert (= (store (store a i 1) 0 2) a))
-(check-sat)

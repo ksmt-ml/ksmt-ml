@@ -2,34 +2,16 @@
 set -euo pipefail
 
 readonly MAX_TRACKED_BYTES=$((5 * 1024 * 1024))
-readonly GRADLE_WRAPPER_JAR_SHA256="7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172"
 readonly FORBIDDEN_PREFIXES=(
   "data/raw/"
   "data/processed/"
   "artifacts/"
   "models/"
   "experiments/runs/"
-  "build/"
-  ".gradle/"
   ".venv/"
 )
 
 failed=0
-actual_wrapper_sha256=$(sha256sum gradle/wrapper/gradle-wrapper.jar | cut -d' ' -f1)
-if [[ "$actual_wrapper_sha256" != "$GRADLE_WRAPPER_JAR_SHA256" ]]; then
-  printf 'Gradle wrapper JAR checksum mismatch\n' >&2
-  failed=1
-fi
-
-if [[ -f "model-bundles/cvc5-policy-prototype-v1/sha256sums.txt" ]]; then
-  if ! (
-    cd model-bundles/cvc5-policy-prototype-v1
-    sha256sum --check --strict --status sha256sums.txt
-  ); then
-    printf 'ONNX prototype bundle checksum mismatch\n' >&2
-    failed=1
-  fi
-fi
 
 while IFS= read -r -d '' path; do
   for prefix in "${FORBIDDEN_PREFIXES[@]}"; do

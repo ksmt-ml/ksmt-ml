@@ -2,78 +2,69 @@
 
 ## Project mission
 
-`ksmt-ml` investigates automatic SMT solver configuration for KSMT. The current
-repository provides a reproducible feature-extraction and dataset-analysis
-pipeline plus a non-trained ONNX/JVM interface fixture. Runtime collection,
-claim-bearing model training, and production KSMT integration remain gated by
-[`PROJECT_PLAN.md`](PROJECT_PLAN.md).
-
-Use `README.md` for user-facing setup. Keep this file focused on stable
-engineering and research rules for contributors and coding agents.
+`ksmt-ml` is the non-production experimentation repository for training a model
+that predicts solver parameters from one representative profile of an
+incremental KSMT workload. It prepares labelled data, trains and evaluates
+models, and exports versioned ONNX bundles.
 
 ## Architectural boundaries
 
-1. KSMT expressions are the canonical AST representation for structural
-   features.
-2. Source-only information may be recovered by a small SMT-LIB scanner, but
-   semantic AST logic must not be independently reimplemented in Python.
-3. A feature schema is immutable after data has been produced. Semantic changes
-   require a new schema version.
-4. Training and JVM inference must share feature order, preprocessing,
-   and action-space versions.
-5. An ONNX file is never deployed alone. It belongs to a checksummed bundle
-   that defines schema identity, tensor semantics, option encodings, action
-   space, invalid-input policy, and evaluation status.
-6. Raw SMT-LIB corpora, generated feature tables, run shards, and large trained
-   model artifacts are not committed to Git. Small checksummed interface
-   fixtures may be committed under `model-bundles/`.
-7. A benchmark runner must isolate native solver failures and distinguish
-   timeout, unknown, crash, invalid configuration, and wrong answer.
+1. KSMT owns the public `KSolverProfile`, profiler, configuration patch, and
+   `KSolverTuner` interfaces in one module.
+2. Do not introduce a second copy of KSMT semantic DTOs in this repository.
+3. Production implementations, including the JVM ONNX adapter, deterministic
+   profile projection, cvc5 parameter validation, fallback, and telemetry, live
+   in the `ksmt-ml-tuner` repository.
+4. This repository emits a model bundle; production must not depend on its
+   training or notebook code.
+5. The first lifecycle profiles one representative run and applies the returned
+   configuration to a fresh solver for a subsequent run. Active solvers are not
+   reconfigured.
+6. The initial target is cvc5. The parameter space defines the valid domains of
+   model outputs, not a catalog of ready configurations.
+7. Raw formulas, application traces, generated profile tables, run shards, and
+   large models are not committed. Small synthetic fixtures and golden vectors
+   may be committed.
+8. Every schema or model artifact is versioned. Semantic changes produce a new
+   identifier.
 
 ## Research integrity
 
-- Register an experiment before a costly run.
-- Treat run results as append-only; never hand-edit measurements.
-- Record dataset ID, feature schema, action-space version, solver version,
-  KSMT version, code revision, seed, timeout, and host information.
-- Split related benchmarks by family, never randomly by individual file.
-- Calculate Default, single best solver/configuration (SBS), and virtual best
-  solver/configuration (VBS) before training a selector.
-- Fit filtering and preprocessing on training folds only.
-- Report failed, partial, and excluded inputs explicitly.
+- Freeze claim-bearing experiment inputs before costly collection.
+- Preserve failures explicitly. Keep generated run history outside Git.
+- Record profile, application, solver, KSMT, code, configuration, host, seed,
+  dataset, label, and training provenance.
+- Compare configurations on deterministic replay or a justified equivalent
+  workload; do not infer gains from unrelated before/after periods.
+- Split by independent workload/application groups, never individual checks.
+- Measure current/default, best fixed, and oracle-per-workload baselines before
+  training.
+- Report profiling and inference overhead separately from model training cost.
 
 ## Build and validation
 
 ```bash
-./gradlew test
-./gradlew clean test
+make check
 ```
 
 For Python analysis:
 
 ```bash
 make analysis-env
-make notebook
+make onnx-env
 ```
 
 ## Change workflow
 
-1. Inspect the relevant contract and tests.
-2. State assumptions that affect feature or experiment semantics.
-3. Make the smallest coherent change.
-4. Add a regression test for changed behavior.
-5. Run focused tests, then `make check` for repository-wide changes.
-6. Review the final diff for generated data, secrets, absolute local paths,
-   undocumented schema changes, and unrelated files.
-7. Update README, `PROJECT_PLAN.md`, research state, or registry when their
-   public claims change. Do not introduce a second roadmap or future-work list.
+1. Inspect the relevant KSMT/profile and model-bundle contracts.
+2. State assumptions that affect workload, lifecycle, feature, or experiment
+   semantics.
+3. Make the smallest coherent change and add regression coverage.
+4. Run focused tests, then repository checks where applicable.
+5. Review the diff for data, secrets, absolute paths, undocumented schema
+   changes, and stale references to superseded designs.
+6. Update `README.md` or `PROJECT_PLAN.md` when their public claims change. Do
+   not create a second roadmap or commit experiment history.
 
-Do not commit, push, merge, publish, or change GitHub settings unless the user
-explicitly asks for it.
-
-## Definition of done
-
-A change is complete when behavior matches the stated milestone, relevant tests
-pass from the repository's own tooling, public contracts and limitations are
-documented, experiment provenance is preserved, and no local datasets or
-generated run artifacts are accidentally tracked.
+Do not commit, push, merge, publish, or change remote settings unless the user
+explicitly asks.

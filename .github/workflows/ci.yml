@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  hygiene:
-    name: Repository hygiene
+  check:
+    name: Repository checks
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -23,24 +23,5 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - name: Check repository hygiene
-        run: bash scripts/hygiene.sh
-
-  test:
-    name: Kotlin/JVM tests
-    needs: hygiene
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          persist-credentials: false
-      - name: Set up JDK 17
-        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
-        with:
-          distribution: temurin
-          java-version: "17"
-          cache: gradle
-      - name: Verify the Gradle wrapper and run tests
-        run: ./gradlew --no-daemon clean test
+      - name: Run repository checks
+        run: make check

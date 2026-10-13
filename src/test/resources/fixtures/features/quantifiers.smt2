@@ -1,5 +1,0 @@
-(set-logic LIA)
-(set-info :status sat)
-(assert (forall ((x Int) (y Int))
-  (exists ((z Int)) (> (+ x y) z))))
-(check-sat)

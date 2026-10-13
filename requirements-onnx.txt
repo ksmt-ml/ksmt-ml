@@ -1,4 +1,4 @@
--r requirements-analysis.txt
 jsonschema==4.26.0
+numpy==2.3.4
 onnx==1.23.0
 onnxruntime==1.31.0

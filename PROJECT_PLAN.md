@@ -1,241 +1,108 @@
 # Project plan
 
-This is the single source of truth for planned work in `ksmt-ml`. Contract
-documents describe behavior that already exists; `RESEARCH.md` records durable
-decisions and evidence; the experiment registry records individual runs. Future
-milestones, dependencies, exit criteria, and open decisions belong here.
+This file is the single roadmap for `ksmt-ml`.
 
 ## Objective
 
-Build and evaluate a reproducible policy that selects a correctness-preserving
-cvc5 configuration for each SMT-LIB benchmark, then deliver the validated
-policy as a versioned ONNX bundle suitable for KSMT integration.
-
-The project is evidence-gated:
+Train a model before deployment that maps deterministic features of one
+representative `KSolverProfile` to a correctness-preserving cvc5 configuration.
+Export it as an ONNX bundle and demonstrate improvement over the default
+configuration on independent workloads.
 
 ```text
-trusted features
-    -> reviewed benchmark cohort and family split
-    -> versioned cvc5 action space
-    -> isolated runtime matrix
-    -> Default / SBS / VBS headroom gate
-    -> learned baseline
-    -> sealed-holdout evaluation
-    -> production integration
+profile contract
+    -> cvc5 profiling pilot
+    -> versioned feature projection
+    -> labelled training dataset
+    -> supervised model training
+    -> sealed-workload evaluation
+    -> ONNX bundle
 ```
 
-Work must not skip the headroom gate. Prior work motivates the approach but
-does not establish that the current dataset, solver version, or action space is
-learnable.
+Runtime training, configuration search, solver replay, RL, and tuning-time
+budgets are outside the MVP.
 
-## Current state
+## Milestone 0 — contracts
 
-| Area | Status | Evidence |
-|---|---|---|
-| Repository foundation | Complete | Gradle wrapper, Apache-2.0 license, CI, hygiene checks, experiment registry |
-| Feature schema | Complete | Frozen `ksmt-machsmt-inspired-v1` contract and golden fixtures |
-| Dataset extraction | Complete for the ten-archive study | 64,432 inputs, 64,341 complete vectors, 91 syntax-only vectors, zero lost inputs |
-| Dataset analysis | Complete for E0004 | Executed notebook, committed figures, and dataset report |
-| ONNX interface | Interface prototype complete | Checksummed bundle, Python/JVM golden batch, 30-option vocabulary, JVM decoder |
-| Pilot split | Not frozen | Candidate logics identified; exact family assignment remains to be reviewed |
-| cvc5 action space | Not frozen | Candidate option vocabulary exists; deployable configurations do not |
-| Runtime matrix | Not started | Isolated runner and runtime labels are absent |
-| Learned selector | Not started | Blocked by action-space headroom evidence |
+Review the KSMT profile, profiler, patch, and tuner interfaces. Keep feature
+vectors and cvc5-specific schemas outside KSMT. The profiler implementation is
+an infrastructure follow-up, not part of this repository.
 
-The committed ONNX graph is deliberately non-trained. It validates the
-integration boundary and must not be reported as a solver-performance result.
+Exit criterion: KSMT interfaces compile and `ksmt-ml-tuner` consumes them
+without duplicating profile DTOs.
 
-## Milestone 1 — freeze the pilot cohort
+## Milestone 1 — cvc5 profiling pilot
 
-Use `QF_ALIA`, `QF_AUFLIA`, and `LIA` as the initial candidates. Review family
-counts, concentration, extraction failures, status balance, exact-content
-duplicates, and likely near-duplicate families.
+Build a small incremental cvc5 consumer, collect the single KSMT profile, and
+verify formula, assumption, scope, timing, result, solver-version, and initial
+configuration fidelity. Measure profiling overhead.
 
-Deliverables:
+TSA may become a workload source after its Yices/Z3 composition is adapted to
+cvc5. Instrument the layer that represents the actual input seen by cvc5.
 
-- a versioned cohort manifest;
-- a deterministic `(logic, family)` development/holdout assignment;
-- a written eligibility policy for the 91 syntax-only rows;
-- a frozen primary metric, timeout, repetition policy, and uncertainty method;
-- a pre-registered experiment row before runtime labels are collected.
+Exit criterion: at least one realistic workload produces a complete profile
+accepted by the feature projection.
 
-Exit criterion: the split contains enough independent families for grouped
-development evaluation and a sealed holdout, with all exclusions accounted for.
+## Milestone 2 — features and labelled dataset
 
-## Milestone 2 — define and measure the cvc5 action space
+Freeze the feature schema and a small cvc5-version-specific output parameter
+space. Prepare grouped examples containing a feature vector and a target cvc5
+configuration. Record how every target was obtained, but do not make that
+process part of the production API.
 
-Construct a small, reviewed action set from the 30-option vocabulary in the
-ONNX contract. Do not enumerate the Cartesian product. Every action must have a
-stable ID, include an explicit default configuration, and use only values
-supported by the pinned cvc5 version.
+Use the same projection semantics for dataset generation and JVM inference.
+Add golden vectors to detect Python/JVM drift.
 
-Implement an isolated benchmark runner that executes every
-`(benchmark, action, repetition)` in a separate process with a parent-enforced
-wall-clock timeout. Records are append-only and distinguish `ok`, `timeout`,
-`unknown`, `crash`, `invalid_config`, `wrong_answer`, and infrastructure
-failure.
+Exit criterion: a versioned dataset can be split by independent workload or
+application groups without leaking related examples into holdout.
 
-Deliverables:
+## Milestone 3 — train supervised baselines
 
-- versioned action-space manifest;
-- smoke validation for every action;
-- isolated runner with bounded concurrency and resumable shards;
-- environment and solver-version capture;
-- correctness validation against expected statuses;
-- complete pilot runtime matrix.
+Start with simple predictors and compare them with default cvc5, the best fixed
+configuration selected on training data, and a deterministic heuristic. Increase
+model complexity only when grouped validation justifies it.
 
-Exit criterion: no retained action produces a wrong answer, all planned cells
-are accounted for, and the matrix is reproducible from recorded manifests.
+Exit criterion: at least one predictor emits values that can be decoded and
+validated for the pinned cvc5 parameter space.
 
-## Milestone 3 — establish selection headroom
+## Milestone 4 — sealed evaluation
 
-Calculate on development families:
+Freeze all design choices and evaluate once on the grouped holdout. Reject
+models that produce invalid configurations, wrong answers, or regress the
+agreed objective beyond the declared tolerance.
 
-- cvc5 default;
-- single best fixed configuration (SBS), selected on training data only;
-- virtual best configuration (VBS), used only as an oracle upper bound;
-- solved count, timeout count, family-macro and benchmark-micro PAR;
-- family-bootstrap confidence intervals.
+Exit criterion: the selected predictor improves the agreed objective over the
+accepted baselines while preserving correctness.
 
-The numerical threshold is frozen before labels are inspected. The current
-candidate gate is:
+## Milestone 5 — ONNX handoff
 
-- zero wrong answers from retained actions;
-- VBS improves over `min(Default, SBS)` by at least 5% PAR-10;
-- the 95% family-bootstrap interval excludes zero improvement;
-- at least two non-default actions win on non-trivial benchmark subsets.
+Export the selected predictor with manifest, profile/feature/parameter-space
+schema IDs, solver compatibility, checksums, and golden vectors. Validate Python
+and JVM output parity. `ksmt-ml-tuner` owns runtime projection, inference,
+decoding, validation, and fallback.
 
-Exit criterion: either the gate passes and model work begins, or the action
-space/data coverage is revised in a new registered experiment. A failed gate is
-not repaired by fitting a more complex model.
+Exit criterion: a versioned bundle can produce a validated
+`KSolverConfigurationPatch` from the single KSMT profile.
 
-## Milestone 4 — reproduce the MachSMT-derived baseline
+## Milestone 6 — end-to-end demonstration
 
-The first claim-bearing selector is the empirical hardness model (EHM):
+Profile a representative run, perform one fast inference, construct a fresh
+cvc5 solver with the returned patch, and repeat the workload. Report solver
+statuses, failures, profiling cost, inference cost, and improvement over default
+across independent workload groups.
 
-1. standardize the 157 input features using training-fold statistics;
-2. generate degree-two polynomial interactions;
-3. reduce to 35 principal components;
-4. fit one AdaBoost PAR-2 regressor per action with 200 decision trees and
-   linear loss;
-5. select the action with the lowest predicted score.
+## Future extension — adaptive tuning
 
-All transformations, feature filtering, action pruning, and hyperparameter
-selection stay inside nested family-grouped training folds. Evaluate pooled and
-per-logic variants only where family counts permit. Compact feature profiles,
-imputation, and alternative estimators are named variants, not silent changes
-to the baseline.
-
-Exit criterion: on the sealed holdout, the EHM improves over Default and the
-training-selected SBS, closes a meaningful fraction of the VBS gap, and remains
-beneficial after feature-extraction and inference overhead.
-
-## Milestone 5 — production model bundle
-
-Replace the hand-authored graph without changing an existing released bundle.
-The trained bundle receives a new model and bundle ID and contains:
-
-- dataset, split, feature-schema, action-space, and experiment IDs;
-- preprocessing parameters and estimator weights;
-- training revision, dependency versions, and random seeds;
-- evaluation and eligibility reports;
-- checksums and golden vectors;
-- Python-to-ONNX and ONNX-to-JVM parity tolerances;
-- measured extraction and inference overhead;
-- explicit fallback behavior.
-
-Exit criterion: deterministic cross-runtime parity, validated checksums,
-rollback-safe loading, observable fallback, and an integration review with the
-KSMT runtime owner.
-
-## Milestone 6 — controlled expansion
-
-Expand one axis at a time so gains remain attributable:
-
-1. additional cvc5 configurations;
-2. additional logics with adequate family coverage;
-3. additional solver versions;
-4. multi-solver portfolios;
-5. pairwise comparators and modern tree ensembles;
-6. hierarchical or multi-task models.
-
-Likely logic order is `QF_AUFBV` and `QF_AX`, then `NIA` and `QF_FPLRA` after
-coverage review. FP-heavy and NRA cohorts remain descriptive or stress-test
-data until their family concentration is substantially reduced.
-
-Every expansion repeats cohort review, split design, action-space headroom, and
-sealed evaluation under a new registered experiment.
-
-## Engineering work aligned with the milestones
-
-### Feature extractor hardening
-
-- isolate parser workers and enforce a parent-side timeout;
-- add resumable shards for large corpora;
-- promote archive manifests to explicit per-benchmark input manifests;
-- record extraction time and peak memory;
-- add malformed and adversarial SMT-LIB fixtures.
-
-These changes must preserve `ksmt-machsmt-inspired-v1`. Any ordering or
-semantic change creates a new feature-schema ID.
-
-### Continuous integration
-
-Already implemented:
-
-- least-privilege GitHub Actions workflow;
-- pinned third-party actions;
-- repository hygiene, wrapper checksum, bundle checksum, and JVM tests;
-- cancellation of superseded branch/PR runs.
-
-Planned additions:
-
-- clean Python environment and ONNX bundle validation;
-- fixture-backed notebook execution and notebook error-output check;
-- experiment-registry schema validation;
-- action-space and small runtime-matrix validation;
-- trained-model Python/ONNX/JVM parity;
-- dependency and security update automation.
-- resolve the deprecated Gradle `Convention` API warning before a Gradle 9
-  wrapper upgrade.
-
-The full 64,432-row dataset and large trained artifacts remain outside CI.
-
-### Public release readiness
-
-- keep the README and contract index current;
-- keep generated small fixtures reproducible and checksummed;
-- never commit raw benchmarks, feature tables, runtime shards, or large models;
-- record every public research claim in a completed registry entry;
-- document breaking contract changes and assign new identifiers;
-- publish no trained policy without its evaluation and limitations;
-- enable GitHub private vulnerability reporting before the public release.
-
-## Experiment sequence
-
-| Experiment | Purpose | Gate |
-|---|---|---|
-| E0002 | Provisional feature fidelity | Superseded, retained as provenance |
-| E0003 | Provisional corpus extraction | Superseded, retained as provenance |
-| E0004 | Frozen-v1 extraction and data review | Complete |
-| E0005 | Review and freeze cvc5 action catalog | Required before runtime collection |
-| E0006 | Collect isolated cvc5 runtime matrix | Required before headroom analysis |
-| E0007 | Default/SBS/VBS headroom | Must pass before learned-model claims |
-| E0008 | MachSMT-derived EHM baseline | Starts only after E0007 passes |
-| E0009+ | Controlled model/action/logic expansion | One axis per registered experiment |
-
-The machine-readable status of each run lives in
-[`experiments/registry.csv`](experiments/registry.csv).
+After the inference-only MVP works, the system may add a workload evaluator,
+online configuration search, or an RL policy that learns from measured runs.
+That extension requires new lifecycle, isolation, budget, persistence, and
+failure-handling contracts; none are part of the current public API.
 
 ## Open decisions
 
-The following values must be resolved and frozen in the relevant experiment,
-not chosen after observing holdout results:
-
-- exact cvc5 configurations in `cvc5-pilot-v1`;
-- exact pilot family assignment;
-- wall-clock timeout and repetition count;
-- PAR-10 versus PAR-2 as the primary evaluation metric;
-- eligibility policy for partial feature vectors;
-- minimum practically meaningful gap closed;
-- artifact storage used for large runtime matrices and trained bundles.
+- first cvc5 version and output parameter domains;
+- source and provenance of target configurations;
+- TSA revision and cvc5 adapter design;
+- primary objective and correctness oracle;
+- minimum improvement required to export a model;
+- model-bundle release and embedding process.

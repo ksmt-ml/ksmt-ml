@@ -1,5 +1,0 @@
-(set-logic QF_FP)
-(set-info :status sat)
-(declare-const x (_ FloatingPoint 8 24))
-(assert (fp.isNaN x))
-(check-sat)

@@ -2,29 +2,21 @@
 
 ## Supported versions
 
-Security fixes are applied to the current default branch. Research snapshots,
-superseded schemas, and historical experiment artifacts are retained for
-provenance but are not maintained as supported releases.
+Security fixes apply to the current default branch and released model bundles.
+No model bundle has been released yet.
 
 ## Reporting a vulnerability
 
 Do not publish vulnerability details in an issue. Use the repository's GitHub
-**Security** tab and its **Report a vulnerability** flow. If that flow is not
-available, open an issue containing no technical details and ask a maintainer
-for a private reporting channel. Include affected revisions, reproduction
-steps, impact, and any known mitigation only in the private report.
-
-Public issues are appropriate for ordinary correctness bugs that do not expose
-credentials, enable code execution, compromise artifact integrity, or disclose
-private data.
+**Security** tab and **Report a vulnerability** flow. If unavailable, open an
+issue without technical details and request a private reporting channel.
 
 ## Scope
 
-Relevant reports include unsafe processing of untrusted SMT-LIB input,
-dependency or deserialization vulnerabilities, checksum bypasses, malicious
-model-bundle behavior, and accidental disclosure of private benchmark data or
-credentials.
+Relevant reports include unsafe processing of workload profiles, dependency or
+deserialization vulnerabilities, checksum bypasses, malicious ONNX behavior,
+and disclosure of private traces, formulas, identifiers, or credentials.
 
-The current ONNX bundle is an interface prototype, not a security boundary.
-Callers must validate bundle provenance and run untrusted solver inputs with
-process isolation and resource limits.
+Model bundles are untrusted input until their manifest, checksums, schema, and
+parameter domains are validated. Solver workloads require process isolation and
+resource limits appropriate to the production consumer.

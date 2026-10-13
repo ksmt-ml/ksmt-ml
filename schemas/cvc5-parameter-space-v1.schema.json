@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-parameter-space-v1.schema.json",
+  "title": "KSMT cvc5 model output parameter space",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "parameterSpaceId",
+    "targetSolver",
+    "compatibleSolverVersions",
+    "applicationLifecycle",
+    "options"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-parameter-space-v1" },
+    "parameterSpaceId": { "type": "string", "minLength": 1 },
+    "targetSolver": { "const": "cvc5" },
+    "compatibleSolverVersions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "applicationLifecycle": { "const": "fresh-solver" },
+    "options": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "not": { "const": "logic" } },
+      "additionalProperties": { "$ref": "#/$defs/domain" }
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "domain": {
+      "oneOf": [
+        { "$ref": "#/$defs/booleanDomain" },
+        { "$ref": "#/$defs/categoricalDomain" },
+        { "$ref": "#/$defs/integerDomain" },
+        { "$ref": "#/$defs/numberDomain" }
+      ]
+    },
+    "booleanDomain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": { "kind": { "const": "boolean" } }
+    },
+    "categoricalDomain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "values"],
+      "properties": {
+        "kind": { "const": "categorical" },
+        "values": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "integerDomain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "minimum", "maximum"],
+      "properties": {
+        "kind": { "const": "integer" },
+        "minimum": { "type": "integer" },
+        "maximum": { "type": "integer" },
+        "step": { "type": "integer", "minimum": 1, "default": 1 }
+      }
+    },
+    "numberDomain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "minimum", "maximum"],
+      "properties": {
+        "kind": { "const": "number" },
+        "minimum": { "type": "number" },
+        "maximum": { "type": "number" }
+      }
+    }
+  }
+}

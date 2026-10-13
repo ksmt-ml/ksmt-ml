@@ -1,36 +1,16 @@
-.PHONY: test check analysis-env notebook cvc5-options onnx-env onnx-prototype onnx-validate smoke
-
-test:
-	./gradlew test
+.PHONY: check analysis-env onnx-env
 
 check:
 	bash scripts/hygiene.sh
-	./gradlew clean test
+	python3 -m compileall -q src tests
+	PYTHONPATH=src python3 -m unittest discover -s tests
+	python3 -m json.tool schemas/cvc5-parameter-space-v1.schema.json >/dev/null
+	python3 -m json.tool schemas/cvc5-tuner-bundle-v1.schema.json >/dev/null
 
 analysis-env:
 	python3 -m venv .venv
 	./.venv/bin/pip install -r requirements-analysis.txt
 
-notebook:
-	./.venv/bin/jupyter nbconvert \
-		--to notebook \
-		--execute \
-		--inplace \
-		notebooks/01_smtlib_feature_distributions.ipynb
-
-cvc5-options:
-	./gradlew -q run --args="--list-options" > cvc5-options.txt
-
 onnx-env:
 	python3 -m venv .venv
 	./.venv/bin/pip install -r requirements-onnx.txt
-
-onnx-prototype:
-	./.venv/bin/python scripts/build_onnx_prototype.py
-	./.venv/bin/python scripts/validate_onnx_bundle.py
-
-onnx-validate:
-	./.venv/bin/python scripts/validate_onnx_bundle.py
-
-smoke:
-	./gradlew run --args="--smoke-experiments"

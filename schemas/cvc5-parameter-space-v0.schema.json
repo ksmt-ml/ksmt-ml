@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ksmt.io/schemas/cvc5-parameter-space-v1.schema.json",
+  "$id": "https://ksmt.io/schemas/cvc5-parameter-space-v0.schema.json",
   "title": "KSMT cvc5 model output parameter space",
   "type": "object",
   "additionalProperties": false,
@@ -13,7 +13,7 @@
     "options"
   ],
   "properties": {
-    "schemaVersion": { "const": "cvc5-parameter-space-v1" },
+    "schemaVersion": { "const": "cvc5-parameter-space-v0" },
     "parameterSpaceId": { "type": "string", "minLength": 1 },
     "targetSolver": { "const": "cvc5" },
     "compatibleSolverVersions": {

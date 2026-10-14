@@ -24,8 +24,9 @@ budgets are outside the MVP.
 
 ## Milestone 0 — contracts
 
-Review the KSMT profile, profiler, patch, and tuner interfaces. Keep feature
-vectors and cvc5-specific schemas outside KSMT. The profiler implementation is
+Review the KSMT profile and profiler interfaces and the cvc5-specific tuner,
+decision, and patch contracts in `ksmt-ml-tuner`. Keep tuning policy, feature
+vectors, and cvc5-specific schemas outside KSMT. The profiler implementation is
 an infrastructure follow-up, not part of this repository.
 
 Exit criterion: KSMT interfaces compile and `ksmt-ml-tuner` consumes them
@@ -82,7 +83,7 @@ and JVM output parity. `ksmt-ml-tuner` owns runtime projection, inference,
 decoding, validation, and fallback.
 
 Exit criterion: a versioned bundle can produce a validated
-`KSolverConfigurationPatch` from the single KSMT profile.
+`Cvc5ConfigurationPatch` from the single KSMT profile.
 
 ## Milestone 6 — end-to-end demonstration
 

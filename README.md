@@ -38,8 +38,8 @@ and is deliberately not a production interface.
 
 | Repository | Responsibility |
 |---|---|
-| KSMT | `KSolverProfile`, future profiling wrapper, configuration patch, and generic tuner interface |
-| `ksmt-ml-tuner` | Production feature projection, pre-trained ONNX inference, decoding, cvc5 validation, and fallback |
+| KSMT | Observation-only `KSolverProfile` and future profiling wrapper |
+| `ksmt-ml-tuner` | cvc5 tuner/decision/patch contracts, production feature projection, pre-trained ONNX inference, validation, and fallback |
 | `ksmt-ml` | Offline datasets, training, evaluation, benchmarks, and ONNX bundle export |
 
 The application applies a recommended patch while constructing a fresh cvc5

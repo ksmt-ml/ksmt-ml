@@ -2,9 +2,10 @@
 
 ## Ownership
 
-KSMT owns `KSolverProfile`, `KSolverConfigurationPatch`, and `KSolverTuner`.
-`ksmt-ml-tuner` owns JVM feature extraction, ONNX Runtime, decoding, validation,
-and fallback. `ksmt-ml` trains and exports bundles.
+KSMT owns the observation-only `KSolverProfile` and profiler contracts.
+`ksmt-ml-tuner` owns `Cvc5MlTuner`, `Cvc5TuningDecision`,
+`Cvc5ConfigurationPatch`, JVM feature extraction, ONNX Runtime, decoding,
+validation, and fallback. `ksmt-ml` trains and exports bundles.
 
 ## Bundle
 
@@ -20,7 +21,7 @@ The graph is trained before deployment and receives tensors, never KSMT
 objects. The production adapter validates the single profile, computes
 deterministic features, invokes ONNX once, decodes parameter coordinates,
 validates every option and value for the exact cvc5 version, and returns either
-`UseConfiguration` or `KeepCurrentConfiguration`.
+`UseConfiguration` or `KeepDefaults`.
 
 The runtime adapter does not train the model, replay a workload, search
 configurations, or enforce a tuning-time budget.

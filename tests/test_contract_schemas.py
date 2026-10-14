@@ -12,7 +12,7 @@ class ContractSchemaTest(unittest.TestCase):
             return json.load(source)
 
     def test_bundle_schema_targets_pretrained_cvc5_model(self) -> None:
-        schema = self.load_schema("cvc5-tuner-bundle-v1.schema.json")
+        schema = self.load_schema("cvc5-tuner-bundle-v0.schema.json")
 
         self.assertEqual(schema["properties"]["targetSolver"]["const"], "cvc5")
         self.assertEqual(
@@ -21,11 +21,11 @@ class ContractSchemaTest(unittest.TestCase):
         )
 
     def test_parameter_space_is_versioned(self) -> None:
-        schema = self.load_schema("cvc5-parameter-space-v1.schema.json")
+        schema = self.load_schema("cvc5-parameter-space-v0.schema.json")
 
         self.assertEqual(
             schema["properties"]["schemaVersion"]["const"],
-            "cvc5-parameter-space-v1",
+            "cvc5-parameter-space-v0",
         )
 
 

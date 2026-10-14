@@ -9,12 +9,12 @@ models, and exports versioned ONNX bundles.
 
 ## Architectural boundaries
 
-1. KSMT owns the public `KSolverProfile`, profiler, configuration patch, and
-   `KSolverTuner` interfaces in one module.
+1. KSMT owns only the public `KSolverProfile` and observation-only profiler
+   contracts in `ksmt-profiling`.
 2. Do not introduce a second copy of KSMT semantic DTOs in this repository.
-3. Production implementations, including the JVM ONNX adapter, deterministic
-   profile projection, cvc5 parameter validation, fallback, and telemetry, live
-   in the `ksmt-ml-tuner` repository.
+3. The cvc5-specific tuner, tuning decision, configuration patch, JVM ONNX
+   adapter, deterministic profile projection, parameter validation, fallback,
+   and telemetry live in the `ksmt-ml-tuner` repository.
 4. This repository emits a model bundle; production must not depend on its
    training or notebook code.
 5. The first lifecycle profiles one representative run and applies the returned

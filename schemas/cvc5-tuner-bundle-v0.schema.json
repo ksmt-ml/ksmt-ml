@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ksmt.io/schemas/cvc5-tuner-bundle-v1.schema.json",
+  "$id": "https://ksmt.io/schemas/cvc5-tuner-bundle-v0.schema.json",
   "title": "KSMT cvc5 tuner model bundle manifest",
   "type": "object",
   "additionalProperties": false,
@@ -19,7 +19,7 @@
     "checksums"
   ],
   "properties": {
-    "bundleSchemaVersion": { "const": "cvc5-tuner-bundle-v1" },
+    "bundleSchemaVersion": { "const": "cvc5-tuner-bundle-v0" },
     "bundleId": { "type": "string", "minLength": 1 },
     "modelId": { "type": "string", "minLength": 1 },
     "profileSchemaVersion": { "type": "string", "minLength": 1 },

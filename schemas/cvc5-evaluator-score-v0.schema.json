@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-evaluator-score-v0.schema.json",
+  "title": "Offline cvc5 evaluator score",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "baselineCandidateId",
+    "candidateId",
+    "parameterSpaceId",
+    "backendRole",
+    "eligible",
+    "reward",
+    "policy",
+    "totals",
+    "profiles",
+    "excludedProfiles"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-evaluator-score-v0" },
+    "baselineCandidateId": { "type": "string", "minLength": 1 },
+    "candidateId": { "type": "string", "minLength": 1 },
+    "parameterSpaceId": { "type": "string", "minLength": 1 },
+    "backendRole": { "enum": ["regular-bv", "integer-blasted"] },
+    "eligible": { "type": "boolean" },
+    "reward": { "type": "number" },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aggregation",
+        "objective",
+        "timeoutPenalty",
+        "rewardClip",
+        "excludeExpectedUnknownChecks",
+        "excludeRecordedFailureProfiles"
+      ],
+      "properties": {
+        "aggregation": { "const": "workload-macro-mean-log-speedup-v0" },
+        "objective": { "const": "non-check-plus-known-check-time-v0" },
+        "timeoutPenalty": { "type": "number", "minimum": 1 },
+        "rewardClip": { "type": "number", "exclusiveMinimum": 0 },
+        "excludeExpectedUnknownChecks": { "type": "boolean" },
+        "excludeRecordedFailureProfiles": { "type": "boolean" }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "comparedProfileCount",
+        "excludedProfileCount",
+        "wrongAnswerCount",
+        "knownStatusTimeoutCount",
+        "failedReplayCount"
+      ],
+      "properties": {
+        "comparedProfileCount": { "type": "integer", "minimum": 0 },
+        "excludedProfileCount": { "type": "integer", "minimum": 0 },
+        "wrongAnswerCount": { "type": "integer", "minimum": 0 },
+        "knownStatusTimeoutCount": { "type": "integer", "minimum": 0 },
+        "failedReplayCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "profileId",
+          "baselineCostNanos",
+          "candidateCostNanos",
+          "reward",
+          "wrongAnswerCount",
+          "knownStatusTimeoutCount",
+          "failedReplayCount"
+        ],
+        "properties": {
+          "profileId": { "type": "string", "minLength": 1 },
+          "baselineCostNanos": { "type": "number", "exclusiveMinimum": 0 },
+          "candidateCostNanos": {
+            "oneOf": [
+              { "type": "number", "exclusiveMinimum": 0 },
+              { "type": "null" }
+            ]
+          },
+          "reward": { "type": "number" },
+          "wrongAnswerCount": { "type": "integer", "minimum": 0 },
+          "knownStatusTimeoutCount": { "type": "integer", "minimum": 0 },
+          "failedReplayCount": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "excludedProfiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["profileId", "reason"],
+        "properties": {
+          "profileId": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

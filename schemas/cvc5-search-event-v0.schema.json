@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-search-event-v0.schema.json",
+  "title": "cvc5 offline search event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sequence", "atEpochMillis", "type", "payload"],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-search-event-v0" },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "atEpochMillis": { "type": "integer", "minimum": 0 },
+    "type": {
+      "enum": [
+        "EXPERIMENT_CREATED",
+        "EXPERIMENT_RESUMED",
+        "DUPLICATE_SKIPPED",
+        "CANDIDATE_PROPOSED",
+        "TRIAL_RECOVERED",
+        "CACHE_HIT",
+        "TRIAL_RECOVERY_FAILED",
+        "TRIAL_STARTED",
+        "TRIAL_FINISHED",
+        "INCUMBENT_CHANGED",
+        "EXPERIMENT_INTERRUPTED",
+        "UNCLEAN_TRIAL_RECOVERED",
+        "EXPERIMENT_FINISHED"
+      ]
+    },
+    "payload": { "type": "object" }
+  }
+}

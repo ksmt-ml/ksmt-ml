@@ -13,3 +13,7 @@ data/processed/
 artifacts/
 models/
 experiments/runs/
+experiments/cache*/
+hs_err_pid*.log
+core
+core.*

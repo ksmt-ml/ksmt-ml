@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-smac-search-state-v0.schema.json",
+  "title": "durable SMAC3 external checkpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "status",
+    "activeWallTimeNanos",
+    "actualEvaluationCount",
+    "completedTrialCount",
+    "cacheHitCount",
+    "nextProposalIndex",
+    "completedRequestIds",
+    "pendingTrial",
+    "incumbent",
+    "smacCheckpoint",
+    "stopReason",
+    "updatedAtEpochMillis"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-smac-search-state-v0" },
+    "runId": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["RUNNING", "INTERRUPTED", "FINISHED"] },
+    "activeWallTimeNanos": { "type": "integer", "minimum": 0 },
+    "actualEvaluationCount": { "type": "integer", "minimum": 0 },
+    "completedTrialCount": { "type": "integer", "minimum": 0 },
+    "cacheHitCount": { "type": "integer", "minimum": 0 },
+    "nextProposalIndex": { "type": "integer", "minimum": 0 },
+    "completedRequestIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "pendingTrial": {
+      "oneOf": [
+        { "$ref": "cvc5-search-state-v0.schema.json#/$defs/pendingTrial" },
+        { "type": "null" }
+      ]
+    },
+    "incumbent": {
+      "oneOf": [{ "$ref": "#/$defs/incumbent" }, { "type": "null" }]
+    },
+    "smacCheckpoint": {
+      "oneOf": [
+        { "$ref": "cvc5-smac-native-checkpoint-v0.schema.json" },
+        { "type": "null" }
+      ]
+    },
+    "stopReason": { "type": ["string", "null"] },
+    "updatedAtEpochMillis": { "type": "integer", "minimum": 0 }
+  },
+  "$defs": {
+    "incumbent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate", "cost"],
+      "properties": {
+        "candidate": { "$ref": "cvc5-replay-candidate-v0.schema.json" },
+        "cost": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

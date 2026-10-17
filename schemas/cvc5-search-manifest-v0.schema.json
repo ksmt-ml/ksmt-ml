@@ -22,19 +22,38 @@
       "required": ["strategy", "budget", "evaluator", "objective"],
       "properties": {
         "strategy": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["name", "seed", "samplingPolicy", "mutationProbability"],
-          "properties": {
-            "name": { "const": "random-search-v0" },
-            "seed": { "type": "integer" },
-            "samplingPolicy": { "const": "independent-default-mutation-v0" },
-            "mutationProbability": {
-              "type": "number",
-              "exclusiveMinimum": 0,
-              "maximum": 1
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "seed", "samplingPolicy", "mutationProbability"],
+              "properties": {
+                "name": { "const": "random-search-v0" },
+                "seed": { "type": "integer" },
+                "samplingPolicy": { "const": "independent-default-mutation-v0" },
+                "mutationProbability": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name", "seed", "samplingPolicy", "populationSize",
+                "eliteFraction", "initialMutationProbability",
+                "mutationProbability", "failureCost"
+              ],
+              "properties": {
+                "name": { "const": "evolution-search-v0" },
+                "seed": { "type": "integer" },
+                "samplingPolicy": { "const": "domain-aware-elitist-mutation-v0" },
+                "populationSize": { "type": "integer", "minimum": 2 },
+                "eliteFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+                "initialMutationProbability": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+                "mutationProbability": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+                "failureCost": { "type": "number", "exclusiveMinimum": 0 }
+              }
             }
-          }
+          ]
         },
         "budget": {
           "type": "object",

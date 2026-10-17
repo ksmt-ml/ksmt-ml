@@ -57,9 +57,15 @@ SEARCH_STATE_SCHEMA_VERSION = "cvc5-search-state-v0"
 SEARCH_EVENT_SCHEMA_VERSION = "cvc5-search-event-v0"
 SEARCH_CACHE_ENTRY_SCHEMA_VERSION = "cvc5-search-cache-entry-v0"
 SEARCH_STRATEGY_STATE_SCHEMA_VERSION = "cvc5-random-search-state-v0"
+EVOLUTION_STRATEGY_STATE_SCHEMA_VERSION = "cvc5-evolution-search-state-v0"
 SEARCH_EVALUATOR_VERSION = "cvc5-real-per-profile-replay-search-v0"
 RANDOM_SAMPLING_POLICY = "independent-default-mutation-v0"
+EVOLUTION_SAMPLING_POLICY = "domain-aware-elitist-mutation-v0"
 DEFAULT_RANDOM_MUTATION_PROBABILITY = 0.05
+DEFAULT_EVOLUTION_INITIAL_MUTATION_PROBABILITY = 0.05
+DEFAULT_EVOLUTION_MUTATION_PROBABILITY = 0.10
+DEFAULT_EVOLUTION_POPULATION_SIZE = 8
+DEFAULT_EVOLUTION_ELITE_FRACTION = 0.25
 PROCESS_HEARTBEAT_INTERVAL_SECONDS = 5.0
 SEARCH_EVENT_TYPES = frozenset(
     {
@@ -175,6 +181,8 @@ class SearchStrategy(Protocol):
 
     def tell(self, result: TrialResult) -> None: ...
 
+    def reject(self, request: TrialRequest) -> None: ...
+
     def snapshot(self) -> dict[str, Any]: ...
 
     def restore(self, state: Mapping[str, Any]) -> None: ...
@@ -288,6 +296,9 @@ class RandomSearchStrategy:
         _validate_trial_result(result)
         self._observation_count += 1
 
+    def reject(self, request: TrialRequest) -> None:
+        _validate_trial_request(request)
+
     def snapshot(self) -> dict[str, Any]:
         return {
             "schemaVersion": SEARCH_STRATEGY_STATE_SCHEMA_VERSION,
@@ -328,6 +339,292 @@ class RandomSearchStrategy:
             raise SearchError("invalid observationCount in strategy checkpoint")
         self._next_proposal_index = next_index
         self._observation_count = observations
+
+
+class EvolutionSearchStrategy:
+    """Serial `(mu, lambda)` evolutionary baseline for the mixed cvc5 space.
+
+    Selection is performed only after a complete population.  Children inherit
+    typed values from an elite parent and mutate each option in its native
+    domain; categorical options are never mapped to an artificial numeric
+    ordering.  Numeric values are resampled from their declared uniform/log
+    domain when mutated.  The complete pending population is checkpointed so a
+    process restart cannot change selection or the candidate sequence.
+    """
+
+    def __init__(
+        self,
+        parameter_space: Mapping[str, Any],
+        seed: int,
+        *,
+        population_size: int = DEFAULT_EVOLUTION_POPULATION_SIZE,
+        elite_fraction: float = DEFAULT_EVOLUTION_ELITE_FRACTION,
+        initial_mutation_probability: float = DEFAULT_EVOLUTION_INITIAL_MUTATION_PROBABILITY,
+        mutation_probability: float = DEFAULT_EVOLUTION_MUTATION_PROBABILITY,
+        failure_cost: float = math.exp(5.0) * 10.0,
+        instance_id: str = "whole-workload-v0",
+        evaluation_seed: int = 0,
+        repetition: int = 0,
+        budget: float | None = None,
+    ):
+        _validate_search_parameter_space(parameter_space)
+        _validate_trial_coordinates(instance_id, evaluation_seed, repetition, budget)
+        _validate_evolution_parameters(
+            population_size,
+            elite_fraction,
+            initial_mutation_probability,
+            mutation_probability,
+            failure_cost,
+        )
+        if isinstance(seed, bool) or not isinstance(seed, int):
+            raise SearchError("evolution seed must be an integer")
+        self._parameter_space = dict(parameter_space)
+        self._parameter_space_hash = sha256_json(parameter_space)
+        self._seed = seed
+        self._population_size = population_size
+        self._elite_fraction = float(elite_fraction)
+        self._initial_mutation_probability = float(initial_mutation_probability)
+        self._mutation_probability = float(mutation_probability)
+        self._failure_cost = float(failure_cost)
+        self._instance_id = instance_id
+        self._evaluation_seed = evaluation_seed
+        self._repetition = repetition
+        self._budget = budget
+        self._generation = 0
+        self._next_proposal_index = 0
+        self._observation_count = 0
+        self._parents: list[dict[str, Any]] = []
+        self._generation_observations: list[dict[str, Any]] = []
+        self._pending: dict[str, dict[str, Any]] = {}
+
+    def ask(self) -> TrialRequest:
+        proposal_index = self._next_proposal_index
+        self._next_proposal_index += 1
+        generator = _proposal_generator(
+            "evolution-search-v0",
+            self._seed,
+            self._parameter_space_hash,
+            proposal_index,
+            self._generation,
+        )
+        domains = self._parameter_space["options"]
+        for _ in range(1_000):
+            if self._parents:
+                parent = self._parents[generator.randrange(len(self._parents))]
+                proposed = {
+                    name: parent["options"].get(name, domain["default"])
+                    for name, domain in sorted(domains.items())
+                }
+                mutation_probability = self._mutation_probability
+            else:
+                proposed = {
+                    name: domain["default"] for name, domain in sorted(domains.items())
+                }
+                mutation_probability = self._initial_mutation_probability
+
+            for name, domain in sorted(domains.items()):
+                if generator.random() < mutation_probability:
+                    current = proposed[name]
+                    proposed[name] = _sample_value_different_from(
+                        generator, name, domain, current
+                    )
+            active = active_option_names(self._parameter_space, proposed)
+            options = {
+                name: value
+                for name, value in proposed.items()
+                if name in active and value != domains[name]["default"]
+            }
+            identity = {
+                "parameterSpaceId": self._parameter_space["parameterSpaceId"],
+                "targetSolver": "cvc5",
+                "options": options,
+            }
+            candidate = {
+                "schemaVersion": CANDIDATE_SCHEMA_VERSION,
+                "candidateId": f"cvc5-evolution-v0-{sha256_json(identity)[:20]}",
+                **identity,
+            }
+            try:
+                normalize_candidate(candidate, self._parameter_space)
+                break
+            except EvaluatorError:
+                continue
+        else:
+            raise SearchError("failed to evolve a constraint-valid candidate")
+        request_id = _trial_request_id(
+            candidate["candidateId"],
+            self._instance_id,
+            self._evaluation_seed,
+            self._repetition,
+            self._budget,
+        )
+        request = TrialRequest(
+            request_id=request_id,
+            proposal_index=proposal_index,
+            candidate=candidate,
+            instance_id=self._instance_id,
+            seed=self._evaluation_seed,
+            repetition=self._repetition,
+            budget=self._budget,
+        )
+        self._pending[request_id] = candidate
+        return request
+
+    def tell(self, result: TrialResult) -> None:
+        _validate_trial_result(result)
+        candidate = self._pending.pop(result.request_id, None)
+        if candidate is None or candidate["candidateId"] != result.candidate_id:
+            raise SearchError("evolution result has no matching pending proposal")
+        cost = float(result.cost) if result.eligible else self._failure_cost
+        self._generation_observations.append(
+            {
+                "candidate": candidate,
+                "cost": cost,
+                "status": result.status,
+                "correctness": result.correctness,
+            }
+        )
+        self._observation_count += 1
+        if len(self._generation_observations) >= self._population_size:
+            elite_count = max(
+                1, math.ceil(self._population_size * self._elite_fraction)
+            )
+            ranked = sorted(
+                self._generation_observations,
+                key=lambda item: (item["cost"], item["candidate"]["candidateId"]),
+            )
+            self._parents = [dict(item["candidate"]) for item in ranked[:elite_count]]
+            self._generation_observations = []
+            self._generation += 1
+
+    def reject(self, request: TrialRequest) -> None:
+        _validate_trial_request(request)
+        self._pending.pop(request.request_id, None)
+
+    def snapshot(self) -> dict[str, Any]:
+        return {
+            "schemaVersion": EVOLUTION_STRATEGY_STATE_SCHEMA_VERSION,
+            "strategy": "evolution-search-v0",
+            "seed": self._seed,
+            "samplingPolicy": EVOLUTION_SAMPLING_POLICY,
+            "populationSize": self._population_size,
+            "eliteFraction": self._elite_fraction,
+            "initialMutationProbability": self._initial_mutation_probability,
+            "mutationProbability": self._mutation_probability,
+            "failureCost": self._failure_cost,
+            "parameterSpaceSha256": self._parameter_space_hash,
+            "instanceId": self._instance_id,
+            "evaluationSeed": self._evaluation_seed,
+            "repetition": self._repetition,
+            "budget": self._budget,
+            "generation": self._generation,
+            "nextProposalIndex": self._next_proposal_index,
+            "observationCount": self._observation_count,
+            "parents": self._parents,
+            "generationObservations": self._generation_observations,
+            "pendingProposals": [
+                {"requestId": request_id, "candidate": candidate}
+                for request_id, candidate in sorted(self._pending.items())
+            ],
+        }
+
+    def restore(self, state: Mapping[str, Any]) -> None:
+        _validate_evolution_strategy_state(state)
+        expected = {
+            "schemaVersion": EVOLUTION_STRATEGY_STATE_SCHEMA_VERSION,
+            "strategy": "evolution-search-v0",
+            "seed": self._seed,
+            "samplingPolicy": EVOLUTION_SAMPLING_POLICY,
+            "populationSize": self._population_size,
+            "eliteFraction": self._elite_fraction,
+            "initialMutationProbability": self._initial_mutation_probability,
+            "mutationProbability": self._mutation_probability,
+            "failureCost": self._failure_cost,
+            "parameterSpaceSha256": self._parameter_space_hash,
+            "instanceId": self._instance_id,
+            "evaluationSeed": self._evaluation_seed,
+            "repetition": self._repetition,
+            "budget": self._budget,
+        }
+        for key, value in expected.items():
+            if state.get(key) != value:
+                raise SearchError(f"incompatible evolution checkpoint field: {key}")
+        self._generation = state["generation"]
+        self._next_proposal_index = state["nextProposalIndex"]
+        self._observation_count = state["observationCount"]
+        self._parents = [dict(candidate) for candidate in state["parents"]]
+        self._generation_observations = [
+            dict(observation) for observation in state["generationObservations"]
+        ]
+        self._pending = {
+            item["requestId"]: dict(item["candidate"])
+            for item in state["pendingProposals"]
+        }
+
+
+def _proposal_generator(
+    strategy: str,
+    seed: int,
+    parameter_space_hash: str,
+    proposal_index: int,
+    generation: int = 0,
+) -> random.Random:
+    digest = hashlib.sha256(
+        canonical_json(
+            {
+                "strategy": strategy,
+                "seed": seed,
+                "parameterSpaceSha256": parameter_space_hash,
+                "proposalIndex": proposal_index,
+                "generation": generation,
+            }
+        )
+    ).digest()
+    return random.Random(int.from_bytes(digest, "big"))
+
+
+def _sample_value_different_from(
+    generator: random.Random, name: str, domain: Any, current: Any
+) -> Any:
+    if domain["kind"] == "boolean":
+        return not current
+    for _ in range(100):
+        sampled = _sample_domain(generator, name, domain)
+        if sampled != current:
+            return sampled
+    return current
+
+
+def _validate_evolution_parameters(
+    population_size: Any,
+    elite_fraction: Any,
+    initial_mutation_probability: Any,
+    mutation_probability: Any,
+    failure_cost: Any,
+) -> None:
+    if (
+        isinstance(population_size, bool)
+        or not isinstance(population_size, int)
+        or population_size < 2
+    ):
+        raise SearchError("evolution population size must be at least 2")
+    if (
+        isinstance(elite_fraction, bool)
+        or not isinstance(elite_fraction, (int, float))
+        or not math.isfinite(float(elite_fraction))
+        or elite_fraction <= 0
+        or elite_fraction > 1
+    ):
+        raise SearchError("evolution elite fraction must be in (0, 1]")
+    _validate_mutation_probability(initial_mutation_probability)
+    _validate_mutation_probability(mutation_probability)
+    if (
+        isinstance(failure_cost, bool)
+        or not isinstance(failure_cost, (int, float))
+        or not math.isfinite(float(failure_cost))
+        or failure_cost <= 0
+    ):
+        raise SearchError("evolution failure cost must be finite and positive")
 
 
 def _validate_mutation_probability(value: Any) -> None:
@@ -996,6 +1293,16 @@ class RealCvc5ProfileTrialEvaluator:
             process_heartbeat=process_heartbeat,
             process_heartbeat_interval_seconds=PROCESS_HEARTBEAT_INTERVAL_SECONDS,
         )
+        return self.score_existing_report(request, report)
+
+    def score_existing_report(
+        self,
+        request: TrialRequest,
+        report: Mapping[str, Any],
+    ) -> ProfileTrialEvaluation:
+        """Validate and score a completed report recovered before score flush."""
+
+        entry = self._profile_entry(request)
         baseline = select_profile_report(
             self.baseline_report,
             request.instance_id,
@@ -1435,6 +1742,9 @@ def _validate_pending_trial(value: Any) -> None:
 
 
 def _validate_strategy_state(value: Any) -> None:
+    if isinstance(value, dict) and value.get("strategy") == "evolution-search-v0":
+        _validate_evolution_strategy_state(value)
+        return
     required = {
         "schemaVersion",
         "strategy",
@@ -1472,6 +1782,122 @@ def _validate_strategy_state(value: Any) -> None:
     _search_non_negative_int(value, "observationCount")
     if value["observationCount"] > value["nextProposalIndex"]:
         raise SearchError("strategy observations exceed proposed candidates")
+
+
+def _validate_evolution_strategy_state(value: Any) -> None:
+    required = {
+        "schemaVersion",
+        "strategy",
+        "seed",
+        "samplingPolicy",
+        "populationSize",
+        "eliteFraction",
+        "initialMutationProbability",
+        "mutationProbability",
+        "failureCost",
+        "parameterSpaceSha256",
+        "instanceId",
+        "evaluationSeed",
+        "repetition",
+        "budget",
+        "generation",
+        "nextProposalIndex",
+        "observationCount",
+        "parents",
+        "generationObservations",
+        "pendingProposals",
+    }
+    if not isinstance(value, dict) or set(value) != required:
+        raise SearchError("evolution strategy state fields do not match the v0 contract")
+    if value.get("schemaVersion") != EVOLUTION_STRATEGY_STATE_SCHEMA_VERSION:
+        raise SearchError("evolution strategy state has unsupported schemaVersion")
+    if value.get("strategy") != "evolution-search-v0":
+        raise SearchError("evolution strategy state has unsupported strategy")
+    if value.get("samplingPolicy") != EVOLUTION_SAMPLING_POLICY:
+        raise SearchError("evolution strategy state has unsupported sampling policy")
+    _validate_evolution_parameters(
+        value.get("populationSize"),
+        value.get("eliteFraction"),
+        value.get("initialMutationProbability"),
+        value.get("mutationProbability"),
+        value.get("failureCost"),
+    )
+    if isinstance(value.get("seed"), bool) or not isinstance(value.get("seed"), int):
+        raise SearchError("evolution strategy state has invalid seed")
+    if not _is_search_sha256(value.get("parameterSpaceSha256")):
+        raise SearchError("evolution strategy state has invalid parameterSpaceSha256")
+    _validate_trial_coordinates(
+        value.get("instanceId"),
+        value.get("evaluationSeed"),
+        value.get("repetition"),
+        value.get("budget"),
+    )
+    for field in ("generation", "nextProposalIndex", "observationCount"):
+        _search_non_negative_int(value, field)
+    for field in ("parents", "generationObservations", "pendingProposals"):
+        if not isinstance(value.get(field), list):
+            raise SearchError(f"evolution strategy state {field} must be an array")
+    if len(value["generationObservations"]) >= value["populationSize"]:
+        raise SearchError("evolution checkpoint contains an unselected full population")
+    elite_limit = max(1, math.ceil(value["populationSize"] * value["eliteFraction"]))
+    if len(value["parents"]) > elite_limit:
+        raise SearchError("evolution checkpoint contains too many elite parents")
+    for candidate in value["parents"]:
+        try:
+            normalize_candidate(candidate)
+        except EvaluatorError as failure:
+            raise SearchError("evolution checkpoint has an invalid parent") from failure
+    for observation in value["generationObservations"]:
+        if not isinstance(observation, dict) or set(observation) != {
+            "candidate",
+            "cost",
+            "status",
+            "correctness",
+        }:
+            raise SearchError("evolution observation fields do not match v0")
+        try:
+            normalize_candidate(observation["candidate"])
+        except EvaluatorError as failure:
+            raise SearchError("evolution checkpoint has an invalid observation") from failure
+        cost = observation["cost"]
+        if (
+            isinstance(cost, bool)
+            or not isinstance(cost, (int, float))
+            or not math.isfinite(float(cost))
+            or cost < 0
+        ):
+            raise SearchError("evolution observation has invalid cost")
+        if not isinstance(observation["status"], str) or not observation["status"]:
+            raise SearchError("evolution observation has invalid status")
+        if observation["correctness"] not in {
+            "CORRECT",
+            "INCORRECT",
+            "NOT_ESTABLISHED",
+        }:
+            raise SearchError("evolution observation has invalid correctness")
+    pending_ids: set[str] = set()
+    for pending in value["pendingProposals"]:
+        if not isinstance(pending, dict) or set(pending) != {"requestId", "candidate"}:
+            raise SearchError("evolution pending proposal fields do not match v0")
+        request_id = pending["requestId"]
+        if not isinstance(request_id, str) or not request_id or request_id in pending_ids:
+            raise SearchError("evolution checkpoint has duplicate pending request")
+        pending_ids.add(request_id)
+        try:
+            candidate = normalize_candidate(pending["candidate"])
+        except EvaluatorError as failure:
+            raise SearchError("evolution checkpoint has an invalid pending candidate") from failure
+        expected = _trial_request_id(
+            candidate["candidateId"],
+            value["instanceId"],
+            value["evaluationSeed"],
+            value["repetition"],
+            value["budget"],
+        )
+        if request_id != expected:
+            raise SearchError("evolution pending request id mismatch")
+    if value["observationCount"] + len(pending_ids) > value["nextProposalIndex"]:
+        raise SearchError("evolution checkpoint counts exceed proposed candidates")
 
 
 def _trial_request_from_pending(value: Mapping[str, Any]) -> TrialRequest:
@@ -1598,21 +2024,50 @@ def _is_search_sha256(value: Any) -> bool:
 
 def _validate_experiment_contract(experiment: Mapping[str, Any]) -> None:
     strategy = experiment.get("strategy")
-    if not isinstance(strategy, dict) or set(strategy) != {
-        "name",
-        "seed",
-        "samplingPolicy",
-        "mutationProbability",
-    }:
+    if not isinstance(strategy, dict):
         raise SearchError("search experiment has invalid strategy")
-    if (
-        strategy.get("name") != "random-search-v0"
-        or strategy.get("samplingPolicy") != RANDOM_SAMPLING_POLICY
-        or isinstance(strategy.get("seed"), bool)
-        or not isinstance(strategy.get("seed"), int)
-    ):
+    if strategy.get("name") == "random-search-v0":
+        if set(strategy) != {
+            "name",
+            "seed",
+            "samplingPolicy",
+            "mutationProbability",
+        }:
+            raise SearchError("random search experiment has invalid strategy")
+        if (
+            strategy.get("samplingPolicy") != RANDOM_SAMPLING_POLICY
+            or isinstance(strategy.get("seed"), bool)
+            or not isinstance(strategy.get("seed"), int)
+        ):
+            raise SearchError("search experiment has unsupported random strategy")
+        _validate_mutation_probability(strategy.get("mutationProbability"))
+    elif strategy.get("name") == "evolution-search-v0":
+        if set(strategy) != {
+            "name",
+            "seed",
+            "samplingPolicy",
+            "populationSize",
+            "eliteFraction",
+            "initialMutationProbability",
+            "mutationProbability",
+            "failureCost",
+        }:
+            raise SearchError("evolution search experiment has invalid strategy")
+        if (
+            strategy.get("samplingPolicy") != EVOLUTION_SAMPLING_POLICY
+            or isinstance(strategy.get("seed"), bool)
+            or not isinstance(strategy.get("seed"), int)
+        ):
+            raise SearchError("search experiment has unsupported evolution strategy")
+        _validate_evolution_parameters(
+            strategy.get("populationSize"),
+            strategy.get("eliteFraction"),
+            strategy.get("initialMutationProbability"),
+            strategy.get("mutationProbability"),
+            strategy.get("failureCost"),
+        )
+    else:
         raise SearchError("search experiment has unsupported strategy")
-    _validate_mutation_probability(strategy.get("mutationProbability"))
     budget = experiment.get("budget")
     if not isinstance(budget, dict) or set(budget) != {
         "maxEvaluations",
@@ -1777,6 +2232,15 @@ def run_search(arguments: argparse.Namespace) -> dict[str, Any]:
     if arguments.max_consecutive_duplicates <= 0:
         raise SearchError("max consecutive duplicates must be positive")
     _validate_mutation_probability(arguments.random_mutation_probability)
+    evolution_failure_cost = math.exp(arguments.reward_clip) * 10.0
+    if arguments.strategy == "evolution":
+        _validate_evolution_parameters(
+            arguments.population_size,
+            arguments.elite_fraction,
+            arguments.evolution_initial_mutation_probability,
+            arguments.evolution_mutation_probability,
+            evolution_failure_cost,
+        )
 
     parameter_space_hash = sha256_json(parameter_space)
     baseline_hash = sha256_json(baseline)
@@ -1792,13 +2256,27 @@ def run_search(arguments: argparse.Namespace) -> dict[str, Any]:
         "machine": platform.machine(),
         "node": platform.node(),
     }
-    experiment = {
-        "strategy": {
+    strategy_contract = (
+        {
             "name": "random-search-v0",
             "seed": arguments.seed,
             "samplingPolicy": RANDOM_SAMPLING_POLICY,
             "mutationProbability": arguments.random_mutation_probability,
-        },
+        }
+        if arguments.strategy == "random"
+        else {
+            "name": "evolution-search-v0",
+            "seed": arguments.seed,
+            "samplingPolicy": EVOLUTION_SAMPLING_POLICY,
+            "populationSize": arguments.population_size,
+            "eliteFraction": arguments.elite_fraction,
+            "initialMutationProbability": arguments.evolution_initial_mutation_probability,
+            "mutationProbability": arguments.evolution_mutation_probability,
+            "failureCost": evolution_failure_cost,
+        }
+    )
+    experiment = {
+        "strategy": strategy_contract,
         "budget": {
             "maxEvaluations": arguments.max_evaluations,
             "maxWallTimeSeconds": arguments.max_wall_time_seconds,
@@ -1832,15 +2310,31 @@ def run_search(arguments: argparse.Namespace) -> dict[str, Any]:
 
     store = FileSearchStore(arguments.run_dir)
     manifest, state, created = store.open_or_create(experiment)
-    strategy = RandomSearchStrategy(
-        parameter_space,
-        arguments.seed,
-        mutation_probability=arguments.random_mutation_probability,
-        instance_id=workload["workloadSha256"],
-        evaluation_seed=0,
-        repetition=0,
-        budget=None,
-    )
+    strategy: SearchStrategy
+    if arguments.strategy == "random":
+        strategy = RandomSearchStrategy(
+            parameter_space,
+            arguments.seed,
+            mutation_probability=arguments.random_mutation_probability,
+            instance_id=workload["workloadSha256"],
+            evaluation_seed=0,
+            repetition=0,
+            budget=None,
+        )
+    else:
+        strategy = EvolutionSearchStrategy(
+            parameter_space,
+            arguments.seed,
+            population_size=arguments.population_size,
+            elite_fraction=arguments.elite_fraction,
+            initial_mutation_probability=arguments.evolution_initial_mutation_probability,
+            mutation_probability=arguments.evolution_mutation_probability,
+            failure_cost=evolution_failure_cost,
+            instance_id=workload["workloadSha256"],
+            evaluation_seed=0,
+            repetition=0,
+            budget=None,
+        )
     if state["strategyState"] is not None:
         strategy.restore(state["strategyState"])
     else:
@@ -1944,6 +2438,7 @@ def run_search(arguments: argparse.Namespace) -> dict[str, Any]:
                 request = strategy.ask()
                 candidate_id = request.candidate["candidateId"]
                 if candidate_id in state["seenCandidateIds"]:
+                    strategy.reject(request)
                     state["duplicateCount"] += 1
                     consecutive_duplicates += 1
                     store.append_event(
@@ -2273,7 +2768,9 @@ def run_search(arguments: argparse.Namespace) -> dict[str, Any]:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    run = commands.add_parser("run", help="run or resume Random Search with real cvc5")
+    run = commands.add_parser(
+        "run", help="run or resume Random Search or evolutionary search with real cvc5"
+    )
     run.add_argument("--run-dir", type=Path, required=True)
     run.add_argument("--cache-dir", type=Path, default=Path("experiments/cache-v0"))
     run.add_argument("--parameter-space", type=Path, required=True)
@@ -2286,6 +2783,7 @@ def _build_parser() -> argparse.ArgumentParser:
     run.add_argument("--repetitions", type=int, default=1)
     run.add_argument("--warmups", type=int, default=0)
     run.add_argument("--seed", type=int, default=0)
+    run.add_argument("--strategy", choices=("random", "evolution"), default="random")
     run.add_argument(
         "--random-mutation-probability",
         type=float,
@@ -2294,6 +2792,22 @@ def _build_parser() -> argparse.ArgumentParser:
             "independent probability of changing each option away from its default; "
             f"default: {DEFAULT_RANDOM_MUTATION_PROBABILITY}"
         ),
+    )
+    run.add_argument(
+        "--population-size", type=int, default=DEFAULT_EVOLUTION_POPULATION_SIZE
+    )
+    run.add_argument(
+        "--elite-fraction", type=float, default=DEFAULT_EVOLUTION_ELITE_FRACTION
+    )
+    run.add_argument(
+        "--evolution-initial-mutation-probability",
+        type=float,
+        default=DEFAULT_EVOLUTION_INITIAL_MUTATION_PROBABILITY,
+    )
+    run.add_argument(
+        "--evolution-mutation-probability",
+        type=float,
+        default=DEFAULT_EVOLUTION_MUTATION_PROBABILITY,
     )
     run.add_argument("--max-evaluations", type=int, required=True)
     run.add_argument("--max-wall-time-seconds", type=float)

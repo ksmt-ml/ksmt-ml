@@ -5,6 +5,7 @@ from pathlib import Path
 
 from ksmt_ml.evaluator import normalize_candidate, score_reports, sha256_json
 from ksmt_ml.search import (
+    EvolutionSearchStrategy,
     FileEvaluationCache,
     FileSearchStore,
     RandomSearchStrategy,
@@ -247,6 +248,78 @@ class RandomSearchStrategyTest(unittest.TestCase):
 
         with self.assertRaisesRegex(SearchError, "invalid parameter-space constraint"):
             RandomSearchStrategy(constrained, seed=0)
+
+
+class EvolutionSearchStrategyTest(unittest.TestCase):
+    @staticmethod
+    def tell_success(strategy, request, cost):
+        strategy.tell(
+            TrialResult(
+                request_id=request.request_id,
+                candidate_id=request.candidate["candidateId"],
+                instance_id=request.instance_id,
+                seed=request.seed,
+                repetition=request.repetition,
+                budget=request.budget,
+                status="SUCCESS",
+                cost=cost,
+                duration_nanos=1,
+                censored=False,
+                correctness="CORRECT",
+                cache_hit=False,
+            )
+        )
+
+    def test_complete_population_selects_elite_parents(self):
+        strategy = EvolutionSearchStrategy(
+            parameter_space(),
+            seed=17,
+            population_size=4,
+            elite_fraction=0.5,
+            initial_mutation_probability=0.5,
+            mutation_probability=0.5,
+        )
+        requests = []
+        for index in range(4):
+            request = strategy.ask()
+            requests.append(request)
+            self.tell_success(strategy, request, float(4 - index))
+
+        state = strategy.snapshot()
+        self.assertEqual(state["generation"], 1)
+        self.assertEqual(state["generationObservations"], [])
+        self.assertEqual(
+            [candidate["candidateId"] for candidate in state["parents"]],
+            [requests[3].candidate["candidateId"], requests[2].candidate["candidateId"]],
+        )
+
+    def test_restore_preserves_pending_proposal_and_sequence(self):
+        strategy = EvolutionSearchStrategy(
+            parameter_space(), seed=5, population_size=3, elite_fraction=1 / 3
+        )
+        first = strategy.ask()
+        checkpoint = strategy.snapshot()
+
+        resumed = EvolutionSearchStrategy(
+            parameter_space(), seed=5, population_size=3, elite_fraction=1 / 3
+        )
+        resumed.restore(checkpoint)
+        self.tell_success(resumed, first, 1.0)
+        second = resumed.ask()
+
+        uninterrupted = EvolutionSearchStrategy(
+            parameter_space(), seed=5, population_size=3, elite_fraction=1 / 3
+        )
+        same_first = uninterrupted.ask()
+        self.tell_success(uninterrupted, same_first, 1.0)
+        same_second = uninterrupted.ask()
+        self.assertEqual(second.candidate, same_second.candidate)
+
+    def test_rejected_duplicate_is_not_kept_pending(self):
+        strategy = EvolutionSearchStrategy(parameter_space(), seed=7)
+        request = strategy.ask()
+        strategy.reject(request)
+        self.assertEqual(strategy.snapshot()["pendingProposals"], [])
 
 
 class FileStoreTest(unittest.TestCase):

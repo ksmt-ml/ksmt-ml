@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-tuning-campaign-summary-v0.schema.json",
+  "title": "cvc5 tuning campaign holdout summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "gate", "interpretation", "results"],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-tuning-campaign-summary-v0" },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimumRelativeImprovement", "minimumProfileCount",
+        "minimumPositiveProfileFraction", "requirePositiveBootstrap95LowerBound",
+        "requireEligibleFailureFreeReplay"
+      ],
+      "properties": {
+        "minimumRelativeImprovement": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+        "minimumProfileCount": { "type": "integer", "minimum": 1 },
+        "minimumPositiveProfileFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "requirePositiveBootstrap95LowerBound": { "const": true },
+        "requireEligibleFailureFreeReplay": { "const": true }
+      }
+    },
+    "interpretation": { "type": "string", "minLength": 1 },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "score", "candidateId", "eligible", "profileCount",
+          "meanLogSpeedup", "geometricSpeedup", "relativeImprovement",
+          "bootstrap95MeanLogSpeedup", "positiveProfileCount",
+          "negativeProfileCount", "wrongAnswerCount",
+          "knownStatusTimeoutCount", "failedReplayCount", "gateChecks",
+          "passesReplayGainGate"
+        ],
+        "properties": {
+          "score": { "type": "string", "minLength": 1 },
+          "candidateId": { "type": "string", "minLength": 1 },
+          "eligible": { "type": "boolean" },
+          "profileCount": { "type": "integer", "minimum": 1 },
+          "meanLogSpeedup": { "type": "number" },
+          "geometricSpeedup": { "type": "number", "exclusiveMinimum": 0 },
+          "relativeImprovement": { "type": "number" },
+          "bootstrap95MeanLogSpeedup": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["low", "high"],
+            "properties": {
+              "low": { "type": "number" },
+              "high": { "type": "number" }
+            }
+          },
+          "positiveProfileCount": { "type": "integer", "minimum": 0 },
+          "negativeProfileCount": { "type": "integer", "minimum": 0 },
+          "wrongAnswerCount": { "type": "integer", "minimum": 0 },
+          "knownStatusTimeoutCount": { "type": "integer", "minimum": 0 },
+          "failedReplayCount": { "type": "integer", "minimum": 0 }
+          ,
+          "gateChecks": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "eligible", "minimumImprovement", "positiveInterval",
+              "minimumProfileCount", "positiveProfileFraction", "failureFree"
+            ],
+            "properties": {
+              "eligible": { "type": "boolean" },
+              "minimumImprovement": { "type": "boolean" },
+              "positiveInterval": { "type": "boolean" },
+              "minimumProfileCount": { "type": "boolean" },
+              "positiveProfileFraction": { "type": "boolean" },
+              "failureFree": { "type": "boolean" }
+            }
+          },
+          "passesReplayGainGate": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

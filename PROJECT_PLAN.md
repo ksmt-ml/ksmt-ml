@@ -60,8 +60,11 @@ All contracts remain `v0` until the first merge.
    budgets.
 6. **SMAC persistence and resume.** Preserve run history, scenario, incumbent
    and external budget accounting so interruption does not invalidate a run.
-7. **Equal-budget comparison.** Compare Random Search and SMAC using identical
-   wall-clock/evaluation limits, parameter space, correctness gate and workload.
+7. **Equal-budget comparison.** Compare Random Search, typed evolutionary
+   search, and SMAC using an identical wall-clock budget, parameter space,
+   correctness gate and workload. Record strategy-specific observation counts
+   separately because a SMAC observation is one profile rather than a complete
+   workload candidate.
 8. **Fresh full TSA application.** Apply the selected custom candidate before
    assertions to a fresh solver and execute the full TSA task, recording
    correctness, coverage and total time.
@@ -69,10 +72,15 @@ All contracts remain `v0` until the first merge.
    example 10% profiling/tuning and 90% final execution) against an untuned
    100% run; include all tuning overhead in the tuned arm.
 
-Current status: steps 1–4 are implemented locally. The five-candidate Random
+Current status: steps 1–6 are implemented locally. The five-candidate Random
 Search smoke completed with four clean candidates and one correctly censored
-known-status timeout. Steps 5–9 are pending; the consolidated repository-wide
-verification remains planned after step 9.
+known-status timeout. The SMAC3 2.4.1 adapter now maps ConfigSpace proposals to
+the same real per-profile trial contract and maps strict evaluator outcomes back
+to typed SMAC observations. SMAC native run history, scenario, intensifier and
+incumbent are now joined to the external evaluator state through immutable
+checksummed generations, with pending-trial reconciliation and active-time
+accounting. Steps 7–9 are pending; the consolidated
+repository-wide verification remains planned after step 9.
 
 ## End-to-end path
 
@@ -311,10 +319,11 @@ top-k-retention threshold on development workloads.
 Map `cvc5-parameter-space-v0` to ConfigSpace and adapt the evaluator to a SMAC3
 target function.
 
-The adapter returns a minimized normalized cost, for example:
+The adapter returns the same minimized normalized cost already produced by the
+real evaluator:
 
 ```text
-log(candidate_effective_cost / default_effective_cost)
+candidate_effective_cost / default_effective_cost
 ```
 
 It also preserves timeout, crash, memory-out, and cancellation as trial status.
@@ -340,6 +349,15 @@ sealed results.
 
 Exit criterion: ES/CEM, Random Search, and SMAC3 can run through the same
 orchestrator with identical evaluator and budget policy.
+
+Implementation status: the v0 runner now includes a resumable typed
+`(mu, lambda)` evolutionary strategy. It uses the same real replay evaluator,
+strict correctness gate, file cache, wall-clock accounting, and persisted
+artifacts as Random Search. A unified CLI exposes Random Search, ES, and SMAC
+through the same experiment inputs. The development/holdout campaign gives all
+three equal wall-clock budgets and confirms all incumbents on a separate
+capture. A real multi-generation run is still required before this milestone
+is experimentally complete.
 
 ## Milestone 8 — development tunability pilot
 
@@ -478,7 +496,7 @@ of steps 1–9.
 
 ## Current next action
 
-Canonical step 4 is complete. The final seed-17 smoke evaluated five unique
+Canonical step 6 is complete. The final seed-17 Random Search smoke evaluated five unique
 default-centred Random Search candidates in 193.43 active seconds: four
 candidates completed all six profiles with zero wrong answers, known-status
 timeouts, replay failures, or recorded failures; one candidate was correctly
@@ -489,5 +507,11 @@ identical invocation exits idempotently without launching cvc5.
 
 No candidate improved the default in this five-sample infrastructure smoke;
 the best observed normalized cost was 1.003848. This is not an optimizer-quality
-claim. Proceed to canonical step 5: integrate SMAC3 with the same trial contract,
-default-centred prior, correctness gate, real evaluator, and external budgets.
+claim. SMAC3 2.4.1 is pinned and connected through a serial `ask/tell`
+adapter. It uses profile IDs as instances, seeds as noisy repetition identities,
+a default-centred sparse initial design, finite typed penalties, and no
+unqualified fidelity budgets. Its durable runner preserves and validates both
+native SMAC state and external real-cvc5 artifacts across `SIGINT`, `SIGTERM`,
+hard termination, and partially written working files. Proceed to canonical
+step 7: first run a tiny real SMAC resume smoke, then compare Random Search and
+SMAC under identical frozen wall-clock and trial budgets.

@@ -42,7 +42,11 @@
     },
     "stopReason": { "type": ["string", "null"] },
     "strategyState": {
-      "oneOf": [{ "$ref": "#/$defs/strategyState" }, { "type": "null" }]
+      "oneOf": [
+        { "$ref": "#/$defs/randomStrategyState" },
+        { "$ref": "#/$defs/evolutionStrategyState" },
+        { "type": "null" }
+      ]
     },
     "updatedAtEpochMillis": { "type": "integer", "minimum": 0 }
   },
@@ -90,7 +94,7 @@
         "trialId": { "type": "string", "minLength": 1 }
       }
     },
-    "strategyState": {
+    "randomStrategyState": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -124,6 +128,75 @@
         "budget": { "type": ["number", "null"], "exclusiveMinimum": 0 },
         "nextProposalIndex": { "type": "integer", "minimum": 0 },
         "observationCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "required": ["schemaVersion", "candidateId", "parameterSpaceId", "targetSolver", "options"],
+      "properties": {
+        "schemaVersion": { "const": "cvc5-replay-candidate-v0" },
+        "candidateId": { "type": "string", "minLength": 1 },
+        "parameterSpaceId": { "type": "string", "minLength": 1 },
+        "targetSolver": { "const": "cvc5" },
+        "options": { "type": "object" }
+      }
+    },
+    "evolutionStrategyState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion", "strategy", "seed", "samplingPolicy",
+        "populationSize", "eliteFraction", "initialMutationProbability",
+        "mutationProbability", "failureCost", "parameterSpaceSha256",
+        "instanceId", "evaluationSeed", "repetition", "budget", "generation",
+        "nextProposalIndex", "observationCount", "parents",
+        "generationObservations", "pendingProposals"
+      ],
+      "properties": {
+        "schemaVersion": { "const": "cvc5-evolution-search-state-v0" },
+        "strategy": { "const": "evolution-search-v0" },
+        "seed": { "type": "integer" },
+        "samplingPolicy": { "const": "domain-aware-elitist-mutation-v0" },
+        "populationSize": { "type": "integer", "minimum": 2 },
+        "eliteFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "initialMutationProbability": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "mutationProbability": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "failureCost": { "type": "number", "exclusiveMinimum": 0 },
+        "parameterSpaceSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "instanceId": { "type": "string", "minLength": 1 },
+        "evaluationSeed": { "type": "integer" },
+        "repetition": { "type": "integer", "minimum": 0 },
+        "budget": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "generation": { "type": "integer", "minimum": 0 },
+        "nextProposalIndex": { "type": "integer", "minimum": 0 },
+        "observationCount": { "type": "integer", "minimum": 0 },
+        "parents": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+        "generationObservations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["candidate", "cost", "status", "correctness"],
+            "properties": {
+              "candidate": { "$ref": "#/$defs/candidate" },
+              "cost": { "type": "number", "minimum": 0 },
+              "status": { "type": "string", "minLength": 1 },
+              "correctness": { "enum": ["CORRECT", "INCORRECT", "NOT_ESTABLISHED"] }
+            }
+          }
+        },
+        "pendingProposals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["requestId", "candidate"],
+            "properties": {
+              "requestId": { "type": "string", "minLength": 1 },
+              "candidate": { "$ref": "#/$defs/candidate" }
+            }
+          }
+        }
       }
     }
   }

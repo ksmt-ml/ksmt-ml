@@ -28,6 +28,20 @@ class ContractSchemaTest(unittest.TestCase):
             "cvc5-parameter-space-v0",
         )
 
+    def test_smac_persistence_contracts_remain_v0(self) -> None:
+        expected = {
+            "cvc5-smac-search-manifest-v0.schema.json": "cvc5-smac-search-manifest-v0",
+            "cvc5-smac-search-state-v0.schema.json": "cvc5-smac-search-state-v0",
+            "cvc5-smac-search-event-v0.schema.json": "cvc5-smac-search-event-v0",
+            "cvc5-smac-native-checkpoint-v0.schema.json": "cvc5-smac-native-checkpoint-v0",
+            "cvc5-tuning-campaign-summary-v0.schema.json": "cvc5-tuning-campaign-summary-v0",
+        }
+
+        for name, version in expected.items():
+            with self.subTest(name=name):
+                schema = self.load_schema(name)
+                self.assertEqual(schema["properties"]["schemaVersion"]["const"], version)
+
 
 if __name__ == "__main__":
     unittest.main()

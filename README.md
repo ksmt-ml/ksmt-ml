@@ -201,14 +201,36 @@ results. Cache keys include the candidate, workload contents, parameter space,
 baseline, TSA runner, fidelity, and scoring policy. Generated run and cache
 directories are ignored by Git.
 
-Run or resume a bounded pilot:
-
-The future SMAC path and the Random Search control share one adapter from
-`cvc5-parameter-space-v0` to ConfigSpace. Install its pinned dependency with
-`make search-env`. The JSON parameter space remains the only catalogue: the
-adapter translates domains, `activeWhen`, and forbidden combinations. A
+Random Search and SMAC3 share one adapter from `cvc5-parameter-space-v0` to
+ConfigSpace. Install the pinned ConfigSpace 1.2.2 and SMAC3 2.4.1 dependencies
+with `make search-env`. The JSON parameter space remains the only catalogue:
+the adapter translates domains, `activeWhen`, and forbidden combinations. A
 `log-uniform-or-zero` option is represented internally by a generated zero
 selector, which is removed when decoding the cvc5 candidate.
+
+The SMAC adapter uses `AlgorithmConfigurationFacade`: its Random Forest and
+Expected Improvement choose configurations, while the existing real
+per-profile evaluator remains solely responsible for executing cvc5. Workload
+profile IDs are SMAC instances and noisy repetitions are SMAC seeds. A SMAC
+trial therefore means one isolated `(candidate, profile, seed)` replay, not one
+complete candidate over the whole corpus. Until a semantic profile feature
+projection is frozen, one-hot identity features let the Random Forest
+distinguish development instances without asserting similarity between them;
+the adapter also accepts explicit finite profile features later. Successful trials report the measured
+normalized cost; known or process timeouts report `TIMEOUT`; wrong answers,
+crashes, malformed reports, and infrastructure failures report `CRASHED` with
+the original strict status retained in `additional_info`.
+
+The initial design contains cvc5 defaults plus reproducible sparse candidates
+from the same `0.05` default-mutation policy used by the Random Search control.
+This bootstraps the surrogate near the known-safe default without restricting
+later SMAC proposals to a preset catalogue. Multi-fidelity is disabled: no
+short profile or partial replay is accepted as a SMAC budget until its ranking
+quality has been measured. Durable external/native checkpoint reconciliation
+is implemented; an identical command restores the referenced checksummed SMAC
+generation and reconciles a pending real solver trial.
+
+Run or resume a bounded Random Search pilot:
 
 ```bash
 PYTHONPATH=src python3 -m ksmt_ml.search run \
@@ -239,6 +261,159 @@ The implementation records active search time, so time between an interruption
 and resume does not consume the search budget. Restarting an interrupted
 pending trial also does not consume a second logical evaluation slot; any
 additional process time is still charged to the wall-clock budget.
+
+The same runner provides the evolutionary control required by the experiment
+protocol. It is a serial `(mu, lambda)` strategy over typed cvc5 domains: a
+complete population is ranked, the best declared fraction becomes the parent
+set, and children apply domain-aware mutations. Boolean and categorical values
+are never assigned an artificial numeric ordering; integer and real values are
+sampled from their declared uniform or log domain. Select it with `--strategy
+evolution`; population, elite fraction, initial mutation, and child mutation
+are frozen in the manifest and resume checkpoint.
+
+All three search procedures are exposed through one experiment interface:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m ksmt_ml.tuning run \
+  --strategy random \
+  --run-dir experiments/runs/example-random-v0 \
+  --parameter-space configs/cvc5-regular-bv-parameter-space-v0.json \
+  --baseline experiments/runs/default-v0.json \
+  --baseline-manifest experiments/runs/default-manifest-v0.json \
+  --tsa-cli-jar ../tsa/tsa-cli/build/libs/tsa-cli.jar \
+  --profile-dir ../tsa/solver-profiles/<run> \
+  --max-wall-time-seconds 1800 \
+  --per-trial-timeout-seconds 600
+```
+
+Only `--strategy random|evolution|smac` and strategy-specific hyperparameters
+change. `--max-optimizer-trials` is a safety ceiling, not a cross-strategy cost
+metric: Random Search and evolution evaluate a complete workload candidate,
+while one SMAC trial is one `(candidate, profile, seed)` observation. Fairness
+therefore comes from the shared wall-clock budget and holdout policy.
+
+## Development/holdout tuning campaign
+
+Two scripts assemble a claim-oriented campaign without starting heavy work
+automatically:
+
+```bash
+CAPTURE_TARGET=all CAPTURE_METHOD_COUNT_HINT=10 \
+  scripts/capture-func-workload-v0.sh storage-provider-v0 dev \
+    ../tsa/tsa-test/src/test/resources/contracts/storage/storage-provider.fc 900
+CAPTURE_TARGET=all CAPTURE_METHOD_COUNT_HINT=10 \
+  scripts/capture-func-workload-v0.sh storage-provider-v0 holdout \
+    ../tsa/tsa-test/src/test/resources/contracts/storage/storage-provider.fc 900
+
+REBUILD_TSA_JAR=1 SEARCH_BUDGET_SECONDS=1800 CONFIRMATION_REPETITIONS=3 \
+  scripts/run-tuning-campaign-v0.sh all storage-provider-v0
+```
+
+The final capture argument is a wall-clock budget for the selected workload,
+not a timeout for every method in the contract. The script splits it between
+the declared methods, runs the analysis in a dedicated JVM, and adds a
+120-second hard shutdown allowance. By default the JVM heap is limited
+to 12288 MiB. On a systemd user session the complete process tree, including
+native cvc5 memory, is additionally limited to 18 GiB of RAM and 1 GiB of swap.
+The limits can be overridden with `CAPTURE_MAX_HEAP_MB`, `CAPTURE_MEMORY_MAX`,
+and `CAPTURE_MEMORY_SWAP_MAX`. A timeout, memory-limit termination, or any
+profile that is not closed and capture-complete makes the capture fail instead
+of admitting partial data to a campaign. All-method analysis requires an
+explicit method-count hint because TSA's native `--timeout` is per method; the
+capture script derives the per-method timeout from the total campaign budget.
+If a systemd user scope is unavailable, capture fails closed; setting
+`CAPTURE_USE_SYSTEMD_SCOPE=0` is an explicit opt-out that leaves native cvc5
+memory outside the JVM heap limit.
+Low-priority symbolic states are skipped by default. They can be included with
+`ANALYZE_LOW_PRIORITY_STATES=1`, while the same hard time and memory limits
+remain active.
+Full result resolution is used by default so that capture matches normal TSA
+analysis. `CAPTURE_RESOLVE_MODE=short` is available only for an explicitly
+lightweight smoke workload; such a capture must not be used for a production
+performance claim.
+
+For a real all-method workload, declare the target and the method count already
+validated by the corresponding TSA integration test. The total budget is split
+between those methods. For example, the supported `storage-provider` contract
+has ten methods:
+
+```bash
+CAPTURE_TARGET=all CAPTURE_METHOD_COUNT_HINT=10 \
+  scripts/capture-func-workload-v0.sh storage-provider-v0 dev \
+    ../tsa/tsa-test/src/test/resources/contracts/storage/storage-provider.fc 900
+```
+
+Capture is rejected if TSA logs an interpreter implementation failure, if any
+profile is incomplete, if fewer methods are analyzed than declared, or if no
+regular-bv backend profile is produced. A method is not required to create a
+solver session: `CAPTURE_METHOD_COUNT_HINT` validates TSA method coverage,
+while `CAPTURE_MIN_REGULAR_PROFILES` independently controls the solver-workload
+floor. This keeps unsupported contracts such as `elector` out of a
+real-workload campaign without rejecting valid solver-free methods.
+
+The stages can instead be invoked separately as `baseline`, `search`, and
+`confirm`. Generated data stays under
+`experiments/runs/campaigns/<campaign-id>/` and remains ignored by Git. Search
+order can be changed with, for example,
+`SEARCH_ORDER=smac,evolution,random`; independent campaigns should rotate the
+order to expose thermal or temporal machine bias. The final
+`confirmation/summary-v0.json` reports eligibility, geometric replay speedup,
+per-profile signs, and a deterministic paired bootstrap interval.
+
+This is a solver-replay claim only. A holdout capture of the same contract can
+test per-contract tuning, but cannot demonstrate generalization to unseen
+contracts. An application-level speedup additionally requires applying the
+selected options to a fresh full TSA run and comparing total time, results,
+and coverage.
+
+## Durable SMAC3 search
+
+SMAC uses the same strict baseline preflight, real per-profile cvc5 evaluator,
+content-addressed cache, subprocess timeout, and signal handling. Its run
+directory additionally contains:
+
+```text
+manifest.json                    immutable SMAC experiment contract
+state.json                       atomic external checkpoint
+events.jsonl                     append-only trial trace
+trials/<trial-id>/               candidate, report, score, result, or failure
+smac/<scenario>/<seed>/          SMAC's current working state
+smac-checkpoints/generation-*/   immutable checksummed native generations
+```
+
+The external checkpoint never points at files while SMAC is writing them.
+After every `ask` and `tell`, all five native SMAC JSON files are parsed, copied
+to a new generation, hashed, and completed with a marker written last. On
+restart the referenced generation is restored before constructing the facade.
+A pending `(candidate, instance, seed)` is then reattached to SMAC's `RUNNING`
+trial and a completed `result.json` is reported without repeating cvc5. If the
+JVM was killed mid-trial, the same logical trial is retried and its extra active
+time remains charged. User idle time between stop and resume is excluded.
+
+Run or resume a bounded SMAC experiment:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m ksmt_ml.smac_search run \
+  --run-dir experiments/runs/smac-pilot-v0 \
+  --cache-dir experiments/cache-v0 \
+  --parameter-space configs/cvc5-regular-bv-parameter-space-v0.json \
+  --baseline experiments/runs/nominator-clean-6-default-per-profile-v0.json \
+  --baseline-manifest experiments/runs/nominator-clean-6-default-manifest-v0.json \
+  --tsa-cli-jar ../tsa/tsa-cli/build/libs/tsa-cli.jar \
+  --profile-dir experiments/runs/workloads/nominator-clean-6-v0 \
+  --seed 17 \
+  --repetitions 1 \
+  --additional-initial-configurations 8 \
+  --max-trials 20 \
+  --max-wall-time-seconds 1800 \
+  --per-trial-timeout-seconds 300
+```
+
+`--max-trials` counts optimizer-visible `(configuration, profile, seed)`
+observations, including cache hits, so cached knowledge is not free in a fair
+comparison. `actualEvaluationCount` separately records logical cache misses.
+An identical command resumes; any changed workload, JAR, parameter space,
+baseline, scoring policy, seed, or budget is rejected.
 
 Before creating or resuming a run, search performs a strict preflight: it
 rehashes the baseline report, parameter space, TSA JAR, and every selected

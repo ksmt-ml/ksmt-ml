@@ -1,3 +1,4 @@
+import importlib.util
 import tempfile
 import unittest
 from pathlib import Path
@@ -5,6 +6,12 @@ from pathlib import Path
 from ksmt_ml.smac_adapter import SmacAskTellStrategy
 from ksmt_ml.smac_search import SmacNativeCheckpointStore
 from ksmt_ml.search import TrialResult
+
+
+HAS_SMAC = (
+    importlib.util.find_spec("ConfigSpace") is not None
+    and importlib.util.find_spec("smac") is not None
+)
 
 
 def parameter_space():
@@ -36,6 +43,7 @@ def build_strategy(root: Path) -> SmacAskTellStrategy:
     )
 
 
+@unittest.skipUnless(HAS_SMAC, "SMAC3 dependencies are not installed")
 class SmacPersistenceTest(unittest.TestCase):
     def test_running_trial_survives_native_corruption_and_restart(self):
         with tempfile.TemporaryDirectory() as temporary:

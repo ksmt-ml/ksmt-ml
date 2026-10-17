@@ -4,106 +4,103 @@ This file is the single roadmap for `ksmt-ml`.
 
 ## Objective
 
-Train a model before deployment that maps deterministic features of one
-representative `KSolverProfile` to a correctness-preserving cvc5 configuration.
-Export it as an ONNX bundle and demonstrate improvement over the default
-configuration on independent workloads.
+Deliver interchangeable cvc5 tuning providers behind the stable
+`ksmt-ml-tuner` JVM contracts:
+
+1. a budgeted external worker that reuses Random Search, evolutionary search,
+   and SMAC;
+2. an optional pre-trained ONNX bundle for one-shot inference.
+
+`ksmt-ml` owns provider artifacts, experiments, conformance fixtures, and
+evidence. It does not own application workload execution or the production JVM
+facade.
 
 ```text
-profile contract
-    -> cvc5 profiling pilot
-    -> versioned feature projection
-    -> labelled training dataset
-    -> supervised model training
-    -> sealed-workload evaluation
-    -> ONNX bundle
+KSMT profile contract
+    -> TSA workload capture and trial evaluation
+    -> ksmt-ml-tuner lifecycle, validation, budget, and fallback
+        -> Python RS / ES / SMAC worker
+        -> or ONNX bundle
 ```
 
-Runtime training, configuration search, solver replay, RL, and tuning-time
-budgets are outside the MVP.
+## Phase 0 — freeze cross-repository contracts
 
-## Milestone 0 — contracts
+Finalize and merge the observation-only KSMT profile API, the tuner inference
+and search APIs, the external-worker protocol, and the TSA launch/evaluator
+interfaces. Keep implementations out of those interface commits. Preserve the
+current experiments on `dev/litvinovmitch11/demo` branches as reference material.
 
-Review the KSMT profile and profiler interfaces and the cvc5-specific tuner,
-decision, and patch contracts in `ksmt-ml-tuner`. Keep tuning policy, feature
-vectors, and cvc5-specific schemas outside KSMT. The profiler implementation is
-an infrastructure follow-up, not part of this repository.
+Exit criterion: the four repositories agree on ownership, identifiers,
+lifecycle, cancellation, failure, and fresh-solver semantics without duplicate
+public DTOs.
 
-Exit criterion: KSMT interfaces compile and `ksmt-ml-tuner` consumes them
-without duplicating profile DTOs.
+## Phase 1 — infrastructure implementation
 
-## Milestone 1 — cvc5 profiling pilot
+The infrastructure team implements:
 
-Build a small incremental cvc5 consumer, collect the single KSMT profile, and
-verify formula, assumption, scope, timing, result, solver-version, and initial
-configuration fidelity. Measure profiling overhead.
+- bounded KSMT profile capture without changing solver behavior;
+- the tuner host, validation, budget, cancellation, checkpoint, fallback, and
+  telemetry mechanisms;
+- TSA workload capture and a trial evaluator that creates an isolated fresh
+  solver for every measured configuration;
+- process isolation and protocol-conformance checks for external workers.
 
-TSA may become a workload source after its Yices/Z3 composition is adapted to
-cvc5. Instrument the layer that represents the actual input seen by cvc5.
+Exit criterion: a deterministic fake worker can complete, cancel, fail, and
+resume a search through the production host, while invalid recommendations
+fail closed.
 
-Exit criterion: at least one realistic workload produces a complete profile
-accepted by the feature projection.
+## Phase 2 — promote the search worker
 
-## Milestone 2 — features and labelled dataset
+Separate the experimental RS, ES, and SMAC algorithms on the demo branch from
+TSA process control and persistence. Package them behind
+`cvc5-search-worker-v0`, using standard input/output only for protocol messages
+and standard error for diagnostics.
 
-Freeze the feature schema and a small cvc5-version-specific output parameter
-space. Prepare grouped examples containing a feature vector and a target cvc5
-configuration. Record how every target was obtained, but do not make that
-process part of the production API.
+The worker owns proposal selection and optimizer-native state. The tuner host
+remains authoritative for budgets, trial identity, correctness results,
+artifacts, cancellation, and process lifetime.
 
-Use the same projection semantics for dataset generation and JVM inference.
-Add golden vectors to detect Python/JVM drift.
+Exit criterion: all three algorithms pass the same protocol suite and can be
+selected without changing the JVM application API.
 
-Exit criterion: a versioned dataset can be split by independent workload or
-application groups without leaking related examples into holdout.
+## Phase 3 — reproducible search evidence
 
-## Milestone 3 — train supervised baselines
+Freeze a cvc5-version-specific parameter space, workload groups, correctness
+oracle, objective, seeds, budgets, timeouts, and repetitions. Compare default
+cvc5, deterministic Random Search, evolutionary search, and SMAC under equal
+host-enforced budgets. Keep raw run history outside Git and publish only frozen
+manifests and aggregate evidence.
 
-Start with simple predictors and compare them with default cvc5, the best fixed
-configuration selected on training data, and a deterministic heuristic. Increase
-model complexity only when grouped validation justifies it.
+Exit criterion: search results are replayable from recorded provenance and no
+retained configuration changes solver correctness.
 
-Exit criterion: at least one predictor emits values that can be decoded and
-validated for the pinned cvc5 parameter space.
+## Phase 4 — optional ONNX provider
 
-## Milestone 4 — sealed evaluation
+When sufficient independent data exists, freeze a deterministic feature
+projection and train supervised baselines. Export a selected model only after a
+sealed grouped evaluation. The bundle includes its manifest, schemas,
+checksums, and Python/JVM golden vectors.
 
-Freeze all design choices and evaluate once on the grouped holdout. Reject
-models that produce invalid configurations, wrong answers, or regress the
-agreed objective beyond the declared tolerance.
+Exit criterion: a versioned bundle produces a validated
+`Cvc5ConfigurationPatch` from a compatible KSMT profile and safely falls back
+for every incompatible or malformed input.
 
-Exit criterion: the selected predictor improves the agreed objective over the
-accepted baselines while preserving correctness.
+## Phase 5 — release readiness
 
-## Milestone 5 — ONNX handoff
+Exercise both providers through the same tuner facade and TSA launch path.
+Document supported cvc5 versions, deployment artifacts, resource limits,
+telemetry, upgrade rules, and rollback behavior. A deployment may ship either
+provider or both.
 
-Export the selected predictor with manifest, profile/feature/parameter-space
-schema IDs, solver compatibility, checksums, and golden vectors. Validate Python
-and JVM output parity. `ksmt-ml-tuner` owns runtime projection, inference,
-decoding, validation, and fallback.
-
-Exit criterion: a versioned bundle can produce a validated
-`Cvc5ConfigurationPatch` from the single KSMT profile.
-
-## Milestone 6 — end-to-end demonstration
-
-Profile a representative run, perform one fast inference, construct a fresh
-cvc5 solver with the returned patch, and repeat the workload. Report solver
-statuses, failures, profiling cost, inference cost, and improvement over default
-across independent workload groups.
-
-## Future extension — adaptive tuning
-
-After the inference-only MVP works, the system may add a workload evaluator,
-online configuration search, or an RL policy that learns from measured runs.
-That extension requires new lifecycle, isolation, budget, persistence, and
-failure-handling contracts; none are part of the current public API.
+Exit criterion: infrastructure can replace either provider implementation
+without changing KSMT or TSA public interfaces.
 
 ## Open decisions
 
-- first cvc5 version and output parameter domains;
-- source and provenance of target configurations;
-- TSA revision and cvc5 adapter design;
-- primary objective and correctness oracle;
-- minimum improvement required to export a model;
-- model-bundle release and embedding process.
+- first supported cvc5 version and parameter domains;
+- workload manifest and correctness oracle;
+- primary objective and multi-instance aggregation;
+- worker executable packaging and sandbox policy;
+- checkpoint retention and compatibility policy;
+- model release gate, if the ONNX path is pursued;
+- artifact publication and versioning process.

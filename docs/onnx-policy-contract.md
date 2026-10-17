@@ -3,7 +3,7 @@
 ## Ownership
 
 KSMT owns the observation-only `KSolverProfile` and profiler contracts.
-`ksmt-ml-tuner` owns `Cvc5MlTuner`, `Cvc5TuningDecision`,
+`ksmt-ml-tuner` owns `Cvc5InferenceTuner`, `Cvc5TuningDecision`,
 `Cvc5ConfigurationPatch`, JVM feature extraction, ONNX Runtime, decoding,
 validation, and fallback. `ksmt-ml` trains and exports bundles.
 
@@ -23,8 +23,9 @@ deterministic features, invokes ONNX once, decodes parameter coordinates,
 validates every option and value for the exact cvc5 version, and returns either
 `UseConfiguration` or `KeepDefaults`.
 
-The runtime adapter does not train the model, replay a workload, search
-configurations, or enforce a tuning-time budget.
+The ONNX adapter does not train the model, replay a workload, or search
+configurations. Budgeted search is a separate provider behind the same tuner
+repository's public contracts.
 
 The parameter schema describes option domains, not complete preset
 configurations. An accepted patch is intended for a fresh solver before it

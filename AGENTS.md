@@ -2,26 +2,28 @@
 
 ## Project mission
 
-`ksmt-ml` is the non-production experimentation repository for training a model
-that predicts solver parameters from one representative profile of an
-incremental KSMT workload. It prepares labelled data, trains and evaluates
-models, and exports versioned ONNX bundles.
+`ksmt-ml` develops and validates two provider artifacts consumed through
+production contracts owned by `ksmt-ml-tuner`: versioned ONNX bundles and an
+external Python search worker containing Random Search, evolutionary search,
+and SMAC. Applications never depend on this repository directly.
 
 ## Architectural boundaries
 
 1. KSMT owns only the public `KSolverProfile` and observation-only profiler
    contracts in `ksmt-profiling`.
 2. Do not introduce a second copy of KSMT semantic DTOs in this repository.
-3. The cvc5-specific tuner, tuning decision, configuration patch, JVM ONNX
-   adapter, deterministic profile projection, parameter validation, fallback,
+3. The cvc5-specific tuner API, tuning decision, configuration patch, JVM ONNX
+   adapter, search lifecycle, worker protocol, parameter validation, fallback,
    and telemetry live in the `ksmt-ml-tuner` repository.
-4. This repository emits a model bundle; production must not depend on its
-   training or notebook code.
-5. The first lifecycle profiles one representative run and applies the returned
-   configuration to a fresh solver for a subsequent run. Active solvers are not
+4. This repository may emit a model bundle or a separately deployable search
+   worker. Production must not depend on its notebooks, datasets, campaign
+   orchestration, or experimental Python modules.
+5. Profiles are observation-only. Every measured or accepted configuration is
+   applied to a fresh solver before its first assertion; active solvers are not
    reconfigured.
-6. The initial target is cvc5. The parameter space defines the valid domains of
-   model outputs, not a catalog of ready configurations.
+6. The initial target is cvc5. The parameter space defines valid domains for
+   both model outputs and search proposals, not a catalog of ready
+   configurations.
 7. Raw formulas, application traces, generated profile tables, run shards, and
    large models are not committed. Small synthetic fixtures and golden vectors
    may be committed.
@@ -38,8 +40,8 @@ models, and exports versioned ONNX bundles.
   workload; do not infer gains from unrelated before/after periods.
 - Split by independent workload/application groups, never individual checks.
 - Measure current/default, best fixed, and oracle-per-workload baselines before
-  training.
-- Report profiling and inference overhead separately from model training cost.
+  claiming either search or model improvements.
+- Report profiling, search, inference, and final workload costs separately.
 
 ## Build and validation
 
@@ -56,7 +58,8 @@ make onnx-env
 
 ## Change workflow
 
-1. Inspect the relevant KSMT/profile and model-bundle contracts.
+1. Inspect the relevant KSMT profile, tuner, worker-protocol, parameter-space,
+   and model-bundle contracts.
 2. State assumptions that affect workload, lifecycle, feature, or experiment
    semantics.
 3. Make the smallest coherent change and add regression coverage.

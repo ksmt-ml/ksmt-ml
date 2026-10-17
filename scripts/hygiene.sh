@@ -7,7 +7,7 @@ readonly FORBIDDEN_PREFIXES=(
   "data/processed/"
   "artifacts/"
   "models/"
-  "experiments/runs/"
+  "experiments/"
   ".venv/"
 )
 

@@ -27,6 +27,17 @@ class ContractSchemaTest(unittest.TestCase):
             schema["properties"]["schemaVersion"]["const"],
             "cvc5-parameter-space-v0",
         )
+        self.assertEqual(schema["properties"]["targetSolver"]["const"], "cvc5")
+        self.assertEqual(
+            schema["properties"]["applicationLifecycle"]["const"],
+            "fresh-solver",
+        )
+        self.assertIn("backendRole", schema["required"])
+        self.assertIn("inventoryId", schema["required"])
+        self.assertEqual(
+            schema["$defs"]["constraint"]["properties"]["kind"]["const"],
+            "forbid",
+        )
 
 
 if __name__ == "__main__":

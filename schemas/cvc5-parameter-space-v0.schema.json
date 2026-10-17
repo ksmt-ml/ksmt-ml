@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ksmt.io/schemas/cvc5-parameter-space-v0.schema.json",
-  "title": "KSMT cvc5 model output parameter space",
+  "title": "KSMT cvc5 tuning parameter space",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -10,6 +10,8 @@
     "targetSolver",
     "compatibleSolverVersions",
     "applicationLifecycle",
+    "backendRole",
+    "inventoryId",
     "options"
   ],
   "properties": {
@@ -23,6 +25,8 @@
       "items": { "type": "string", "minLength": 1 }
     },
     "applicationLifecycle": { "const": "fresh-solver" },
+    "backendRole": { "type": "string", "minLength": 1 },
+    "inventoryId": { "type": "string", "minLength": 1 },
     "options": {
       "type": "object",
       "minProperties": 1,
@@ -31,10 +35,13 @@
     },
     "constraints": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 }
+      "items": { "$ref": "#/$defs/constraint" }
     }
   },
   "$defs": {
+    "value": {
+      "type": ["boolean", "integer", "number", "string"]
+    },
     "domain": {
       "oneOf": [
         { "$ref": "#/$defs/booleanDomain" },
@@ -46,42 +53,125 @@
     "booleanDomain": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind"],
-      "properties": { "kind": { "const": "boolean" } }
+      "required": ["kind", "default"],
+      "properties": {
+        "kind": { "const": "boolean" },
+        "default": { "type": "boolean" },
+        "activeWhen": { "$ref": "#/$defs/predicate" }
+      }
     },
     "categoricalDomain": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "values"],
+      "required": ["kind", "values", "default"],
       "properties": {
         "kind": { "const": "categorical" },
         "values": {
           "type": "array",
-          "minItems": 2,
+          "minItems": 1,
           "uniqueItems": true,
-          "items": { "type": "string" }
-        }
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "default": { "type": "string", "minLength": 1 },
+        "activeWhen": { "$ref": "#/$defs/predicate" }
       }
     },
     "integerDomain": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "minimum", "maximum"],
+      "required": ["kind", "minimum", "maximum", "default"],
       "properties": {
         "kind": { "const": "integer" },
         "minimum": { "type": "integer" },
         "maximum": { "type": "integer" },
-        "step": { "type": "integer", "minimum": 1, "default": 1 }
+        "default": { "type": "integer" },
+        "step": { "type": "integer", "minimum": 1, "default": 1 },
+        "sampling": { "enum": ["uniform", "log-uniform"], "default": "uniform" },
+        "activeWhen": { "$ref": "#/$defs/predicate" }
       }
     },
     "numberDomain": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "minimum", "maximum"],
+      "required": ["kind", "minimum", "maximum", "default"],
       "properties": {
         "kind": { "const": "number" },
         "minimum": { "type": "number" },
-        "maximum": { "type": "number" }
+        "maximum": { "type": "number" },
+        "default": { "type": "number" },
+        "sampling": {
+          "enum": ["uniform", "log-uniform", "log-uniform-or-zero"],
+          "default": "uniform"
+        },
+        "positiveMinimum": { "type": "number", "exclusiveMinimum": 0 },
+        "activeWhen": { "$ref": "#/$defs/predicate" }
+      }
+    },
+    "predicate": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["option", "equals"],
+          "properties": {
+            "option": { "type": "string", "minLength": 1 },
+            "equals": { "$ref": "#/$defs/value" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["option", "in"],
+          "properties": {
+            "option": { "type": "string", "minLength": 1 },
+            "in": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/value" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["all"],
+          "properties": {
+            "all": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/predicate" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["any"],
+          "properties": {
+            "any": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/predicate" }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["not"],
+          "properties": { "not": { "$ref": "#/$defs/predicate" } }
+        }
+      ]
+    },
+    "constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "when", "reason"],
+      "properties": {
+        "kind": { "const": "forbid" },
+        "when": { "$ref": "#/$defs/predicate" },
+        "reason": { "type": "string", "minLength": 1 }
       }
     }
   }

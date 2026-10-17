@@ -11,8 +11,9 @@ KSMT workload-profile contract.
    hyperparameters, and seed before a claim-bearing or costly experiment.
 3. Keep raw traces, generated profile tables, run history, and large models out
    of Git.
-4. Keep production runtime code in its own repository. This repository may
-   contain training, evaluation, export, and small artifact-validation tools.
+4. Keep the production JVM facade and workload execution in their owning
+   repositories. This repository may contain provider workers, training,
+   evaluation, export, and small artifact-validation tools.
 
 ## Development setup
 
@@ -35,7 +36,8 @@ The following identifiers are independent once artifacts use them:
 - KSMT profile schema;
 - profile-feature projection schema;
 - parameter-space ID and target solver version;
-- model/bundle ID.
+- model/bundle ID;
+- search-worker protocol and algorithm ID.
 
 Do not reuse an identifier after changing its meaning. Update schemas, fixtures,
 validators, documentation, and golden vectors together. A binary ONNX graph is

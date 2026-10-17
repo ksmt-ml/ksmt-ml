@@ -1,110 +1,118 @@
 # ksmt-ml
 
-`ksmt-ml` is the offline experimentation and training repository for a model
-that predicts cvc5 parameters from a representative incremental KSMT workload.
-It is not a production JVM dependency. Its deployable result is a versioned
-ONNX model bundle consumed by `ksmt-ml-tuner`.
+ksmt-ml develops and validates cvc5 tuning providers. Production applications
+use the stable JVM APIs from ksmt-ml-tuner and never depend on this repository
+directly.
 
-## MVP lifecycle
+Two provider artifacts are planned:
 
-KSMT defines the only public workload profile: `KSolverProfile`. The same
-versioned feature projection must be used while preparing training data and in
-the production JVM library.
+1. a versioned ONNX bundle for one-shot inference from KSolverProfile;
+2. a separately deployable Python search worker providing Random Search,
+   evolutionary search, and SMAC through the tuner worker protocol.
 
-```text
-offline, before deployment
+Neither production artifact is implemented on this interface-only branch.
+Experimental evaluator, search, persistence, and campaign implementations are
+preserved on dev/litvinovmitch11/demo as non-production reference code.
 
-KSolverProfile samples
-    -> deterministic feature projection
-    -> labelled examples (features, target cvc5 configuration)
-    -> model training and sealed evaluation
-    -> ONNX export and cross-runtime golden vectors
-    -> versioned model bundle
+## System boundary
 
-runtime, inside the application
+    KSMT
+        KSolverProfile and KSolverProfiler contracts
 
-KSolverProfile
-    -> ksmt-ml-tuner
-    -> one pre-trained ONNX inference
-    -> validated cvc5 configuration patch
-```
+    TSA or another application
+        workload capture and Cvc5TrialEvaluator implementation
 
-The MVP does not train or refine a model in the application. Runtime inference
-does not replay a workload, run an optimizer, or have a tuning-time budget.
-How labelled configurations are obtained is part of offline dataset preparation
-and is deliberately not a production interface.
+    ksmt-ml-tuner
+        production JVM API, validation, lifecycle, fallback, telemetry
+        ONNX adapter and external-worker host implementations
 
-## Repository split
+    ksmt-ml
+        ONNX bundle producer
+        Python RS / ES / SMAC worker producer
+        experiments, evidence, and conformance fixtures
 
-| Repository | Responsibility |
-|---|---|
-| KSMT | Observation-only `KSolverProfile` and future profiling wrapper |
-| `ksmt-ml-tuner` | cvc5 tuner/decision/patch contracts, production feature projection, pre-trained ONNX inference, validation, and fallback |
-| `ksmt-ml` | Offline datasets, training, evaluation, benchmarks, and ONNX bundle export |
+The application applies an accepted configuration only while constructing a
+fresh cvc5 solver, before its first assertion. Active solvers are never
+reconfigured.
 
-The application applies a recommended patch while constructing a fresh cvc5
-solver for a later workload run. The MVP never reconfigures an active
-incremental solver.
+## ONNX provider
 
-## Stable handoff
+The model path is inference-only at runtime:
 
-The stable boundary of this repository is the model bundle rather than its
-experimental Python API. A bundle contains the ONNX graph, a manifest, schema
-identifiers, supported cvc5 versions, checksums, and golden input/output
-vectors. The schemas under `schemas/` define that handoff.
+    KSolverProfile
+        -> deterministic versioned feature projection
+        -> one pre-trained ONNX inference
+        -> decoded and validated Cvc5ConfigurationPatch
 
-Training implementations may change freely as long as the exported bundle
-remains compatible and the evidence gate is satisfied.
+A deployable bundle contains the graph, manifest, feature and parameter
+schemas, checksums, and cross-runtime golden vectors. The current
+cvc5-tuner-bundle-v0 and cvc5-parameter-space-v0 schemas define the producer
+side of that handoff.
 
-## Evidence path
+There is no trained model or production bundle yet.
 
-1. Collect representative profiles and target cvc5 configurations.
-2. Freeze the profile, feature, parameter-space, dataset, and split versions.
-3. Train simple supervised baselines before increasing model complexity.
-4. Compare the predictor with default cvc5, best-fixed, and deterministic
-   heuristic baselines on grouped holdout workloads.
-5. Export ONNX only when predicted configurations preserve correctness and
-   improve the agreed workload objective.
-6. Verify parity between the training runtime and the JVM ONNX adapter.
+## Search provider
 
-TSA is a candidate workload source because symbolic execution produces related
-incremental queries. Its current solver composition uses Yices and Z3, so a
-reviewed cvc5 experimental adapter is required before using it for claims.
+The search path reuses a Python optimizer without exposing Python APIs to a JVM
+application:
 
-## Future extension
+    tuner host -> ASK
+    search worker -> PROPOSAL
+    application evaluator -> TELL observation
+    search worker -> next proposal or RESULT
 
-An online evaluator, online configuration search, or an RL policy may be added
-after the pre-trained inference MVP works and has a measurable baseline. Those
-components will require separate contracts and are not implied by the current
-interfaces.
+The canonical cvc5-search-worker-v0 protocol is owned by ksmt-ml-tuner. This
+repository will package a worker implementing that protocol. The worker owns
+only algorithm state and proposal selection. The tuner host remains
+authoritative for budgets, cancellation, process isolation, correctness,
+artifacts, validation, and fallback.
+
+The worker may reuse the experimental RS, ES, and SMAC implementations from the
+demo branch after they are separated from TSA execution and hardened against
+the protocol conformance suite.
+
+## Stable and experimental surfaces
+
+Stable handoffs:
+
+- versioned model-bundle and parameter-space documents;
+- the tuner-owned external worker protocol;
+- conformance fixtures and golden vectors;
+- final aggregate evidence with frozen provenance.
+
+Not production interfaces:
+
+- notebooks and training modules;
+- experiment campaign scripts;
+- raw run directories and caches;
+- direct TSA process invocation;
+- internal Python strategy or persistence classes.
 
 ## Current state
 
 | Area | Status |
 |---|---|
-| KSMT contracts | Interface-only draft; profiler implementation pending |
-| `ksmt-ml-tuner` | Interface-only inference library skeleton |
-| labelled cvc5 dataset | Not collected |
-| trained model | Not implemented |
-| production model bundle | Not available |
-
-No tuning results or performance claims exist yet.
+| KSMT profiling API | final interface branch prepared |
+| tuner inference/search API | final interface branch prepared |
+| TSA launch/evaluator API | final interface branch prepared |
+| RS / ES / SMAC worker | experimental reference exists only on demo |
+| ONNX model and bundle | not implemented |
+| performance claims | none |
 
 ## Development
 
 Requirements are Python 3.12 and GNU Make.
 
-```bash
-make check
-make analysis-env
-make onnx-env
-```
+    make check
+    make analysis-env
+    make onnx-env
 
-The roadmap is [`PROJECT_PLAN.md`](PROJECT_PLAN.md), and evaluation rules are in
-[`docs/experiment-protocol.md`](docs/experiment-protocol.md).
+The roadmap is PROJECT_PLAN.md. Claim-bearing evaluation requirements are in
+docs/experiment-protocol.md.
 
 ## Data policy
 
-Do not commit raw formulas, application traces, generated datasets, experiment
-history, or large models. Small synthetic fixtures, schemas, final aggregate
-reports, and golden ONNX vectors may be reviewed in Git.
+Do not commit raw formulas, application traces, generated datasets, tuning run
+history, caches, or large models. Small synthetic fixtures, schemas,
+conformance messages, final aggregate reports, and golden vectors may be
+reviewed in Git.

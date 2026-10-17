@@ -13,8 +13,8 @@ Before a claim-bearing run, freeze:
 - workload manifest and grouped split;
 - KSMT profile and feature schema versions;
 - cvc5 version and parameter-space ID;
-- target-configuration provenance and correctness oracle;
-- training algorithm, hyperparameters, seed, and stopping rule;
+- provider and algorithm identifiers, configuration, seed, and stopping rule;
+- target-configuration provenance, when training a model, and correctness oracle;
 - host policy, timeout, repetitions, and primary objective.
 
 Git stores specifications and final aggregate evidence, not tuning run history.
@@ -32,30 +32,37 @@ failures explicitly.
 If workload replay is not equivalent, document the drift and do not infer
 causal gains from unrelated before/after runs.
 
-## Required baselines
+## Required search baselines
 
 - default cvc5 configuration;
-- best fixed configuration selected only on development workloads;
-- simple deterministic profile heuristic;
-- learned predictor.
+- deterministic Random Search;
+- evolutionary search;
+- SMAC.
 
-The predictor is compared with the same correctness oracle and workload split.
-Its inference cost is reported separately from profiling and solver execution.
+All algorithms receive the same host-enforced budget, workload policy,
+correctness oracle, and aggregation rule. Report worker and host overhead
+separately from solver execution.
+
+For model evaluation, also include the best fixed configuration selected only
+on development workloads and a simple deterministic profile heuristic. Compare
+the predictor on the same grouped split, and report inference cost separately.
 
 ## Metrics and gate
 
 Always report correctness failures, statuses, total workload time, checks per
-second or another frozen objective, p50/p95/p99 where meaningful, profiling and
-inference overhead, and workload-macro aggregates.
+second or another frozen objective, p50/p95/p99 where meaningful, profiling,
+search-host, worker, and inference overhead where applicable, plus
+workload-macro aggregates.
 
-Model work requires zero wrong answers among retained configurations, stable
-headroom over default and best fixed, and consistent improvement across
-independent workload groups. A failed gate changes the workload coverage,
-parameter space, or objective; it is not repaired by silently fitting a larger
-model.
+Every retained configuration requires zero wrong answers. Any performance claim
+requires stable headroom over default and the declared baselines and consistent
+improvement across independent workload groups. A failed gate changes the
+workload coverage, parameter space, objective, or provider; it is not repaired
+by silently changing the search or model after inspecting the holdout.
 
 ## Final evaluation
 
-After all choices are frozen, train once on development workloads and evaluate
-once on the sealed holdout. Report negative results. A changed design requires a
+After all choices are frozen, run the declared algorithms on the sealed
+workloads. For a model, train once on development workloads and evaluate once
+on the grouped holdout. Report negative results. A changed design requires a
 new evaluation, but intermediate run history is not committed to this repo.

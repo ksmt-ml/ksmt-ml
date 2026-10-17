@@ -137,7 +137,7 @@ tsa_jar="$tsa_root/tsa-cli/build/libs/tsa-cli.jar"
 cd "$tsa_root"
 APPIMAGE_EXTRACT_AND_RUN=1 ./gradlew \
   --console=plain \
-  -PuseLocalKsmt=true \
+  -PuseLocalTuningContracts=true \
   :tsa-cli:shadowJar 2>&1 | tee -a "$log"
 
 if [[ ! -f $tsa_jar ]]; then

@@ -114,6 +114,9 @@ Requirements are Python 3.12 and GNU Make.
 The roadmap is PROJECT_PLAN.md. Claim-bearing evaluation requirements are in
 docs/experiment-protocol.md.
 
+The operational walkthrough for the experimental demo branches is in
+docs/demo-end-to-end-ru.md.
+
 ## Data policy
 
 Do not commit raw formulas, application traces, generated datasets, tuning run

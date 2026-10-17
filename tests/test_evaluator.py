@@ -13,6 +13,7 @@ from ksmt_ml.evaluator import (
     build_baseline_manifest,
     describe_workload,
     normalize_candidate,
+    run_profile_replay_matrix,
     run_replay,
     score_reports,
     select_profile_report,
@@ -196,6 +197,72 @@ class RewardTest(unittest.TestCase):
 
 
 class ProfileTrialAggregationTest(unittest.TestCase):
+    def test_matrix_does_not_validate_a_typed_candidate_twice(self):
+        parameter_space = {
+            "schemaVersion": "cvc5-parameter-space-v0",
+            "parameterSpaceId": "test-space-v0",
+            "targetSolver": "cvc5",
+            "compatibleSolverVersions": ["1.3.4"],
+            "applicationLifecycle": "fresh-solver",
+            "backendRole": "regular-bv",
+            "inventoryId": "test-inventory-v0",
+            "options": {
+                "bool-opt": {"kind": "boolean", "default": False},
+            },
+        }
+        typed_candidate = candidate("candidate-v0", {"bool-opt": True})
+        normalized_candidate = normalize_candidate(typed_candidate, parameter_space)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            profile = root / "profile.json"
+            profile.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": "ksmt-solver-profile-v0",
+                        "profileId": "profile-1",
+                        "runId": "run-v0",
+                        "producer": {
+                            "format": "tsa-solver-profile-json-v0",
+                            "captureComplete": True,
+                            "replayable": True,
+                        },
+                        "solver": {
+                            "name": "cvc5",
+                            "version": "1.3.4",
+                            "attributes": {"backend-role": "regular-bv"},
+                        },
+                        "attributes": {
+                            "backend-role": "regular-bv",
+                            "workload-id": "workload-v0",
+                        },
+                        "events": [{"type": "close"}],
+                    },
+                    indent=2,
+                )
+            )
+            trial_report = report(
+                "candidate-v0", [result("candidate-v0", "profile-1")]
+            )
+            trial_report["candidate"] = normalized_candidate
+            trial_report["sourceProfiles"] = [profile.name]
+
+            with mock.patch(
+                "ksmt_ml.evaluator.run_replay", return_value=trial_report
+            ) as replay:
+                aggregated = run_profile_replay_matrix(
+                    tsa_cli_jar=root / "tsa-cli.jar",
+                    candidate=typed_candidate,
+                    parameter_space=parameter_space,
+                    output_path=root / "report.json",
+                    profiles=[profile],
+                )
+
+            self.assertIs(
+                replay.call_args.kwargs["candidate"]["options"]["bool-opt"], True
+            )
+            self.assertEqual(aggregated["candidate"]["options"]["bool-opt"], "true")
+
     def test_selects_one_profile_with_all_baseline_repetitions(self):
         baseline = report(
             "default-v0",

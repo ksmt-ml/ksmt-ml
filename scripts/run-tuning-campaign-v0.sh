@@ -232,7 +232,7 @@ if [[ ${REBUILD_TSA_JAR:-0} == 1 ]]; then
     cd "$tsa_root"
     APPIMAGE_EXTRACT_AND_RUN=1 ./gradlew \
       --console=plain \
-      -PuseLocalKsmt=true \
+      -PuseLocalTuningContracts=true \
       :tsa-cli:shadowJar
   )
 fi

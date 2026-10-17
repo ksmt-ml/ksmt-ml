@@ -698,7 +698,7 @@ def run_profile_replay_matrix(
                         raise ReplayTimeoutError(process_timeout_seconds)
                 trial_report = run_replay(
                     tsa_cli_jar=tsa_cli_jar,
-                    candidate=normalized,
+                    candidate=candidate,
                     parameter_space=parameter_space,
                     output_path=trial_path,
                     profiles=[Path(entry["path"])],

@@ -15,6 +15,7 @@ class ContractSchemaTest(unittest.TestCase):
         schema = self.load_schema("cvc5-tuner-bundle-v0.schema.json")
 
         self.assertEqual(schema["properties"]["targetSolver"]["const"], "cvc5")
+        self.assertIn("parameterSpaceId", schema["required"])
         self.assertEqual(
             schema["properties"]["applicationLifecycle"]["const"],
             "fresh-solver",
@@ -28,6 +29,7 @@ class ContractSchemaTest(unittest.TestCase):
             "cvc5-parameter-space-v0",
         )
         self.assertEqual(schema["properties"]["targetSolver"]["const"], "cvc5")
+        self.assertIn("parameterSpaceId", schema["required"])
         self.assertEqual(
             schema["properties"]["applicationLifecycle"]["const"],
             "fresh-solver",

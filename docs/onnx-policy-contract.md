@@ -4,8 +4,9 @@
 
 KSMT owns the observation-only `KSolverProfile` and profiler contracts.
 `ksmt-ml-tuner` owns `Cvc5InferenceTuner`, `Cvc5TuningDecision`,
-`Cvc5ConfigurationPatch`, JVM feature extraction, ONNX Runtime, decoding,
-validation, and fallback. `ksmt-ml` trains and exports bundles.
+`Cvc5ConfigurationPatch`, `Cvc5ValidatedConfigurationPatch`, JVM feature
+extraction, ONNX Runtime, decoding, validation, and fallback. `ksmt-ml` trains
+and exports bundles.
 
 ## Bundle
 
@@ -20,8 +21,9 @@ status, and fallback policy.
 The graph is trained before deployment and receives tensors, never KSMT
 objects. The production adapter validates the single profile, computes
 deterministic features, invokes ONNX once, decodes parameter coordinates,
-validates every option and value for the exact cvc5 version, and returns either
-`UseConfiguration` or `KeepDefaults`.
+creates an untrusted `Cvc5ConfigurationPatch`, validates every option and value
+for the exact cvc5 version, and returns either
+`UseConfiguration(Cvc5ValidatedConfigurationPatch)` or `KeepDefaults`.
 
 The ONNX adapter does not train the model, replay a workload, or search
 configurations. Budgeted search is a separate provider behind the same tuner

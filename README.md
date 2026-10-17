@@ -42,7 +42,9 @@ The model path is inference-only at runtime:
     KSolverProfile
         -> deterministic versioned feature projection
         -> one pre-trained ONNX inference
-        -> decoded and validated Cvc5ConfigurationPatch
+        -> decoded Cvc5ConfigurationPatch
+        -> parameter-space validation
+        -> Cvc5ValidatedConfigurationPatch
 
 A deployable bundle contains the graph, manifest, feature and parameter
 schemas, checksums, and cross-runtime golden vectors. The current
@@ -58,6 +60,8 @@ application:
 
     tuner host -> ASK
     search worker -> PROPOSAL
+    tuner host validates the proposed patch
+    application evaluator receives Cvc5ValidatedConfigurationPatch
     application evaluator -> TELL observation
     search worker -> next proposal or RESULT
 
@@ -92,9 +96,9 @@ Not production interfaces:
 
 | Area | Status |
 |---|---|
-| KSMT profiling API | final interface branch prepared |
-| tuner inference/search API | final interface branch prepared |
-| TSA launch/evaluator API | final interface branch prepared |
+| KSMT profiling API | contract defined in KSMT |
+| tuner inference/search API | contract defined in ksmt-ml-tuner |
+| TSA launch/evaluator API | contract defined in TSA |
 | RS / ES / SMAC worker | experimental reference exists only on demo |
 | ONNX model and bundle | not implemented |
 | performance claims | none |

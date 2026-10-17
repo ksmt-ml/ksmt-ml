@@ -3,7 +3,7 @@
 ## Ownership
 
 `ksmt-ml-tuner` owns the public JVM search API and the canonical
-`cvc5-search-worker-v0` message schema. `ksmt-ml` may publish a Python worker
+`cvc5-search-worker-v0` message schema. `ksmt-ml` may provide a Python worker
 that conforms to that protocol. TSA or another application implements the JVM
 trial evaluator and owns the workload, correctness oracle, and produced
 artifacts.
@@ -15,7 +15,9 @@ No Python class or module in this repository is a cross-repository API.
 The tuner host starts one local worker process per search session. Standard
 input and output carry newline-delimited JSON protocol messages only. Worker
 diagnostics use standard error. The host validates every envelope, sequence,
-proposal, configuration patch, observation, and checkpoint descriptor.
+proposal, configuration patch, observation, and checkpoint descriptor. A
+worker proposal is an untrusted `Cvc5ConfigurationPatch`; only the host may
+convert it to `Cvc5ValidatedConfigurationPatch` before invoking the evaluator.
 
 The worker owns algorithm-native proposal selection and serializable optimizer
 state. It must not execute TSA, construct a solver, decide correctness, extend

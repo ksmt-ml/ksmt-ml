@@ -81,9 +81,10 @@ projection and train supervised baselines. Export a selected model only after a
 sealed grouped evaluation. The bundle includes its manifest, schemas,
 checksums, and Python/JVM golden vectors.
 
-Exit criterion: a versioned bundle produces a validated
-`Cvc5ConfigurationPatch` from a compatible KSMT profile and safely falls back
-for every incompatible or malformed input.
+Exit criterion: a versioned bundle produces a raw `Cvc5ConfigurationPatch`
+from a compatible KSMT profile, the tuner converts it to
+`Cvc5ValidatedConfigurationPatch` only after parameter-space validation, and
+safely falls back for every incompatible or malformed input.
 
 ## Phase 5 — release readiness
 

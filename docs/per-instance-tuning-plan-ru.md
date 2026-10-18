@@ -402,8 +402,10 @@ profile features
     -> validation and fallback
 ```
 
-Такой вариант совместим с текущей границей `ksmt-ml-tuner`: в production нет
-replay и runtime-поиска.
+Это один из двух поддерживаемых `ksmt-ml-tuner` режимов: быстрый
+inference-only provider не делает replay и runtime-поиска. Он получает один
+профиль, выполняет один заранее обученный ONNX-инференс и возвращает patch либо
+безопасный fallback.
 
 ### Learned surrogate с runtime-поиском
 
@@ -414,12 +416,17 @@ replay и runtime-поиска.
 ```
 
 Затем дешёвый оптимизатор перебирает значения уже по предсказаниям модели, а
-не запускает cvc5 для каждого кандидата. Если же модель дополнительно проверяет
-кандидатов на реальной задаче, это становится online-тюнингом и требует новых
-контрактов budget, cancellation, persistence и solver isolation.
+не запускает cvc5 для каждого кандидата. Если кандидаты дополнительно
+проверяются на реальной задаче, используется второй, независимый production
+режим: budgeted search через внешний worker. Контракты lifecycle, budget,
+cancellation, checkpoint, validation и изолированного evaluator уже
+принадлежат `ksmt-ml-tuner`; TSA или другое приложение владеет workload и
+реальным выполнением trial.
 
-Этот вариант следует рассматривать после inference-only MVP, а не смешивать с
-первым экспериментом.
+Inference provider и search provider не следует смешивать внутри одного
+решения. Они взаимозаменяемы за общим tuner-слоем и могут поставляться
+независимо; learned surrogate для search остаётся отдельным будущим
+улучшением worker'а.
 
 ## Что уже есть
 

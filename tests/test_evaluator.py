@@ -8,6 +8,7 @@ from unittest import mock
 
 from ksmt_ml.evaluator import (
     EvaluatorError,
+    ReplayMatrixTimeoutError,
     ReplayTimeoutError,
     aggregate_profile_trial_reports,
     build_baseline_manifest,
@@ -256,12 +257,35 @@ class ProfileTrialAggregationTest(unittest.TestCase):
                     parameter_space=parameter_space,
                     output_path=root / "report.json",
                     profiles=[profile],
+                    matrix_timeout_seconds=456,
+                    trial_timeout_seconds=123,
                 )
 
             self.assertIs(
                 replay.call_args.kwargs["candidate"]["options"]["bool-opt"], True
             )
+            self.assertEqual(
+                replay.call_args.kwargs["process_timeout_seconds"], 123
+            )
             self.assertEqual(aggregated["candidate"]["options"]["bool-opt"], "true")
+
+            with mock.patch("ksmt_ml.evaluator.run_replay") as replay:
+                with mock.patch(
+                    "ksmt_ml.evaluator.time.monotonic", side_effect=[0.0, 10.0]
+                ):
+                    with self.assertRaisesRegex(
+                        ReplayMatrixTimeoutError, "matrix exceeded"
+                    ):
+                        run_profile_replay_matrix(
+                            tsa_cli_jar=root / "tsa-cli.jar",
+                            candidate=typed_candidate,
+                            parameter_space=parameter_space,
+                            output_path=root / "timed-out.json",
+                            profiles=[profile],
+                            matrix_timeout_seconds=5,
+                            trial_timeout_seconds=123,
+                        )
+            replay.assert_not_called()
 
     def test_selects_one_profile_with_all_baseline_repetitions(self):
         baseline = report(
@@ -471,7 +495,7 @@ class RunnerTest(unittest.TestCase):
         process = popen.return_value
         process.wait.side_effect = subprocess.TimeoutExpired(["java"], timeout=0.001)
 
-        with self.assertRaisesRegex(ReplayTimeoutError, "process budget"):
+        with self.assertRaisesRegex(ReplayTimeoutError, "trial budget"):
             run_replay(
                 tsa_cli_jar=Path("tsa-cli.jar"),
                 candidate=candidate("candidate-v0"),

@@ -49,12 +49,22 @@ class EvaluatorError(ValueError):
 
 
 class ReplayTimeoutError(EvaluatorError):
-    """A candidate exhausted its whole-process evaluation budget."""
+    """One isolated TSA replay process exceeded its trial budget."""
 
     def __init__(self, timeout_seconds: float):
         self.timeout_seconds = timeout_seconds
         super().__init__(
-            f"TSA replay exceeded the {timeout_seconds}-second process budget"
+            f"TSA replay exceeded the {timeout_seconds}-second trial budget"
+        )
+
+
+class ReplayMatrixTimeoutError(EvaluatorError):
+    """A complete profile/repetition matrix exhausted its wall-clock budget."""
+
+    def __init__(self, timeout_seconds: float):
+        self.timeout_seconds = timeout_seconds
+        super().__init__(
+            f"TSA replay matrix exceeded the {timeout_seconds}-second wall-clock budget"
         )
 
 
@@ -656,11 +666,17 @@ def run_profile_replay_matrix(
     repetitions: int = 1,
     warmups: int = 0,
     java: str = "java",
-    process_timeout_seconds: float | None = None,
+    matrix_timeout_seconds: float | None = None,
+    trial_timeout_seconds: float | None = None,
     stream_child_output: bool = True,
     progress_interval_seconds: int = 15,
 ) -> dict[str, Any]:
     """Run a complete workload as isolated one-profile/one-repetition trials."""
+
+    if matrix_timeout_seconds is not None and matrix_timeout_seconds <= 0:
+        raise EvaluatorError("matrix timeout must be positive")
+    if trial_timeout_seconds is not None and trial_timeout_seconds <= 0:
+        raise EvaluatorError("trial timeout must be positive")
 
     workload = describe_workload(
         profile_directory=profile_directory,
@@ -691,25 +707,40 @@ def run_profile_replay_matrix(
                 if trial_report["candidate"] != normalized:
                     raise EvaluatorError("persisted profile trial belongs to another candidate")
             else:
-                remaining = None
-                if process_timeout_seconds is not None:
-                    remaining = process_timeout_seconds - (time.monotonic() - started)
-                    if remaining <= 0:
-                        raise ReplayTimeoutError(process_timeout_seconds)
-                trial_report = run_replay(
-                    tsa_cli_jar=tsa_cli_jar,
-                    candidate=candidate,
-                    parameter_space=parameter_space,
-                    output_path=trial_path,
-                    profiles=[Path(entry["path"])],
-                    backend_role=backend_role,
-                    repetitions=1,
-                    warmups=warmups,
-                    java=java,
-                    process_timeout_seconds=remaining,
-                    stream_child_output=stream_child_output,
-                    progress_interval_seconds=progress_interval_seconds,
-                )
+                matrix_remaining = None
+                if matrix_timeout_seconds is not None:
+                    matrix_remaining = matrix_timeout_seconds - (time.monotonic() - started)
+                    if matrix_remaining <= 0:
+                        raise ReplayMatrixTimeoutError(matrix_timeout_seconds)
+
+                effective_trial_timeout = trial_timeout_seconds
+                limited_by_matrix = False
+                if matrix_remaining is not None and (
+                    effective_trial_timeout is None
+                    or matrix_remaining < effective_trial_timeout
+                ):
+                    effective_trial_timeout = matrix_remaining
+                    limited_by_matrix = True
+
+                try:
+                    trial_report = run_replay(
+                        tsa_cli_jar=tsa_cli_jar,
+                        candidate=candidate,
+                        parameter_space=parameter_space,
+                        output_path=trial_path,
+                        profiles=[Path(entry["path"])],
+                        backend_role=backend_role,
+                        repetitions=1,
+                        warmups=warmups,
+                        java=java,
+                        process_timeout_seconds=effective_trial_timeout,
+                        stream_child_output=stream_child_output,
+                        progress_interval_seconds=progress_interval_seconds,
+                    )
+                except ReplayTimeoutError as failure:
+                    if limited_by_matrix:
+                        raise ReplayMatrixTimeoutError(matrix_timeout_seconds) from failure
+                    raise
             trial_reports.append((profile_id, repetition, trial_report))
 
     report = aggregate_profile_trial_reports(
@@ -1676,7 +1707,16 @@ def _build_parser() -> argparse.ArgumentParser:
         command.add_argument("--backend-role", default="regular-bv")
         command.add_argument("--repetitions", type=int, default=1)
         command.add_argument("--warmups", type=int, default=0)
-        command.add_argument("--process-timeout-seconds", type=float)
+        command.add_argument(
+            "--matrix-timeout-seconds",
+            type=float,
+            help="wall-clock budget for all profile/repetition trials",
+        )
+        command.add_argument(
+            "--trial-timeout-seconds",
+            type=float,
+            help="process timeout for one isolated profile/repetition trial",
+        )
         command.add_argument(
             "--progress-interval-seconds",
             type=int,
@@ -1727,7 +1767,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             java=arguments.java,
             stream_child_output=not arguments.quiet_child_output,
             progress_interval_seconds=arguments.progress_interval_seconds,
-            process_timeout_seconds=arguments.process_timeout_seconds,
+            matrix_timeout_seconds=arguments.matrix_timeout_seconds,
+            trial_timeout_seconds=arguments.trial_timeout_seconds,
         )
         if arguments.command == "baseline":
             workload = describe_workload(

@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-smac-search-manifest-v0.schema.json",
+  "title": "durable SMAC3 cvc5 search manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "createdAtEpochMillis",
+    "experimentSha256",
+    "experiment"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-smac-search-manifest-v0" },
+    "runId": { "type": "string", "minLength": 1 },
+    "createdAtEpochMillis": { "type": "integer", "minimum": 0 },
+    "experimentSha256": { "$ref": "#/$defs/sha256" },
+    "experiment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "budget", "evaluator", "objective"],
+      "properties": {
+        "strategy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "adapterVersion",
+            "smacVersion",
+            "seed",
+            "scenarioName",
+            "additionalInitialConfigurations",
+            "instanceFeaturePolicy",
+            "fidelityPolicy"
+          ],
+          "properties": {
+            "name": { "const": "smac3-algorithm-configuration-v0" },
+            "adapterVersion": { "const": "cvc5-smac3-ask-tell-v0" },
+            "smacVersion": { "const": "2.4.1" },
+            "seed": { "type": "integer", "minimum": 0 },
+            "scenarioName": { "const": "ksmt-cvc5-smac-v0" },
+            "additionalInitialConfigurations": { "type": "integer", "minimum": 0 },
+            "instanceFeaturePolicy": { "const": "one-hot-identity-v0" },
+            "fidelityPolicy": { "const": "disabled-until-qualified-v0" }
+          }
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maxTrials", "maxWallTimeSeconds", "perTrialTimeoutSeconds"],
+          "properties": {
+            "maxTrials": { "type": "integer", "minimum": 1 },
+            "maxWallTimeSeconds": {
+              "oneOf": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "null" }]
+            },
+            "perTrialTimeoutSeconds": {
+              "oneOf": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "null" }]
+            }
+          }
+        },
+        "evaluator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "tsaCliJar",
+            "tsaCliJarSha256",
+            "java",
+            "host",
+            "backendRole",
+            "smacRepetitions",
+            "warmups",
+            "progressIntervalSeconds",
+            "parameterSpace",
+            "parameterSpaceSha256",
+            "baseline",
+            "baselineSha256",
+            "baselineManifest",
+            "baselineManifestSha256",
+            "workload",
+            "scoringPolicy"
+          ],
+          "properties": {
+            "version": { "const": "cvc5-real-per-profile-replay-search-v0" },
+            "tsaCliJar": { "type": "string", "minLength": 1 },
+            "tsaCliJarSha256": { "$ref": "#/$defs/sha256" },
+            "java": { "type": "string", "minLength": 1 },
+            "host": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["system", "release", "machine", "node"],
+              "properties": {
+                "system": { "type": "string" },
+                "release": { "type": "string" },
+                "machine": { "type": "string" },
+                "node": { "type": "string" }
+              }
+            },
+            "backendRole": { "enum": ["regular-bv", "integer-blasted"] },
+            "smacRepetitions": { "type": "integer", "minimum": 1 },
+            "warmups": { "type": "integer", "minimum": 0 },
+            "progressIntervalSeconds": { "type": "integer", "minimum": 0 },
+            "parameterSpace": { "type": "string", "minLength": 1 },
+            "parameterSpaceSha256": { "$ref": "#/$defs/sha256" },
+            "baseline": { "type": "string", "minLength": 1 },
+            "baselineSha256": { "$ref": "#/$defs/sha256" },
+            "baselineManifest": { "type": "string", "minLength": 1 },
+            "baselineManifestSha256": { "$ref": "#/$defs/sha256" },
+            "workload": {
+              "$ref": "cvc5-baseline-manifest-v0.schema.json#/$defs/workload"
+            },
+            "scoringPolicy": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["timeoutPenalty", "rewardClip", "excludeRecordedFailures"],
+              "properties": {
+                "timeoutPenalty": { "type": "number", "minimum": 1 },
+                "rewardClip": { "type": "number", "exclusiveMinimum": 0 },
+                "excludeRecordedFailures": { "type": "boolean" }
+              }
+            }
+          }
+        },
+        "objective": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "direction"],
+          "properties": {
+            "name": { "const": "smac-instance-mean-normalized-cost-v0" },
+            "direction": { "const": "minimize" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

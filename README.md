@@ -10,9 +10,11 @@ Two provider artifacts are planned:
 2. a separately deployable Python search worker providing Random Search,
    evolutionary search, and SMAC through the tuner worker protocol.
 
-Neither production artifact is implemented on this interface-only branch.
-Experimental evaluator, search, persistence, and campaign implementations are
-preserved on dev/litvinovmitch11/demo as non-production reference code.
+The main branch owns provider-side schemas, documentation, and handoff
+requirements; it does not contain either production provider artifact. The
+`dev/litvinovmitch11/demo` branch additionally preserves experimental
+evaluator, search, persistence, and campaign implementations as non-production
+reference code.
 
 ## System boundary
 
@@ -113,6 +115,9 @@ Requirements are Python 3.12 and GNU Make.
 
 The roadmap is PROJECT_PLAN.md. Claim-bearing evaluation requirements are in
 docs/experiment-protocol.md.
+
+The operational walkthrough for the experimental demo branches is in
+docs/demo-end-to-end-ru.md.
 
 ## Data policy
 

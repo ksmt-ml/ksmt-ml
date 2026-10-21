@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-search-trial-failure-v0.schema.json",
+  "title": "cvc5 search trial failure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "candidateId",
+    "status",
+    "failureType",
+    "message",
+    "atEpochMillis",
+    "processTimeoutSeconds",
+    "returnCode",
+    "signalNumber"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-search-trial-failure-v0" },
+    "candidateId": { "type": "string", "minLength": 1 },
+    "status": {
+      "enum": [
+        "INCOMPLETE_ATTEMPT",
+        "CANDIDATE_TIMEOUT",
+        "NATIVE_CRASH",
+        "JVM_FAILURE",
+        "INVALID_REPORT",
+        "INFRASTRUCTURE_FAILURE",
+        "EVALUATOR_FAILURE"
+      ]
+    },
+    "failureType": { "type": "string", "minLength": 1 },
+    "message": { "type": "string" },
+    "atEpochMillis": { "type": "integer", "minimum": 0 },
+    "processTimeoutSeconds": {
+      "oneOf": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "null" }]
+    },
+    "returnCode": {
+      "oneOf": [{ "type": "integer" }, { "type": "null" }]
+    },
+    "signalNumber": {
+      "oneOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }]
+    }
+  }
+}

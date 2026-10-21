@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-search-manifest-v0.schema.json",
+  "title": "cvc5 offline search manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "createdAtEpochMillis",
+    "experimentSha256",
+    "experiment"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-search-manifest-v0" },
+    "runId": { "type": "string", "minLength": 1 },
+    "createdAtEpochMillis": { "type": "integer", "minimum": 0 },
+    "experimentSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "experiment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "budget", "evaluator", "objective"],
+      "properties": {
+        "strategy": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "seed", "samplingPolicy", "mutationProbability"],
+              "properties": {
+                "name": { "const": "random-search-v0" },
+                "seed": { "type": "integer" },
+                "samplingPolicy": { "const": "independent-default-mutation-v0" },
+                "mutationProbability": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name", "seed", "samplingPolicy", "populationSize",
+                "eliteFraction", "initialMutationProbability",
+                "mutationProbability", "failureCost"
+              ],
+              "properties": {
+                "name": { "const": "evolution-search-v0" },
+                "seed": { "type": "integer" },
+                "samplingPolicy": { "const": "domain-aware-elitist-mutation-v0" },
+                "populationSize": { "type": "integer", "minimum": 2 },
+                "eliteFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+                "initialMutationProbability": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+                "mutationProbability": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+                "failureCost": { "type": "number", "exclusiveMinimum": 0 }
+              }
+            }
+          ]
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maxEvaluations",
+            "maxWallTimeSeconds",
+            "perTrialTimeoutSeconds",
+            "maxConsecutiveDuplicates"
+          ],
+          "properties": {
+            "maxEvaluations": { "type": "integer", "minimum": 1 },
+            "maxWallTimeSeconds": {
+              "oneOf": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "null" }]
+            },
+            "perTrialTimeoutSeconds": {
+              "oneOf": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "null" }]
+            },
+            "maxConsecutiveDuplicates": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "evaluator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "tsaCliJar",
+            "tsaCliJarSha256",
+            "java",
+            "host",
+            "backendRole",
+            "repetitions",
+            "warmups",
+            "progressIntervalSeconds",
+            "parameterSpace",
+            "parameterSpaceSha256",
+            "baseline",
+            "baselineSha256",
+            "baselineManifest",
+            "baselineManifestSha256",
+            "workload",
+            "scoringPolicy"
+          ],
+          "properties": {
+            "version": { "const": "cvc5-real-per-profile-replay-search-v0" },
+            "tsaCliJar": { "type": "string", "minLength": 1 },
+            "tsaCliJarSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "java": { "type": "string", "minLength": 1 },
+            "host": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["system", "release", "machine", "node"],
+              "properties": {
+                "system": { "type": "string" },
+                "release": { "type": "string" },
+                "machine": { "type": "string" },
+                "node": { "type": "string" }
+              }
+            },
+            "backendRole": { "enum": ["regular-bv", "integer-blasted"] },
+            "repetitions": { "type": "integer", "minimum": 1 },
+            "warmups": { "type": "integer", "minimum": 0 },
+            "progressIntervalSeconds": { "type": "integer", "minimum": 0 },
+            "parameterSpace": { "type": "string", "minLength": 1 },
+            "parameterSpaceSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "baseline": { "type": "string", "minLength": 1 },
+            "baselineSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "baselineManifest": { "type": "string", "minLength": 1 },
+            "baselineManifestSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "workload": {
+              "$ref": "cvc5-baseline-manifest-v0.schema.json#/$defs/workload"
+            },
+            "scoringPolicy": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "timeoutPenalty",
+                "rewardClip",
+                "excludeRecordedFailures"
+              ],
+              "properties": {
+                "timeoutPenalty": { "type": "number", "minimum": 1 },
+                "rewardClip": { "type": "number", "exclusiveMinimum": 0 },
+                "excludeRecordedFailures": { "type": "boolean" }
+              }
+            }
+          }
+        },
+        "objective": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "direction"],
+          "properties": {
+            "name": { "const": "workload-geometric-normalized-cost-v0" },
+            "direction": { "const": "minimize" }
+          }
+        }
+      }
+    }
+  }
+}

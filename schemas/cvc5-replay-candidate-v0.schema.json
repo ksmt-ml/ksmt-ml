@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-replay-candidate-v0.schema.json",
+  "title": "Offline cvc5 replay candidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "candidateId",
+    "parameterSpaceId",
+    "targetSolver",
+    "options"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-replay-candidate-v0" },
+    "candidateId": { "type": "string", "minLength": 1 },
+    "parameterSpaceId": { "type": "string", "minLength": 1 },
+    "targetSolver": { "const": "cvc5" },
+    "options": {
+      "type": "object",
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "logic",
+            "tlimit-per",
+            "produce-models",
+            "produce-unsat-cores",
+            "incremental",
+            "arrays-exp",
+            "fp-exp"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "anyOf": [
+          { "type": "boolean" },
+          { "type": "integer" },
+          { "type": "number" },
+          { "type": "string", "minLength": 1 }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-baseline-manifest-v0.schema.json",
+  "title": "Qualified cvc5 replay baseline manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "executionMode",
+    "createdAtEpochMillis",
+    "baselineReport",
+    "parameterSpace",
+    "tsaCliJar",
+    "defaultCandidate",
+    "evaluationPolicy",
+    "workload"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-baseline-manifest-v0" },
+    "executionMode": { "const": "per-profile-process-v0" },
+    "createdAtEpochMillis": { "type": "integer", "minimum": 0 },
+    "baselineReport": { "$ref": "#/$defs/fileBinding" },
+    "parameterSpace": {
+      "allOf": [
+        { "$ref": "#/$defs/fileBinding" },
+        {
+          "type": "object",
+          "required": ["parameterSpaceId"],
+          "properties": {
+            "parameterSpaceId": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "tsaCliJar": { "$ref": "#/$defs/fileBinding" },
+    "defaultCandidate": { "$ref": "cvc5-replay-candidate-v0.schema.json" },
+    "evaluationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineKnownStatusTimeouts",
+        "candidateKnownStatusTimeouts",
+        "timeoutPenalty",
+        "baselineKnownStatusTimeoutCount"
+      ],
+      "properties": {
+        "baselineKnownStatusTimeouts": { "const": "censored-par10-v0" },
+        "candidateKnownStatusTimeouts": { "const": "hard-failure-v0" },
+        "timeoutPenalty": { "type": "number", "minimum": 1 },
+        "baselineKnownStatusTimeoutCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "workload": { "$ref": "#/$defs/workload" }
+  },
+  "$defs": {
+    "fileBinding": {
+      "type": "object",
+      "required": ["fileName", "sha256"],
+      "properties": {
+        "fileName": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "workload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "backendRole", "workloadSha256", "profiles"],
+      "properties": {
+        "schemaVersion": { "const": "cvc5-workload-manifest-v0" },
+        "backendRole": { "enum": ["regular-bv", "integer-blasted"] },
+        "workloadSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "profiles": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/profile" }
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fileName",
+        "path",
+        "sha256",
+        "sizeBytes",
+        "profileId",
+        "runId",
+        "workloadId",
+        "solverName",
+        "solverVersion",
+        "backendRole",
+        "profileSchemaVersion",
+        "producerFormat",
+        "captureComplete",
+        "replayable"
+      ],
+      "properties": {
+        "fileName": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "sizeBytes": { "type": "integer", "minimum": 0 },
+        "profileId": { "type": "string", "minLength": 1 },
+        "runId": { "type": "string", "minLength": 1 },
+        "workloadId": { "type": "string", "minLength": 1 },
+        "solverName": { "const": "cvc5" },
+        "solverVersion": { "type": "string", "minLength": 1 },
+        "backendRole": { "enum": ["regular-bv", "integer-blasted"] },
+        "profileSchemaVersion": { "const": "ksmt-solver-profile-v0" },
+        "producerFormat": { "const": "tsa-solver-profile-json-v0" },
+        "captureComplete": { "const": true },
+        "replayable": { "const": true }
+      }
+    }
+  }
+}

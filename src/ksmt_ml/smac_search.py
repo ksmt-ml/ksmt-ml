@@ -682,6 +682,7 @@ def _prepare_experiment(arguments: argparse.Namespace) -> tuple[
             parameter_space=parameter_space,
             tsa_cli_jar=arguments.tsa_cli_jar,
             current_workload=workload,
+            expected_timeout_penalty=arguments.timeout_penalty,
         )
     except EvaluatorError as failure:
         raise SmacSearchError(f"SMAC baseline preflight failed: {failure}") from failure

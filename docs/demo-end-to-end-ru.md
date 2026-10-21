@@ -131,6 +131,14 @@ Manifest связывает baseline с точными SHA-256 parameter space, 
 каждого профиля. Если оба baseline-файла уже существуют, скрипт сохраняет их,
 а не переизмеряет выборочно.
 
+`UNKNOWN`, полученный default cvc5 по достижении записанного solver timeout,
+сохраняется как censored observation, а не как неверный ответ. Его стоимость
+считается по зафиксированному PAR10-подобному правилу: из измерения вычитается
+фактическая длительность timeout и добавляется `10 × timeout budget`. Wrong
+answer и replay failure по-прежнему запрещены в baseline. Для проверяемого
+кандидата любой timeout известного SAT/UNSAT, wrong answer или replay failure
+остаётся hard failure.
+
 ## 5. RS, ES и SMAC
 
 Все три алгоритма используют один evaluator, один development workload,

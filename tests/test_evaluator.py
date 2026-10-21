@@ -75,9 +75,20 @@ def result(
         "wrongAnswerCount": wrong_answers,
         "expectedUnknownCount": 0,
         "resolvedUnknownCount": 0,
-        "actualStatusCounts": {"SAT": 1},
+        "actualStatusCounts": {"UNKNOWN" if timeout_count else "SAT": 1},
         "operationDurationNanos": {"check": known_check},
-        "mismatches": [],
+        "mismatches": (
+            [
+                {
+                    "checkId": 0,
+                    "expectedStatus": "SAT",
+                    "actualStatus": "UNKNOWN",
+                    "timeoutNanos": timeout_budget,
+                }
+            ]
+            if timeout_count
+            else []
+        ),
         "failureType": None,
         "failureMessage": None,
     }
@@ -162,6 +173,32 @@ class RewardTest(unittest.TestCase):
         self.assertIsNone(score["profiles"][0]["candidateCostNanos"])
         self.assertEqual(score["reward"], -5)
         self.assertEqual(score["totals"]["knownStatusTimeoutCount"], 1)
+
+    def test_censored_baseline_timeout_is_penalized_but_candidate_must_be_clean(self):
+        baseline = report(
+            "default-v0",
+            [
+                result(
+                    "default-v0",
+                    "profile-1",
+                    non_check=10,
+                    known_check=50,
+                    timeout_duration=50,
+                    timeout_budget=100,
+                    timeout_count=1,
+                )
+            ],
+        )
+        evaluated = report(
+            "candidate-v0",
+            [result("candidate-v0", "profile-1", non_check=10, known_check=90)],
+        )
+
+        score = score_reports(baseline, evaluated, timeout_penalty=10)
+
+        self.assertTrue(score["eligible"])
+        self.assertEqual(score["profiles"][0]["baselineCostNanos"], 1010)
+        self.assertAlmostEqual(score["reward"], math.log(10.1))
 
     def test_wrong_answer_is_hard_failure(self):
         baseline = report("default-v0", [result("default-v0", "profile-1")])
@@ -407,6 +444,15 @@ class BaselinePreflightTest(unittest.TestCase):
                 tsa_cli_jar=jar,
                 workload=workload,
             )
+            self.assertEqual(
+                manifest["evaluationPolicy"],
+                {
+                    "baselineKnownStatusTimeouts": "censored-par10-v0",
+                    "candidateKnownStatusTimeouts": "hard-failure-v0",
+                    "timeoutPenalty": 10.0,
+                    "baselineKnownStatusTimeoutCount": 0,
+                },
+            )
             validate_baseline_manifest(
                 manifest,
                 report_path=report_path,
@@ -461,6 +507,39 @@ class BaselinePreflightTest(unittest.TestCase):
             )
             with self.assertRaisesRegex(EvaluatorError, "wrong SAT/UNSAT"):
                 validate_baseline_preflight(incorrect, self._space(), workload)
+
+    def test_preflight_accepts_a_censored_default_baseline(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            profile = Path(temporary) / "profile-1.json"
+            self._write_profile(profile)
+            workload = describe_workload(
+                profiles=[profile], backend_role="regular-bv"
+            )
+            censored = report(
+                "default-v0",
+                [
+                    result(
+                        "default-v0",
+                        "profile-1",
+                        non_check=10,
+                        known_check=50,
+                        timeout_duration=50,
+                        timeout_budget=100,
+                        timeout_count=1,
+                    )
+                ],
+            )
+
+            validate_baseline_preflight(
+                censored, self._space(), workload, timeout_penalty=10
+            )
+
+            censored["results"][0]["knownStatusTimeoutBudgetNanos"] = 0
+            censored["results"][0]["mismatches"][0]["timeoutNanos"] = 0
+            with self.assertRaisesRegex(EvaluatorError, "no duration or budget"):
+                validate_baseline_preflight(
+                    censored, self._space(), workload, timeout_penalty=10
+                )
 
 
 class RunnerTest(unittest.TestCase):

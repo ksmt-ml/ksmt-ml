@@ -2212,6 +2212,7 @@ def run_search(arguments: argparse.Namespace) -> dict[str, Any]:
             parameter_space=parameter_space,
             tsa_cli_jar=arguments.tsa_cli_jar,
             current_workload=workload,
+            expected_timeout_penalty=arguments.timeout_penalty,
         )
     except EvaluatorError as failure:
         raise SearchError(f"baseline preflight failed: {failure}") from failure

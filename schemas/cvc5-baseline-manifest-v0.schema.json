@@ -12,6 +12,7 @@
     "parameterSpace",
     "tsaCliJar",
     "defaultCandidate",
+    "evaluationPolicy",
     "workload"
   ],
   "properties": {
@@ -33,6 +34,22 @@
     },
     "tsaCliJar": { "$ref": "#/$defs/fileBinding" },
     "defaultCandidate": { "$ref": "cvc5-replay-candidate-v0.schema.json" },
+    "evaluationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baselineKnownStatusTimeouts",
+        "candidateKnownStatusTimeouts",
+        "timeoutPenalty",
+        "baselineKnownStatusTimeoutCount"
+      ],
+      "properties": {
+        "baselineKnownStatusTimeouts": { "const": "censored-par10-v0" },
+        "candidateKnownStatusTimeouts": { "const": "hard-failure-v0" },
+        "timeoutPenalty": { "type": "number", "minimum": 1 },
+        "baselineKnownStatusTimeoutCount": { "type": "integer", "minimum": 0 }
+      }
+    },
     "workload": { "$ref": "#/$defs/workload" }
   },
   "$defs": {

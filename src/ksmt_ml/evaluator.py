@@ -28,6 +28,7 @@ REPORT_SCHEMA_VERSION = "tsa-cvc5-profile-replay-report-v0"
 RESULT_SCHEMA_VERSION = "tsa-cvc5-profile-replay-result-v0"
 SCORE_SCHEMA_VERSION = "cvc5-evaluator-score-v0"
 BASELINE_MANIFEST_SCHEMA_VERSION = "cvc5-baseline-manifest-v0"
+DEFAULT_TIMEOUT_PENALTY = 10.0
 WORKLOAD_MANIFEST_SCHEMA_VERSION = "cvc5-workload-manifest-v0"
 REPLAY_EXECUTION_MODE = "per-profile-process-v0"
 
@@ -365,8 +366,15 @@ def build_baseline_manifest(
     parameter_space: Mapping[str, Any],
     tsa_cli_jar: Path,
     workload: Mapping[str, Any],
+    timeout_penalty: float = DEFAULT_TIMEOUT_PENALTY,
 ) -> dict[str, Any]:
-    validate_baseline_preflight(report, parameter_space, workload)
+    validate_baseline_preflight(
+        report, parameter_space, workload, timeout_penalty=timeout_penalty
+    )
+    timeout_count = sum(
+        _non_negative_int(result, "knownStatusTimeoutCount")
+        for result in report["results"]
+    )
     return {
         "schemaVersion": BASELINE_MANIFEST_SCHEMA_VERSION,
         "executionMode": REPLAY_EXECUTION_MODE,
@@ -385,6 +393,12 @@ def build_baseline_manifest(
             "sha256": sha256_file(tsa_cli_jar.resolve()),
         },
         "defaultCandidate": report["candidate"],
+        "evaluationPolicy": {
+            "baselineKnownStatusTimeouts": "censored-par10-v0",
+            "candidateKnownStatusTimeouts": "hard-failure-v0",
+            "timeoutPenalty": timeout_penalty,
+            "baselineKnownStatusTimeoutCount": timeout_count,
+        },
         "workload": dict(workload),
     }
 
@@ -398,6 +412,7 @@ def validate_baseline_manifest(
     parameter_space: Mapping[str, Any],
     tsa_cli_jar: Path,
     current_workload: Mapping[str, Any],
+    expected_timeout_penalty: float = DEFAULT_TIMEOUT_PENALTY,
 ) -> None:
     required = {
         "schemaVersion",
@@ -407,6 +422,7 @@ def validate_baseline_manifest(
         "parameterSpace",
         "tsaCliJar",
         "defaultCandidate",
+        "evaluationPolicy",
         "workload",
     }
     if set(manifest) != required:
@@ -433,7 +449,43 @@ def validate_baseline_manifest(
     if manifest.get("defaultCandidate") != report.get("candidate"):
         raise EvaluatorError("baseline manifest candidate mismatch")
     normalize_candidate(manifest["defaultCandidate"], parameter_space)
-    validate_baseline_preflight(report, parameter_space, current_workload)
+    policy = manifest.get("evaluationPolicy")
+    if not isinstance(policy, dict) or set(policy) != {
+        "baselineKnownStatusTimeouts",
+        "candidateKnownStatusTimeouts",
+        "timeoutPenalty",
+        "baselineKnownStatusTimeoutCount",
+    }:
+        raise EvaluatorError("baseline manifest evaluation policy is malformed")
+    _require_equal(policy, "baselineKnownStatusTimeouts", "censored-par10-v0")
+    _require_equal(policy, "candidateKnownStatusTimeouts", "hard-failure-v0")
+    timeout_penalty = policy.get("timeoutPenalty")
+    if (
+        isinstance(timeout_penalty, bool)
+        or not isinstance(timeout_penalty, (int, float))
+        or not math.isfinite(float(timeout_penalty))
+        or float(timeout_penalty) < 1.0
+    ):
+        raise EvaluatorError("baseline manifest timeout penalty is invalid")
+    if not math.isclose(
+        float(timeout_penalty), float(expected_timeout_penalty), rel_tol=0.0, abs_tol=0.0
+    ):
+        raise EvaluatorError("baseline and search timeout penalties differ")
+    recorded_timeout_count = _non_negative_int(
+        policy, "baselineKnownStatusTimeoutCount"
+    )
+    actual_timeout_count = sum(
+        _non_negative_int(result, "knownStatusTimeoutCount")
+        for result in report["results"]
+    )
+    if recorded_timeout_count != actual_timeout_count:
+        raise EvaluatorError("baseline manifest timeout count mismatch")
+    validate_baseline_preflight(
+        report,
+        parameter_space,
+        current_workload,
+        timeout_penalty=float(timeout_penalty),
+    )
 
 
 def _validate_file_binding(binding: Any, path: Path, label: str) -> None:
@@ -1055,7 +1107,11 @@ def validate_baseline_preflight(
     report: Mapping[str, Any],
     parameter_space: Mapping[str, Any],
     workload: Mapping[str, Any],
+    *,
+    timeout_penalty: float = DEFAULT_TIMEOUT_PENALTY,
 ) -> None:
+    if timeout_penalty < 1.0 or not math.isfinite(timeout_penalty):
+        raise EvaluatorError("timeout penalty must be finite and at least 1")
     validate_parameter_space(parameter_space)
     validate_workload_manifest(workload)
     validate_report(report)
@@ -1074,15 +1130,38 @@ def validate_baseline_preflight(
             raise EvaluatorError("baseline contains a failed replay")
         if result["wrongAnswerCount"]:
             raise EvaluatorError("baseline produced a wrong SAT/UNSAT answer")
-        if result["knownStatusTimeoutCount"]:
-            raise EvaluatorError("baseline did not reproduce a known result")
+        _validate_censored_baseline_timeouts(result)
         if result["recordedFailureEventCount"]:
             raise EvaluatorError("baseline workload contains a recorded failure event")
-    self_score = score_reports(report, report, exclude_recorded_failures=False)
-    if not self_score["eligible"] or not math.isclose(
-        float(self_score["reward"]), 0.0, abs_tol=1e-12
-    ):
-        raise EvaluatorError("baseline self-score is not a clean zero")
+        _effective_cost(result, timeout_penalty)
+
+
+def _validate_censored_baseline_timeouts(result: Mapping[str, Any]) -> None:
+    timeout_count = _non_negative_int(result, "knownStatusTimeoutCount")
+    timeout_duration = _non_negative_int(
+        result, "knownStatusTimeoutDurationNanos"
+    )
+    timeout_budget = _non_negative_int(result, "knownStatusTimeoutBudgetNanos")
+    mismatches = result["mismatches"]
+    if timeout_count == 0:
+        if timeout_duration or timeout_budget or mismatches:
+            raise EvaluatorError("baseline timeout accounting is inconsistent")
+        return
+    if timeout_duration == 0 or timeout_budget == 0:
+        raise EvaluatorError("censored baseline timeout has no duration or budget")
+    expected_mismatch_count = min(timeout_count, 20)
+    if len(mismatches) != expected_mismatch_count:
+        raise EvaluatorError("censored baseline timeout mismatches are incomplete")
+    for mismatch in mismatches:
+        if mismatch["actualStatus"] != "UNKNOWN":
+            raise EvaluatorError("censored baseline mismatch is not UNKNOWN")
+        timeout_nanos = mismatch.get("timeoutNanos")
+        if (
+            isinstance(timeout_nanos, bool)
+            or not isinstance(timeout_nanos, int)
+            or timeout_nanos <= 0
+        ):
+            raise EvaluatorError("censored baseline mismatch has no positive cutoff")
 
 
 def validate_report_against_workload(
@@ -1280,8 +1359,6 @@ def _baseline_exclusion_reason(
         raise EvaluatorError("baseline replay contains a failed result")
     if any(_non_negative_int(result, "wrongAnswerCount") for result in results):
         raise EvaluatorError("baseline replay produced a wrong SAT/UNSAT answer")
-    if any(_non_negative_int(result, "knownStatusTimeoutCount") for result in results):
-        raise EvaluatorError("baseline replay did not reproduce a known result")
     if exclude_recorded_failures and any(
         _non_negative_int(result, "recordedFailureEventCount") for result in results
     ):
@@ -1738,7 +1815,25 @@ def _build_parser() -> argparse.ArgumentParser:
         "baseline", help="run and strictly qualify a default baseline"
     )
     add_replay_arguments(baseline)
+    baseline.add_argument(
+        "--timeout-penalty", type=float, default=DEFAULT_TIMEOUT_PENALTY
+    )
     baseline.add_argument("--manifest-output", type=Path, required=True)
+
+    finalize = commands.add_parser(
+        "finalize-baseline",
+        help="qualify an existing aggregate baseline without replaying profiles",
+    )
+    finalize.add_argument("--report", type=Path, required=True)
+    finalize.add_argument("--parameter-space", type=Path, required=True)
+    finalize.add_argument("--tsa-cli-jar", type=Path, required=True)
+    finalize.add_argument("--profile-dir", type=Path)
+    finalize.add_argument("--profile", type=Path, action="append", default=[])
+    finalize.add_argument("--backend-role", default="regular-bv")
+    finalize.add_argument(
+        "--timeout-penalty", type=float, default=DEFAULT_TIMEOUT_PENALTY
+    )
+    finalize.add_argument("--manifest-output", type=Path, required=True)
 
     score = commands.add_parser("score", help="score a replay report against a baseline")
     score.add_argument("--baseline", type=Path, required=True)
@@ -1783,8 +1878,27 @@ def main(argv: Sequence[str] | None = None) -> int:
                 parameter_space=parameter_space,
                 tsa_cli_jar=arguments.tsa_cli_jar,
                 workload=workload,
+                timeout_penalty=arguments.timeout_penalty,
             )
             write_json(arguments.manifest_output, manifest)
+    elif arguments.command == "finalize-baseline":
+        parameter_space = load_json(arguments.parameter_space)
+        report = load_json(arguments.report)
+        workload = describe_workload(
+            profile_directory=arguments.profile_dir,
+            profiles=arguments.profile,
+            backend_role=arguments.backend_role,
+        )
+        manifest = build_baseline_manifest(
+            report_path=arguments.report,
+            report=report,
+            parameter_space_path=arguments.parameter_space,
+            parameter_space=parameter_space,
+            tsa_cli_jar=arguments.tsa_cli_jar,
+            workload=workload,
+            timeout_penalty=arguments.timeout_penalty,
+        )
+        write_json(arguments.manifest_output, manifest)
     else:
         score = score_reports(
             load_json(arguments.baseline),

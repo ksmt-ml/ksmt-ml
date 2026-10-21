@@ -238,6 +238,43 @@ class SmacPinnedApiIntegrationTest(unittest.TestCase):
             self.assertEqual(feedback.status, "SUCCESS")
             self.assertEqual(len(strategy.facade.runhistory), 1)
 
+    def test_surrogate_handles_more_than_four_workload_instances(self):
+        instances = [f"profile-{index}-v0" for index in range(10)]
+        space = parameter_space()
+        space["options"] = {
+            f"option-{index}": {"kind": "boolean", "default": False}
+            for index in range(6)
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            strategy = SmacAskTellStrategy.build(
+                space,
+                instance_ids=instances,
+                seed=17,
+                n_trials=30,
+                repetitions=1,
+                output_directory=Path(temporary),
+                additional_initial_configurations=1,
+            )
+
+            # Five observations activate SMAC 2.4.1's default four-component
+            # PCA.  The next surrogate prediction used to fail because SMAC
+            # combined a PCA-trained forest with the original ten features.
+            for index in range(25):
+                request = strategy.ask()
+                strategy.tell(
+                    trial_result(
+                        request_id=request.request_id,
+                        candidate_id=request.candidate["candidateId"],
+                        instance_id=request.instance_id,
+                        seed=request.seed,
+                        cost=0.75 + index / 100.0,
+                    )
+                )
+
+            model = strategy.facade._config_selector._model
+            self.assertIsNone(model._pca_components)
+            self.assertGreaterEqual(strategy.facade.runhistory.finished, 25)
+
 
 if __name__ == "__main__":
     unittest.main()

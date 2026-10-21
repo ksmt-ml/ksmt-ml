@@ -658,6 +658,35 @@ def _working_smac_directory(run_directory: Path, seed: int) -> Path:
     return run_directory.resolve() / "smac" / SMAC_SCENARIO_NAME / str(seed)
 
 
+def _migrate_smac_241_instance_feature_pca(working_directory: Path) -> bool:
+    """Repair pre-fix SMAC 2.4.1 metadata after a verified restore.
+
+    The immutable checkpoint remains untouched and checksummed.  Only its
+    disposable working copy is updated so that SMAC accepts the explicitly
+    configured no-PCA surrogate and can continue from the preserved
+    runhistory.  A subsequent checkpoint captures the repaired metadata.
+    """
+
+    scenario_path = working_directory / "scenario.json"
+    scenario = load_json(scenario_path)
+    if not scenario.get("instance_features"):
+        return False
+    metadata = scenario.get("_meta")
+    model = metadata.get("model") if isinstance(metadata, dict) else None
+    if not isinstance(model, dict) or model.get("name") != "RandomForest":
+        raise SmacSearchError("restored SMAC scenario has unexpected model metadata")
+    pca_components = model.get("pca_components")
+    if pca_components is None:
+        return False
+    if pca_components != 4:
+        raise SmacSearchError(
+            "restored SMAC scenario has an unsupported instance-feature PCA policy"
+        )
+    model["pca_components"] = None
+    atomic_write_json(scenario_path, scenario)
+    return True
+
+
 def _prepare_experiment(arguments: argparse.Namespace) -> tuple[
     dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]
 ]:
@@ -768,8 +797,17 @@ def run_smac_search(arguments: argparse.Namespace) -> dict[str, Any]:
     manifest, state, created = store.open_or_create(experiment)
     checkpoint_store = SmacNativeCheckpointStore(arguments.run_dir)
     working_directory = _working_smac_directory(arguments.run_dir, arguments.seed)
+    migrated_instance_feature_pca = False
     if not created and state["smacCheckpoint"] is not None:
         checkpoint_store.restore(state["smacCheckpoint"], working_directory)
+        migrated_instance_feature_pca = _migrate_smac_241_instance_feature_pca(
+            working_directory
+        )
+        if migrated_instance_feature_pca:
+            _log(
+                "Migrated the restored SMAC 2.4.1 checkpoint to disable "
+                "broken instance-feature PCA"
+            )
 
     strategy = SmacAskTellStrategy.build(
         parameter_space,
@@ -808,7 +846,14 @@ def run_smac_search(arguments: argparse.Namespace) -> dict[str, Any]:
     state["status"] = "RUNNING"
     state["stopReason"] = None
     store.save_state(state)
-    store.append_event("EXPERIMENT_CREATED" if created else "EXPERIMENT_RESUMED")
+    store.append_event(
+        "EXPERIMENT_CREATED" if created else "EXPERIMENT_RESUMED",
+        compatibilityMigration=(
+            "smac-2.4.1-disable-instance-feature-pca-v0"
+            if migrated_instance_feature_pca
+            else None
+        ),
+    )
     _log(
         f"{'Created' if created else 'Resumed'} {manifest['runId']}; "
         f"completed={state['completedTrialCount']}, realEvaluations={state['actualEvaluationCount']}"

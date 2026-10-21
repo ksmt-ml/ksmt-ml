@@ -172,9 +172,21 @@ class SmacAskTellStrategy:
             scenario,
             max_config_calls=len(instances) * repetitions,
         )
+        # SMAC 2.4.1 enables a four-component PCA for instance features by
+        # default.  Its RandomForest trains on the transformed features, but
+        # predict_marginalized() passes the original features to the fitted
+        # sklearn forest.  With more than four one-hot workload instances this
+        # fails as soon as SMAC leaves the initial design and starts using its
+        # surrogate.  Keep the declared one-hot identity features unchanged:
+        # they are already small, deterministic, and need no compression.
+        model = api.AlgorithmConfigurationFacade.get_model(
+            scenario,
+            pca_components=None,
+        )
         facade = api.AlgorithmConfigurationFacade(
             scenario,
             target_function=None,
+            model=model,
             initial_design=initial_design,
             intensifier=intensifier,
             logging_level=logging_level,

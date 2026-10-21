@@ -1,11 +1,15 @@
 import importlib.util
+import json
 import tempfile
 import unittest
 from pathlib import Path
 
 from ksmt_ml.smac_adapter import SmacAskTellStrategy
-from ksmt_ml.smac_search import SmacNativeCheckpointStore
-from ksmt_ml.search import TrialResult
+from ksmt_ml.smac_search import (
+    SmacNativeCheckpointStore,
+    _migrate_smac_241_instance_feature_pca,
+)
+from ksmt_ml.search import TrialResult, atomic_write_json
 
 
 HAS_SMAC = (
@@ -45,6 +49,27 @@ def build_strategy(root: Path) -> SmacAskTellStrategy:
 
 @unittest.skipUnless(HAS_SMAC, "SMAC3 dependencies are not installed")
 class SmacPersistenceTest(unittest.TestCase):
+    def test_legacy_instance_feature_pca_metadata_is_migrated(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            working = Path(temporary)
+            scenario = {
+                "instance_features": {"profile-v0": [1.0]},
+                "_meta": {
+                    "model": {
+                        "name": "RandomForest",
+                        "pca_components": 4,
+                    }
+                },
+            }
+            atomic_write_json(working / "scenario.json", scenario)
+
+            self.assertTrue(_migrate_smac_241_instance_feature_pca(working))
+            migrated = json.loads(
+                (working / "scenario.json").read_text(encoding="utf-8")
+            )
+            self.assertIsNone(migrated["_meta"]["model"]["pca_components"])
+            self.assertFalse(_migrate_smac_241_instance_feature_pca(working))
+
     def test_running_trial_survives_native_corruption_and_restart(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

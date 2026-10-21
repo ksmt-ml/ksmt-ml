@@ -18,6 +18,7 @@ from ksmt_ml.evaluator import (
     run_replay,
     score_reports,
     select_profile_report,
+    sha256_json,
     validate_baseline_manifest,
     validate_baseline_preflight,
     validate_report,
@@ -235,6 +236,70 @@ class RewardTest(unittest.TestCase):
 
 
 class ProfileTrialAggregationTest(unittest.TestCase):
+    @mock.patch("ksmt_ml.evaluator.run_replay")
+    def test_matrix_resume_reuses_a_valid_profile_trial(self, replay):
+        parameter_space = {
+            "schemaVersion": "cvc5-parameter-space-v0",
+            "parameterSpaceId": "test-space-v0",
+            "targetSolver": "cvc5",
+            "compatibleSolverVersions": ["1.3.4"],
+            "applicationLifecycle": "fresh-solver",
+            "backendRole": "regular-bv",
+            "inventoryId": "test-inventory-v0",
+            "options": {
+                "bool-opt": {"kind": "boolean", "default": False},
+            },
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            profile = root / "profile-1.json"
+            profile.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": "ksmt-solver-profile-v0",
+                        "profileId": "profile-1",
+                        "runId": "run-v0",
+                        "producer": {
+                            "format": "tsa-solver-profile-json-v0",
+                            "captureComplete": True,
+                            "replayable": True,
+                        },
+                        "solver": {
+                            "name": "cvc5",
+                            "version": "1.3.4",
+                            "attributes": {"backend-role": "regular-bv"},
+                        },
+                        "attributes": {
+                            "backend-role": "regular-bv",
+                            "workload-id": "workload-v0",
+                        },
+                        "events": [],
+                    },
+                    indent=2,
+                )
+                + "\n"
+            )
+            output = root / "confirmation.json"
+            shard = root / "confirmation.profile-trials" / (
+                f"0000-{sha256_json('profile-1')[:12]}-r0000.json"
+            )
+            shard.parent.mkdir()
+            shard.write_text(
+                json.dumps(report("default-v0", [result("default-v0", "profile-1")]))
+            )
+
+            aggregated = run_profile_replay_matrix(
+                tsa_cli_jar=root / "unused.jar",
+                candidate=candidate("default-v0"),
+                parameter_space=parameter_space,
+                output_path=output,
+                profiles=[profile],
+            )
+
+            replay.assert_not_called()
+            self.assertEqual(len(aggregated["results"]), 1)
+            self.assertTrue(output.is_file())
+
     def test_matrix_does_not_validate_a_typed_candidate_twice(self):
         parameter_space = {
             "schemaVersion": "cvc5-parameter-space-v0",

@@ -10,11 +10,111 @@ import statistics
 from pathlib import Path
 from typing import Any, Sequence
 
-from ksmt_ml.evaluator import load_json, validate_score, write_json
+from ksmt_ml.evaluator import (
+    DEFAULT_TIMEOUT_PENALTY,
+    describe_workload,
+    load_json,
+    normalize_candidate,
+    score_reports,
+    validate_baseline_manifest,
+    validate_report_against_workload,
+    validate_score,
+    write_json,
+)
 
 
 class CampaignError(ValueError):
     pass
+
+
+def validate_replay_artifact(
+    *,
+    report_path: Path,
+    candidate_path: Path,
+    parameter_space_path: Path,
+    profile_directory: Path | None = None,
+    profiles: Sequence[Path] = (),
+    backend_role: str = "regular-bv",
+    repetitions: int,
+    warmups: int,
+) -> None:
+    """Validate a completed report before a resumed campaign skips it."""
+
+    parameter_space = load_json(parameter_space_path)
+    workload = describe_workload(
+        profile_directory=profile_directory,
+        profiles=profiles,
+        backend_role=backend_role,
+    )
+    expected_candidate = normalize_candidate(
+        load_json(candidate_path), parameter_space
+    )
+    report = load_json(report_path)
+    validate_report_against_workload(
+        report,
+        parameter_space,
+        workload,
+        expected_repetitions=repetitions,
+        expected_warmups=warmups,
+    )
+    if report["candidate"] != expected_candidate:
+        raise CampaignError("replay report belongs to another candidate artifact")
+
+
+def validate_baseline_artifacts(
+    *,
+    report_path: Path,
+    manifest_path: Path,
+    parameter_space_path: Path,
+    tsa_cli_jar: Path,
+    profile_directory: Path | None = None,
+    profiles: Sequence[Path] = (),
+    backend_role: str = "regular-bv",
+    timeout_penalty: float = DEFAULT_TIMEOUT_PENALTY,
+) -> None:
+    """Validate a sealed baseline and every content binding needed for reuse."""
+
+    parameter_space = load_json(parameter_space_path)
+    report = load_json(report_path)
+    workload = describe_workload(
+        profile_directory=profile_directory,
+        profiles=profiles,
+        backend_role=backend_role,
+    )
+    validate_baseline_manifest(
+        load_json(manifest_path),
+        report_path=report_path,
+        report=report,
+        parameter_space_path=parameter_space_path,
+        parameter_space=parameter_space,
+        tsa_cli_jar=tsa_cli_jar,
+        current_workload=workload,
+        expected_timeout_penalty=timeout_penalty,
+    )
+
+
+def validate_score_artifact(
+    *,
+    score_path: Path,
+    baseline_path: Path,
+    candidate_report_path: Path,
+    timeout_penalty: float = DEFAULT_TIMEOUT_PENALTY,
+    reward_clip: float = 5.0,
+    exclude_recorded_failures: bool = True,
+) -> None:
+    """Reject a stale score instead of trusting only its candidate identifier."""
+
+    actual = load_json(score_path)
+    expected = score_reports(
+        load_json(baseline_path),
+        load_json(candidate_report_path),
+        timeout_penalty=timeout_penalty,
+        reward_clip=reward_clip,
+        exclude_recorded_failures=exclude_recorded_failures,
+    )
+    validate_score(actual, expected_candidate_id=expected["candidateId"])
+    if actual != expected:
+        raise CampaignError("persisted score does not match the current reports")
 
 
 def budget_advice(
@@ -213,6 +313,48 @@ def _build_parser() -> argparse.ArgumentParser:
     advice.add_argument("--per-trial-timeout-seconds", type=float, required=True)
     advice.add_argument("--population-size", type=int, required=True)
     advice.add_argument("--minimum-generations", type=int, default=2)
+
+    validate_replay = commands.add_parser(
+        "validate-replay", help="validate and reuse an existing replay report"
+    )
+    validate_replay.add_argument("--report", type=Path, required=True)
+    validate_replay.add_argument("--candidate", type=Path, required=True)
+    validate_replay.add_argument("--parameter-space", type=Path, required=True)
+    validate_replay.add_argument("--profile-dir", type=Path)
+    validate_replay.add_argument("--profile", type=Path, action="append", default=[])
+    validate_replay.add_argument("--backend-role", default="regular-bv")
+    validate_replay.add_argument("--repetitions", type=int, required=True)
+    validate_replay.add_argument("--warmups", type=int, required=True)
+
+    validate_baseline = commands.add_parser(
+        "validate-baseline", help="validate and reuse a sealed baseline"
+    )
+    validate_baseline.add_argument("--report", type=Path, required=True)
+    validate_baseline.add_argument("--manifest", type=Path, required=True)
+    validate_baseline.add_argument("--parameter-space", type=Path, required=True)
+    validate_baseline.add_argument("--tsa-cli-jar", type=Path, required=True)
+    validate_baseline.add_argument("--profile-dir", type=Path)
+    validate_baseline.add_argument("--profile", type=Path, action="append", default=[])
+    validate_baseline.add_argument("--backend-role", default="regular-bv")
+    validate_baseline.add_argument(
+        "--timeout-penalty", type=float, default=DEFAULT_TIMEOUT_PENALTY
+    )
+
+    validate_saved_score = commands.add_parser(
+        "validate-score", help="validate a score against its current reports"
+    )
+    validate_saved_score.add_argument("--score", type=Path, required=True)
+    validate_saved_score.add_argument("--baseline", type=Path, required=True)
+    validate_saved_score.add_argument(
+        "--candidate-report", type=Path, required=True
+    )
+    validate_saved_score.add_argument(
+        "--timeout-penalty", type=float, default=DEFAULT_TIMEOUT_PENALTY
+    )
+    validate_saved_score.add_argument("--reward-clip", type=float, default=5.0)
+    validate_saved_score.add_argument(
+        "--include-recorded-failures", action="store_true"
+    )
     return parser
 
 
@@ -244,7 +386,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     f"log95=[{interval['low']:.4f}, {interval['high']:.4f}] "
                     f"passesReplayGainGate={item['passesReplayGainGate']}"
                 )
-        else:
+        elif arguments.command == "budget-advice":
             advice = budget_advice(
                 arguments.baseline,
                 search_budget_seconds=arguments.search_budget_seconds,
@@ -254,8 +396,39 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             print(json.dumps(advice, ensure_ascii=False, indent=2, sort_keys=True))
             return 0 if advice["ready"] else 3
+        elif arguments.command == "validate-replay":
+            validate_replay_artifact(
+                report_path=arguments.report,
+                candidate_path=arguments.candidate,
+                parameter_space_path=arguments.parameter_space,
+                profile_directory=arguments.profile_dir,
+                profiles=arguments.profile,
+                backend_role=arguments.backend_role,
+                repetitions=arguments.repetitions,
+                warmups=arguments.warmups,
+            )
+        elif arguments.command == "validate-baseline":
+            validate_baseline_artifacts(
+                report_path=arguments.report,
+                manifest_path=arguments.manifest,
+                parameter_space_path=arguments.parameter_space,
+                tsa_cli_jar=arguments.tsa_cli_jar,
+                profile_directory=arguments.profile_dir,
+                profiles=arguments.profile,
+                backend_role=arguments.backend_role,
+                timeout_penalty=arguments.timeout_penalty,
+            )
+        else:
+            validate_score_artifact(
+                score_path=arguments.score,
+                baseline_path=arguments.baseline,
+                candidate_report_path=arguments.candidate_report,
+                timeout_penalty=arguments.timeout_penalty,
+                reward_clip=arguments.reward_clip,
+                exclude_recorded_failures=not arguments.include_recorded_failures,
+            )
         return 0
-    except (CampaignError, OSError, ValueError) as failure:
+    except (OSError, ValueError) as failure:
         print(f"campaign helper failed: {failure}")
         return 2
 

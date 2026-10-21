@@ -3,8 +3,15 @@ import math
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
-from ksmt_ml.campaign import budget_advice, extract_finalists, summarize_scores
+from ksmt_ml.campaign import (
+    CampaignError,
+    budget_advice,
+    extract_finalists,
+    summarize_scores,
+    validate_score_artifact,
+)
 
 
 def candidate(candidate_id):
@@ -59,6 +66,36 @@ def score(candidate_id, rewards):
 
 
 class CampaignTest(unittest.TestCase):
+    def test_resume_rejects_a_stale_score(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            baseline = root / "baseline.json"
+            candidate_report = root / "candidate-report.json"
+            score_path = root / "score.json"
+            baseline.write_text("{}")
+            candidate_report.write_text("{}")
+            expected = score("candidate-v0", [0.1, 0.2])
+            score_path.write_text(json.dumps(expected))
+
+            with mock.patch(
+                "ksmt_ml.campaign.score_reports", return_value=expected
+            ):
+                validate_score_artifact(
+                    score_path=score_path,
+                    baseline_path=baseline,
+                    candidate_report_path=candidate_report,
+                )
+
+                stale = json.loads(json.dumps(expected))
+                stale["policy"]["timeoutPenalty"] = 9.0
+                score_path.write_text(json.dumps(stale))
+                with self.assertRaisesRegex(CampaignError, "does not match"):
+                    validate_score_artifact(
+                        score_path=score_path,
+                        baseline_path=baseline,
+                        candidate_report_path=candidate_report,
+                    )
+
     def test_budget_advice_requires_two_populations_and_timeout_margin(self):
         with tempfile.TemporaryDirectory() as temporary:
             baseline = Path(temporary) / "baseline.json"

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-workload-corpus-v0.schema.json",
+  "title": "Grouped cvc5 workload corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "corpusId", "targetSolver", "solverVersion",
+    "parameterSpaceId", "groupingKey", "groups"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-workload-corpus-v0" },
+    "corpusId": { "type": "string", "minLength": 1 },
+    "targetSolver": { "const": "cvc5" },
+    "solverVersion": { "type": "string", "minLength": 1 },
+    "parameterSpaceId": { "type": "string", "minLength": 1 },
+    "groupingKey": { "type": "string", "minLength": 1 },
+    "groups": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "groupId", "leakageGroupId", "partition",
+          "sealedUntilFinalEvaluation", "baselineManifest"
+        ],
+        "properties": {
+          "groupId": { "type": "string", "minLength": 1 },
+          "leakageGroupId": { "type": "string", "minLength": 1 },
+          "partition": {
+            "enum": ["development", "validation", "test"]
+          },
+          "sealedUntilFinalEvaluation": { "type": "boolean" },
+          "baselineManifest": { "$ref": "#/$defs/fileBinding" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "fileBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

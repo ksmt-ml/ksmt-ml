@@ -41,6 +41,41 @@ class ContractSchemaTest(unittest.TestCase):
             "forbid",
         )
 
+    def test_smac_persistence_contracts_remain_v0(self) -> None:
+        expected = {
+            "cvc5-smac-search-manifest-v0.schema.json": "cvc5-smac-search-manifest-v0",
+            "cvc5-smac-search-state-v0.schema.json": "cvc5-smac-search-state-v0",
+            "cvc5-smac-search-event-v0.schema.json": "cvc5-smac-search-event-v0",
+            "cvc5-smac-native-checkpoint-v0.schema.json": "cvc5-smac-native-checkpoint-v0",
+            "cvc5-tuning-campaign-summary-v0.schema.json": "cvc5-tuning-campaign-summary-v0",
+        }
+
+        for name, version in expected.items():
+            with self.subTest(name=name):
+                schema = self.load_schema(name)
+                self.assertEqual(schema["properties"]["schemaVersion"]["const"], version)
+
+    def test_multi_workload_experiment_contracts_start_at_v0(self) -> None:
+        expected = {
+            "cvc5-workload-corpus-v0.schema.json": "cvc5-workload-corpus-v0",
+            "cvc5-configurator-campaign-v0.schema.json": "cvc5-configurator-campaign-v0",
+            "cvc5-confirmation-schedule-v0.schema.json": "cvc5-confirmation-schedule-v0",
+            "cvc5-confirmation-observations-v0.schema.json": "cvc5-confirmation-observations-v0",
+            "cvc5-grouped-confirmation-summary-v0.schema.json": "cvc5-grouped-confirmation-summary-v0",
+            "cvc5-default-noise-calibration-summary-v0.schema.json": "cvc5-default-noise-calibration-summary-v0",
+            "cvc5-campaign-workspace-v0.schema.json": "cvc5-campaign-workspace-v0",
+            "cvc5-finalist-index-v0.schema.json": "cvc5-finalist-index-v0",
+            "cvc5-confirmation-candidate-index-v0.schema.json": "cvc5-confirmation-candidate-index-v0",
+            "cvc5-multi-seed-anytime-summary-v0.schema.json": "cvc5-multi-seed-anytime-summary-v0",
+            "cvc5-option-subset-ablation-v0.schema.json": "cvc5-option-subset-ablation-v0",
+            "cvc5-option-subset-ablation-results-v0.schema.json": "cvc5-option-subset-ablation-results-v0",
+        }
+
+        for name, version in expected.items():
+            with self.subTest(name=name):
+                schema = self.load_schema(name)
+                self.assertEqual(schema["properties"]["schemaVersion"]["const"], version)
+
 
 if __name__ == "__main__":
     unittest.main()

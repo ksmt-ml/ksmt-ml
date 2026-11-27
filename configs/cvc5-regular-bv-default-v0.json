@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "cvc5-replay-candidate-v0",
+  "candidateId": "cvc5-1.3.4-regular-bv-default-v0",
+  "parameterSpaceId": "cvc5-1.3.4-regular-bv-wide-v0",
+  "targetSolver": "cvc5",
+  "options": {}
+}

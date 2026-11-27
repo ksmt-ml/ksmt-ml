@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-search-cache-entry-v0.schema.json",
+  "title": "cvc5 search file-cache completion marker",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "cacheKey",
+    "createdAtEpochMillis",
+    "evaluationIdentitySha256",
+    "candidateSha256",
+    "reportSha256",
+    "scoreSha256"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-search-cache-entry-v0" },
+    "cacheKey": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "createdAtEpochMillis": { "type": "integer", "minimum": 0 },
+    "evaluationIdentitySha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "candidateSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "reportSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "scoreSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

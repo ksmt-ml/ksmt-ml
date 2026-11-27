@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-confirmation-schedule-v0.schema.json",
+  "title": "Paired randomized cvc5 confirmation schedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "campaignId", "policy", "seed", "defaultCandidateId",
+    "repetitions", "workloadGroupIds", "candidates", "trials",
+    "scheduleSha256"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-confirmation-schedule-v0" },
+    "campaignId": { "type": "string", "minLength": 1 },
+    "policy": {
+      "enum": [
+        "paired-randomized-interleaved-v0",
+        "paired-balanced-randomized-interleaved-v0"
+      ]
+    },
+    "seed": { "type": "integer", "minimum": 0 },
+    "defaultCandidateId": { "type": "string", "minLength": 1 },
+    "repetitions": { "type": "integer", "minimum": 2 },
+    "workloadGroupIds": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "candidates": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["candidateId", "defaultControl"],
+        "properties": {
+          "candidateId": { "type": "string", "minLength": 1 },
+          "defaultControl": { "type": "boolean" }
+        }
+      }
+    },
+    "trials": {
+      "type": "array", "minItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": [
+          "ordinal", "trialId", "pairId", "workloadGroupId", "candidateId",
+          "configurationRole", "repetition"
+        ],
+        "properties": {
+          "ordinal": { "type": "integer", "minimum": 0 },
+          "trialId": { "type": "string", "minLength": 1 },
+          "pairId": { "type": "string", "minLength": 1 },
+          "workloadGroupId": { "type": "string", "minLength": 1 },
+          "candidateId": { "type": "string", "minLength": 1 },
+          "configurationRole": { "enum": ["default", "candidate"] },
+          "repetition": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "scheduleSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

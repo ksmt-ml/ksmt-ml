@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-profile-replay-report-v0.schema.json",
+  "title": "TSA cvc5 profile replay report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "createdAtEpochMillis",
+    "candidate",
+    "backendRole",
+    "repetitions",
+    "warmupRepetitions",
+    "sourceProfiles",
+    "results"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "tsa-cvc5-profile-replay-report-v0" },
+    "createdAtEpochMillis": { "type": "integer", "minimum": 0 },
+    "candidate": { "$ref": "#/$defs/candidate" },
+    "backendRole": { "enum": ["regular-bv", "integer-blasted"] },
+    "repetitions": { "type": "integer", "minimum": 1 },
+    "warmupRepetitions": { "type": "integer", "minimum": 0 },
+    "sourceProfiles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/result" }
+    }
+  },
+  "$defs": {
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "candidateId",
+        "parameterSpaceId",
+        "targetSolver",
+        "options"
+      ],
+      "properties": {
+        "schemaVersion": { "const": "cvc5-replay-candidate-v0" },
+        "candidateId": { "type": "string", "minLength": 1 },
+        "parameterSpaceId": { "type": "string", "minLength": 1 },
+        "targetSolver": { "const": "cvc5" },
+        "options": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "nonNegativeInteger": { "type": "integer", "minimum": 0 },
+    "integerMap": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/nonNegativeInteger" }
+    },
+    "mismatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checkId", "expectedStatus", "actualStatus"],
+      "properties": {
+        "checkId": { "$ref": "#/$defs/nonNegativeInteger" },
+        "expectedStatus": { "enum": ["SAT", "UNSAT"] },
+        "actualStatus": { "enum": ["SAT", "UNSAT", "UNKNOWN"] },
+        "timeoutNanos": {
+          "oneOf": [
+            { "$ref": "#/$defs/nonNegativeInteger" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "candidateId",
+        "parameterSpaceId",
+        "profileId",
+        "runId",
+        "solverVersion",
+        "backendRole",
+        "repetition",
+        "outcome",
+        "wallDurationNanos",
+        "decodeDurationNanos",
+        "solverOperationDurationNanos",
+        "nonCheckDurationNanos",
+        "knownCheckDurationNanos",
+        "unknownCheckDurationNanos",
+        "knownStatusTimeoutDurationNanos",
+        "knownStatusTimeoutBudgetNanos",
+        "eventCount",
+        "executedEventCount",
+        "recordedFailureEventCount",
+        "skippedResultAccessCount",
+        "checkCount",
+        "knownStatusMatchCount",
+        "knownStatusTimeoutCount",
+        "wrongAnswerCount",
+        "expectedUnknownCount",
+        "resolvedUnknownCount",
+        "actualStatusCounts",
+        "operationDurationNanos",
+        "mismatches"
+      ],
+      "properties": {
+        "schemaVersion": { "const": "tsa-cvc5-profile-replay-result-v0" },
+        "candidateId": { "type": "string", "minLength": 1 },
+        "parameterSpaceId": { "type": "string", "minLength": 1 },
+        "profileId": { "type": "string", "minLength": 1 },
+        "runId": { "type": "string", "minLength": 1 },
+        "solverVersion": {
+          "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "backendRole": { "enum": ["regular-bv", "integer-blasted"] },
+        "repetition": { "$ref": "#/$defs/nonNegativeInteger" },
+        "outcome": { "enum": ["SUCCESS", "FAILURE"] },
+        "wallDurationNanos": { "$ref": "#/$defs/nonNegativeInteger" },
+        "decodeDurationNanos": { "$ref": "#/$defs/nonNegativeInteger" },
+        "solverOperationDurationNanos": { "$ref": "#/$defs/nonNegativeInteger" },
+        "nonCheckDurationNanos": { "$ref": "#/$defs/nonNegativeInteger" },
+        "knownCheckDurationNanos": { "$ref": "#/$defs/nonNegativeInteger" },
+        "unknownCheckDurationNanos": { "$ref": "#/$defs/nonNegativeInteger" },
+        "knownStatusTimeoutDurationNanos": { "$ref": "#/$defs/nonNegativeInteger" },
+        "knownStatusTimeoutBudgetNanos": { "$ref": "#/$defs/nonNegativeInteger" },
+        "eventCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "executedEventCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "recordedFailureEventCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "skippedResultAccessCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "checkCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "knownStatusMatchCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "knownStatusTimeoutCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "wrongAnswerCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "expectedUnknownCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "resolvedUnknownCount": { "$ref": "#/$defs/nonNegativeInteger" },
+        "actualStatusCounts": { "$ref": "#/$defs/integerMap" },
+        "operationDurationNanos": { "$ref": "#/$defs/integerMap" },
+        "mismatches": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "$ref": "#/$defs/mismatch" }
+        },
+        "failureType": {
+          "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "failureMessage": {
+          "oneOf": [{ "type": "string" }, { "type": "null" }]
+        }
+      }
+    }
+  }
+}

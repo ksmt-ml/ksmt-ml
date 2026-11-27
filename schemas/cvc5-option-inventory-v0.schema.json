@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-option-inventory-v0.schema.json",
+  "title": "cvc5 runtime option inventory with experiment policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "inventoryId",
+    "targetSolver",
+    "solverVersion",
+    "acceptedNameCount",
+    "canonicalOptionCount",
+    "statusCounts",
+    "source",
+    "options"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-option-inventory-v0" },
+    "inventoryId": { "type": "string", "minLength": 1 },
+    "targetSolver": { "const": "cvc5" },
+    "solverVersion": { "const": "1.3.4" },
+    "acceptedNameCount": { "type": "integer", "minimum": 1 },
+    "canonicalOptionCount": { "const": 518 },
+    "statusCounts": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "source": {
+      "type": "object",
+      "required": ["schemaVersion", "method", "officialDocumentation"]
+    },
+    "options": {
+      "type": "array",
+      "minItems": 518,
+      "maxItems": 518,
+      "items": {
+        "type": "object",
+        "required": ["name", "aliases", "category", "kind", "module", "status", "reason"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "aliases": { "type": "array", "items": { "type": "string" } },
+          "category": { "enum": ["common", "regular", "expert", "undocumented"] },
+          "kind": { "enum": ["boolean", "categorical", "integer", "number", "string", "void"] },
+          "module": { "type": "string", "minLength": 1 },
+          "status": {
+            "enum": ["active", "evaluator-controlled", "fixed-singleton", "inactive-parent", "infrastructure", "theory-gated", "unsafe"]
+          },
+          "reason": { "type": "string", "minLength": 1 },
+          "domain": { "type": "object" }
+        }
+      }
+    }
+  }
+}

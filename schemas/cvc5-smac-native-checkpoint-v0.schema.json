@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-smac-native-checkpoint-v0.schema.json",
+  "title": "checksummed SMAC3 native-state generation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "generation",
+    "directory",
+    "files",
+    "runhistoryStats"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-smac-native-checkpoint-v0" },
+    "generation": { "type": "integer", "minimum": 0 },
+    "directory": { "type": "string", "pattern": "^generation-[0-9]{8}$" },
+    "files": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenario.json",
+        "configspace.json",
+        "optimization.json",
+        "runhistory.json",
+        "intensifier.json"
+      ],
+      "properties": {
+        "scenario.json": { "$ref": "#/$defs/sha256" },
+        "configspace.json": { "$ref": "#/$defs/sha256" },
+        "optimization.json": { "$ref": "#/$defs/sha256" },
+        "runhistory.json": { "$ref": "#/$defs/sha256" },
+        "intensifier.json": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "runhistoryStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["submitted", "finished", "running"],
+      "properties": {
+        "submitted": { "type": "integer", "minimum": 0 },
+        "finished": { "type": "integer", "minimum": 0 },
+        "running": { "type": "integer", "minimum": 0, "maximum": 1 }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}

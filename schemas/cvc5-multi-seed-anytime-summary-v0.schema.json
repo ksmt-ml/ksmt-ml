@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-multi-seed-anytime-summary-v0.schema.json",
+  "title": "Comparable multi-seed configurator anytime summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "campaignId", "timeFractions", "algorithms"],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-multi-seed-anytime-summary-v0" },
+    "campaignId": { "type": "string", "minLength": 1 },
+    "timeFractions": {
+      "type": "array", "minItems": 2,
+      "items": { "type": "number", "minimum": 0, "maximum": 1 }
+    },
+    "algorithms": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["algorithm", "seedCount", "runs", "aggregate"],
+        "properties": {
+          "algorithm": { "enum": ["random", "evolution", "smac"] },
+          "seedCount": { "type": "integer", "minimum": 2 },
+          "runs": {
+            "type": "array", "minItems": 2,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": [
+                "algorithm", "seed", "durationSeconds",
+                "completedEvaluationCount", "hasQualifiedIncumbent",
+                "finalCost", "finalGeometricSpeedup",
+                "normalizedAreaUnderSpeedupCurve", "points"
+              ],
+              "properties": {
+                "algorithm": { "enum": ["random", "evolution", "smac"] },
+                "seed": { "type": "integer", "minimum": 0 },
+                "durationSeconds": { "type": "number", "exclusiveMinimum": 0 },
+                "completedEvaluationCount": { "type": "integer", "minimum": 0 },
+                "hasQualifiedIncumbent": { "type": "boolean" },
+                "finalCost": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+                "finalGeometricSpeedup": { "type": "number", "exclusiveMinimum": 0 },
+                "normalizedAreaUnderSpeedupCurve": {
+                  "type": "number", "exclusiveMinimum": 0
+                },
+                "points": { "type": "array" }
+              }
+            }
+          },
+          "aggregate": { "type": "array", "minItems": 2 }
+        }
+      }
+    }
+  }
+}

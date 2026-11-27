@@ -1,0 +1,94 @@
+{
+  "gate": {
+    "minimumPositiveProfileFraction": 0.6,
+    "minimumProfileCount": 5,
+    "minimumRelativeImprovement": 0.05,
+    "requireEligibleFailureFreeReplay": true,
+    "requirePositiveBootstrap95LowerBound": true
+  },
+  "interpretation": "A replay-level gain is confirmed only for an eligible candidate whose predeclared minimum improvement is met and whose paired holdout interval stays above zero. End-to-end TSA gain requires a separate fresh-run gate.",
+  "results": [
+    {
+      "bootstrap95MeanLogSpeedup": {
+        "high": 0.022830575518479022,
+        "low": -0.029238473325213135
+      },
+      "candidateId": "cvc5-evolution-v0-13b165a6e292383811f4",
+      "eligible": true,
+      "failedReplayCount": 0,
+      "gateChecks": {
+        "eligible": true,
+        "failureFree": true,
+        "minimumImprovement": false,
+        "minimumProfileCount": true,
+        "positiveInterval": false,
+        "positiveProfileFraction": false
+      },
+      "geometricSpeedup": 0.9952217213021868,
+      "knownStatusTimeoutCount": 0,
+      "meanLogSpeedup": -0.0047897311680973245,
+      "negativeProfileCount": 6,
+      "passesReplayGainGate": false,
+      "positiveProfileCount": 3,
+      "profileCount": 9,
+      "relativeImprovement": -0.004801220266335449,
+      "score": "evolution-score-v0.json",
+      "wrongAnswerCount": 0
+    },
+    {
+      "bootstrap95MeanLogSpeedup": {
+        "high": 0.024656730572141197,
+        "low": -0.043735705557785616
+      },
+      "candidateId": "cvc5-configspace-v0-ff2bcb5977eaf7948d0a",
+      "eligible": true,
+      "failedReplayCount": 0,
+      "gateChecks": {
+        "eligible": true,
+        "failureFree": true,
+        "minimumImprovement": false,
+        "minimumProfileCount": true,
+        "positiveInterval": false,
+        "positiveProfileFraction": false
+      },
+      "geometricSpeedup": 0.9879482386650412,
+      "knownStatusTimeoutCount": 0,
+      "meanLogSpeedup": -0.012124972621814497,
+      "negativeProfileCount": 6,
+      "passesReplayGainGate": false,
+      "positiveProfileCount": 3,
+      "profileCount": 9,
+      "relativeImprovement": -0.012198778097163965,
+      "score": "smac-score-v0.json",
+      "wrongAnswerCount": 0
+    },
+    {
+      "bootstrap95MeanLogSpeedup": {
+        "high": 0.03058916588573464,
+        "low": -0.015532296252136575
+      },
+      "candidateId": "cvc5-random-v0-6399fe4135f2ac72563c",
+      "eligible": true,
+      "failedReplayCount": 0,
+      "gateChecks": {
+        "eligible": true,
+        "failureFree": true,
+        "minimumImprovement": false,
+        "minimumProfileCount": true,
+        "positiveInterval": false,
+        "positiveProfileFraction": true
+      },
+      "geometricSpeedup": 1.0081207223315298,
+      "knownStatusTimeoutCount": 0,
+      "meanLogSpeedup": 0.008087926695802937,
+      "negativeProfileCount": 3,
+      "passesReplayGainGate": false,
+      "positiveProfileCount": 6,
+      "profileCount": 9,
+      "relativeImprovement": 0.008055307416703572,
+      "score": "random-score-v0.json",
+      "wrongAnswerCount": 0
+    }
+  ],
+  "schemaVersion": "cvc5-tuning-campaign-summary-v0"
+}

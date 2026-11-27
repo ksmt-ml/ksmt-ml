@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-parameter-space-smoke-report-v0.schema.json",
+  "title": "cvc5 parameter-space real replay smoke report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "parameterSpaceId",
+    "solverVersion",
+    "backendRole",
+    "parameterSpaceSha256",
+    "tsaCliJarSha256",
+    "smokePlanSha256",
+    "sourceProfiles",
+    "startedAtEpochMillis",
+    "completedAtEpochMillis",
+    "plannedCandidateCount",
+    "passedCandidateCount",
+    "failedCandidateCount",
+    "results"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-parameter-space-smoke-report-v0" },
+    "parameterSpaceId": { "type": "string", "minLength": 1 },
+    "solverVersion": { "const": "1.3.4" },
+    "backendRole": { "const": "regular-bv" },
+    "parameterSpaceSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "tsaCliJarSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "smokePlanSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "sourceProfiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "sha256"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "startedAtEpochMillis": { "type": "integer", "minimum": 0 },
+    "completedAtEpochMillis": { "type": ["integer", "null"], "minimum": 0 },
+    "plannedCandidateCount": { "type": "integer", "minimum": 0 },
+    "passedCandidateCount": { "type": "integer", "minimum": 0 },
+    "failedCandidateCount": { "type": "integer", "minimum": 0 },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "candidateId",
+          "options",
+          "status",
+          "durationNanos",
+          "wrongAnswerCount",
+          "knownStatusTimeoutCount",
+          "failedReplayCount",
+          "failureMessage"
+        ],
+        "properties": {
+          "candidateId": { "type": "string", "minLength": 1 },
+          "options": { "type": "object" },
+          "status": { "enum": ["PASS", "FAIL"] },
+          "durationNanos": { "type": "integer", "minimum": 0 },
+          "wrongAnswerCount": { "type": "integer", "minimum": 0 },
+          "knownStatusTimeoutCount": { "type": "integer", "minimum": 0 },
+          "failedReplayCount": { "type": "integer", "minimum": 0 },
+          "failureMessage": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

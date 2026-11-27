@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-search-state-v0.schema.json",
+  "title": "cvc5 offline search checkpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "status",
+    "activeWallTimeNanos",
+    "actualEvaluationCount",
+    "completedTrialCount",
+    "cacheHitCount",
+    "duplicateCount",
+    "seenCandidateIds",
+    "pendingTrial",
+    "incumbent",
+    "stopReason",
+    "strategyState",
+    "updatedAtEpochMillis"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-search-state-v0" },
+    "runId": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["RUNNING", "INTERRUPTED", "FINISHED"] },
+    "activeWallTimeNanos": { "type": "integer", "minimum": 0 },
+    "actualEvaluationCount": { "type": "integer", "minimum": 0 },
+    "completedTrialCount": { "type": "integer", "minimum": 0 },
+    "cacheHitCount": { "type": "integer", "minimum": 0 },
+    "duplicateCount": { "type": "integer", "minimum": 0 },
+    "seenCandidateIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "pendingTrial": {
+      "oneOf": [{ "$ref": "#/$defs/pendingTrial" }, { "type": "null" }]
+    },
+    "incumbent": {
+      "oneOf": [{ "$ref": "#/$defs/incumbent" }, { "type": "null" }]
+    },
+    "stopReason": { "type": ["string", "null"] },
+    "strategyState": {
+      "oneOf": [
+        { "$ref": "#/$defs/randomStrategyState" },
+        { "$ref": "#/$defs/evolutionStrategyState" },
+        { "type": "null" }
+      ]
+    },
+    "updatedAtEpochMillis": { "type": "integer", "minimum": 0 }
+  },
+  "$defs": {
+    "pendingTrial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trialId",
+        "requestId",
+        "proposalIndex",
+        "candidate",
+        "instanceId",
+        "evaluationSeed",
+        "repetition",
+        "budget",
+        "cacheKey",
+        "evaluationIdentity",
+        "proposedAtEpochMillis"
+      ],
+      "properties": {
+        "trialId": { "type": "string", "minLength": 1 },
+        "requestId": { "type": "string", "minLength": 1 },
+        "proposalIndex": { "type": "integer", "minimum": 0 },
+        "candidate": { "type": "object" },
+        "instanceId": { "type": "string", "minLength": 1 },
+        "evaluationSeed": { "type": "integer" },
+        "repetition": { "type": "integer", "minimum": 0 },
+        "budget": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "cacheKey": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "evaluationIdentity": { "type": "object" },
+        "proposedAtEpochMillis": { "type": "integer", "minimum": 0 },
+        "attemptState": { "enum": ["RUNNING", "INTERRUPTED", "RECOVERED"] },
+        "attemptStartedAtEpochMillis": { "type": "integer", "minimum": 0 },
+        "attemptLastHeartbeatEpochMillis": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "incumbent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidateId", "cost", "trialId"],
+      "properties": {
+        "candidateId": { "type": "string", "minLength": 1 },
+        "cost": { "type": "number", "minimum": 0 },
+        "trialId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "randomStrategyState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "strategy",
+        "seed",
+        "samplingPolicy",
+        "mutationProbability",
+        "parameterSpaceSha256",
+        "instanceId",
+        "evaluationSeed",
+        "repetition",
+        "budget",
+        "nextProposalIndex",
+        "observationCount"
+      ],
+      "properties": {
+        "schemaVersion": { "const": "cvc5-random-search-state-v0" },
+        "strategy": { "const": "random-search-v0" },
+        "seed": { "type": "integer" },
+        "samplingPolicy": { "const": "independent-default-mutation-v0" },
+        "mutationProbability": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "parameterSpaceSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "instanceId": { "type": "string", "minLength": 1 },
+        "evaluationSeed": { "type": "integer" },
+        "repetition": { "type": "integer", "minimum": 0 },
+        "budget": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "nextProposalIndex": { "type": "integer", "minimum": 0 },
+        "observationCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "required": ["schemaVersion", "candidateId", "parameterSpaceId", "targetSolver", "options"],
+      "properties": {
+        "schemaVersion": { "const": "cvc5-replay-candidate-v0" },
+        "candidateId": { "type": "string", "minLength": 1 },
+        "parameterSpaceId": { "type": "string", "minLength": 1 },
+        "targetSolver": { "const": "cvc5" },
+        "options": { "type": "object" }
+      }
+    },
+    "evolutionStrategyState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion", "strategy", "seed", "samplingPolicy",
+        "populationSize", "eliteFraction", "initialMutationProbability",
+        "mutationProbability", "failureCost", "parameterSpaceSha256",
+        "instanceId", "evaluationSeed", "repetition", "budget", "generation",
+        "nextProposalIndex", "observationCount", "parents",
+        "generationObservations", "pendingProposals"
+      ],
+      "properties": {
+        "schemaVersion": { "const": "cvc5-evolution-search-state-v0" },
+        "strategy": { "const": "evolution-search-v0" },
+        "seed": { "type": "integer" },
+        "samplingPolicy": { "const": "domain-aware-elitist-mutation-v0" },
+        "populationSize": { "type": "integer", "minimum": 2 },
+        "eliteFraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "initialMutationProbability": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "mutationProbability": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "failureCost": { "type": "number", "exclusiveMinimum": 0 },
+        "parameterSpaceSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "instanceId": { "type": "string", "minLength": 1 },
+        "evaluationSeed": { "type": "integer" },
+        "repetition": { "type": "integer", "minimum": 0 },
+        "budget": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+        "generation": { "type": "integer", "minimum": 0 },
+        "nextProposalIndex": { "type": "integer", "minimum": 0 },
+        "observationCount": { "type": "integer", "minimum": 0 },
+        "parents": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+        "generationObservations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["candidate", "cost", "status", "correctness"],
+            "properties": {
+              "candidate": { "$ref": "#/$defs/candidate" },
+              "cost": { "type": "number", "minimum": 0 },
+              "status": { "type": "string", "minLength": 1 },
+              "correctness": { "enum": ["CORRECT", "INCORRECT", "NOT_ESTABLISHED"] }
+            }
+          }
+        },
+        "pendingProposals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["requestId", "candidate"],
+            "properties": {
+              "requestId": { "type": "string", "minLength": 1 },
+              "candidate": { "$ref": "#/$defs/candidate" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

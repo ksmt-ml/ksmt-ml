@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-option-subset-ablation-v0.schema.json",
+  "title": "cvc5 exhaustive explicit-option subset ablation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "sourceCandidate", "parameterSpace", "policy", "candidates"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-option-subset-ablation-v0" },
+    "sourceCandidate": { "$ref": "#/$defs/sourceCandidate" },
+    "parameterSpace": { "$ref": "#/$defs/parameterSpace" },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "optionNames", "candidateCount"],
+      "properties": {
+        "kind": { "const": "exhaustive-explicit-option-subsets-v0" },
+        "optionNames": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "candidateCount": { "type": "integer", "minimum": 2 }
+      }
+    },
+    "candidates": {
+      "type": "array", "minItems": 2,
+      "items": { "$ref": "#/$defs/candidate" }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "sourceCandidate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidateId", "fileName", "sha256"],
+      "properties": {
+        "candidateId": { "type": "string", "minLength": 1 },
+        "fileName": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "parameterSpace": {
+      "type": "object", "additionalProperties": false,
+      "required": ["parameterSpaceId", "fileName", "sha256"],
+      "properties": {
+        "parameterSpaceId": { "type": "string", "minLength": 1 },
+        "fileName": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "candidate": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "ordinal", "mask", "optionNames", "candidateId", "path", "sha256"
+      ],
+      "properties": {
+        "ordinal": { "type": "integer", "minimum": 0 },
+        "mask": { "type": "integer", "minimum": 0 },
+        "optionNames": {
+          "type": "array", "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "candidateId": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

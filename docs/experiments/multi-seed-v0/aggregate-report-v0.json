@@ -1,0 +1,2279 @@
+{
+  "ablationCorrectness": {
+    "baselineManifest": {
+      "fileName": "default-manifest-v0.json",
+      "sha256": "e6bd9c391322b8681c1d03fefb3995de5c51dec1c0384d551d784a20a2f5ce19"
+    },
+    "complete": true,
+    "repetitions": 1,
+    "results": [
+      {
+        "candidateId": "cvc5-ablation-v0-c9c0efbf7bb15fd756c7",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9578582829986289,
+        "knownStatusTimeoutCount": 0,
+        "mask": 0,
+        "optionNames": [],
+        "ordinal": 0,
+        "reportSha256": "5aa565804c4835463085600ce8e7bd1e1b8cb0d5673d88761a1669ce5381c5b2",
+        "reward": -0.043055442018069365,
+        "scoreSha256": "8cd3940cf42d768e574f74e7ac72066339c3e7a19d75793cc5c99b82d792139d",
+        "speedupVsFreshDefault": 1.0,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-9b6c3c28d5c06e890d09",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9811205524694646,
+        "knownStatusTimeoutCount": 0,
+        "mask": 1,
+        "optionNames": [
+          "ee-mode"
+        ],
+        "ordinal": 1,
+        "reportSha256": "004c9468e2ba1c72d9e7e2ca4c6d7bd8bd82401a4ca657cc588fcfe1c4ec8b69",
+        "reward": -0.019059939638093115,
+        "scoreSha256": "3bd3af5f74bd4127533bac488600c92cd371bb3e36bcc32e3a8e013ff232424c",
+        "speedupVsFreshDefault": 1.0242857110323376,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-d0892fceaa3cbec1eed2",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9659777826438364,
+        "knownStatusTimeoutCount": 0,
+        "mask": 2,
+        "optionNames": [
+          "on-repeat-ite-simp"
+        ],
+        "ordinal": 2,
+        "reportSha256": "0548879af90e226c23407ed1362c27991462c1676fe455f22f99f75bb86e0d5b",
+        "reward": -0.03461444436761049,
+        "scoreSha256": "f3257943f02c07204e7f1ed70db3bf48327c7e145f2c79e0ddb18d8a0301250f",
+        "speedupVsFreshDefault": 1.008476723320478,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-5cbcb6d48680043e8c23",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9830941048464419,
+        "knownStatusTimeoutCount": 0,
+        "mask": 3,
+        "optionNames": [
+          "ee-mode",
+          "on-repeat-ite-simp"
+        ],
+        "ordinal": 3,
+        "reportSha256": "2b0acea217ba045d1e7a26b6104245c9eb7f46acb910415670d15dbcf58504e0",
+        "reward": -0.01705043112154948,
+        "scoreSha256": "c6e9835f41b9871c972b91f995b1cfb6931bf4bfd8efc3aee2dc7616eb49d881",
+        "speedupVsFreshDefault": 1.0263460913746143,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-3e8dc2effd6d37ef828a",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9613994731150575,
+        "knownStatusTimeoutCount": 0,
+        "mask": 4,
+        "optionNames": [
+          "simp-with-care"
+        ],
+        "ordinal": 4,
+        "reportSha256": "c2489138f44d9c93016e3d38db06076ab80c3831a99eb5f8923ac257de3b69b9",
+        "reward": -0.03936527156168479,
+        "scoreSha256": "07ae1646b8aa402f46832fa780e8b21e75e4fc402de64ab53421f2bcea11afea",
+        "speedupVsFreshDefault": 1.0036969875181772,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-c5e42ca60873f1109d8f",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9662385420652478,
+        "knownStatusTimeoutCount": 0,
+        "mask": 5,
+        "optionNames": [
+          "ee-mode",
+          "simp-with-care"
+        ],
+        "ordinal": 5,
+        "reportSha256": "18ad3c0bc66d5296b86aa33a43a94dc6bbb045190c0d899c0b7df6c0b6ee731a",
+        "reward": -0.034344537298034584,
+        "scoreSha256": "d4723c967d6293378282b38cd066c77de5bc4bca6ae4cf2dd39a995822239caa",
+        "speedupVsFreshDefault": 1.0087489550545872,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-142698c17163d7a5d691",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9421585505675254,
+        "knownStatusTimeoutCount": 0,
+        "mask": 6,
+        "optionNames": [
+          "on-repeat-ite-simp",
+          "simp-with-care"
+        ],
+        "ordinal": 6,
+        "reportSha256": "f4bee1eb28c15c01cea5c411ad3463baebb6f600994acf66a42c4b36d20e45fd",
+        "reward": -0.05958170586438863,
+        "scoreSha256": "77d68c6e33af0a70fdc6f30a9603a5265b638e655aed41c4d0d59071e157ef47",
+        "speedupVsFreshDefault": 0.9836095456814816,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-4fece3d09387a8069d69",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9735204793629846,
+        "knownStatusTimeoutCount": 0,
+        "mask": 7,
+        "optionNames": [
+          "ee-mode",
+          "on-repeat-ite-simp",
+          "simp-with-care"
+        ],
+        "ordinal": 7,
+        "reportSha256": "53cdb71447b5d78377f364d6701c6193a8810530f3caded8429b829bc7178f4b",
+        "reward": -0.026836417551929857,
+        "scoreSha256": "676a259625e73f11a4a042c348bae6d032d491f4a898f766fcc2928528251190",
+        "speedupVsFreshDefault": 1.0163512668234431,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-abdb76808cf13379382b",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9534928131038337,
+        "knownStatusTimeoutCount": 0,
+        "mask": 8,
+        "optionNames": [
+          "theoryof-mode"
+        ],
+        "ordinal": 8,
+        "reportSha256": "e1cdbaec1a2ae7dd07a0bbb27b7036e167ab150a1de5b0cf38696ff2fec38923",
+        "reward": -0.04762339135461728,
+        "scoreSha256": "83c03fc57aa3e1e3b99e6afbc1614d5d099234049283becf91e654698f595926",
+        "speedupVsFreshDefault": 0.9954424678762198,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-68815191a75dadb20047",
+        "eligible": false,
+        "failedReplayCount": 0,
+        "geometricSpeedup": null,
+        "knownStatusTimeoutCount": 0,
+        "mask": 9,
+        "optionNames": [
+          "ee-mode",
+          "theoryof-mode"
+        ],
+        "ordinal": 9,
+        "reportSha256": "507beae5243687c399c4da33e02165aa47e6dd4246e51e4f4e8523a09f62c7bd",
+        "reward": -5.0,
+        "scoreSha256": "6e4a4d772be21038c1da013795cd995361cd3027478cb3b16ff8b090d5903f9f",
+        "speedupVsFreshDefault": null,
+        "wrongAnswerCount": 4
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-eae8a98a476a8032d630",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9430151905387256,
+        "knownStatusTimeoutCount": 0,
+        "mask": 10,
+        "optionNames": [
+          "on-repeat-ite-simp",
+          "theoryof-mode"
+        ],
+        "ordinal": 10,
+        "reportSha256": "f66bd278e8ef1fba3b5917e75b9645a8bbc90640bdc3f26bbc3a089ba3bd04ed",
+        "reward": -0.05867288774170528,
+        "scoreSha256": "72d7f8438593d339b525484c3bb35711d2bd6a918285a43c947a456ef3ddfe36",
+        "speedupVsFreshDefault": 0.9845038741916643,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-bf6b5d9d276cf9686a72",
+        "eligible": false,
+        "failedReplayCount": 0,
+        "geometricSpeedup": null,
+        "knownStatusTimeoutCount": 0,
+        "mask": 11,
+        "optionNames": [
+          "ee-mode",
+          "on-repeat-ite-simp",
+          "theoryof-mode"
+        ],
+        "ordinal": 11,
+        "reportSha256": "72d50842f4abe17dfbfb959742aa14f87cb448aaac0bddf9ac9107e38fd0f2bf",
+        "reward": -5.0,
+        "scoreSha256": "ef0caf021bdcffefffb3f6c9ca57896c84df4fdef3305a31afc5199a5cdb79a4",
+        "speedupVsFreshDefault": null,
+        "wrongAnswerCount": 4
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-a94e82d571e23270d18d",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9379093600618704,
+        "knownStatusTimeoutCount": 0,
+        "mask": 12,
+        "optionNames": [
+          "simp-with-care",
+          "theoryof-mode"
+        ],
+        "ordinal": 12,
+        "reportSha256": "05c4112aa4ad91b6bb9c364eb8bdcbf1488d69f8eb21755737ac80f7a34b2e38",
+        "reward": -0.06410196570909847,
+        "scoreSha256": "9d777a5db3b2ed5522477b7f39d4a0b8d0f84d1de57258c018583cad761b5010",
+        "speedupVsFreshDefault": 0.9791734087486228,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-619fea7e2b55007792ca",
+        "eligible": false,
+        "failedReplayCount": 0,
+        "geometricSpeedup": null,
+        "knownStatusTimeoutCount": 0,
+        "mask": 13,
+        "optionNames": [
+          "ee-mode",
+          "simp-with-care",
+          "theoryof-mode"
+        ],
+        "ordinal": 13,
+        "reportSha256": "840c35ac97c4b00cff90790baa5424825fc134dc636cf76d4596e1d03e8613d7",
+        "reward": -5.0,
+        "scoreSha256": "d850af1409f219d7731fd4b0a76df818c900b73b22fc8f4dee4c94e4cdec363f",
+        "speedupVsFreshDefault": null,
+        "wrongAnswerCount": 4
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-71fe516e08e7d505fb21",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9532256553806553,
+        "knownStatusTimeoutCount": 0,
+        "mask": 14,
+        "optionNames": [
+          "on-repeat-ite-simp",
+          "simp-with-care",
+          "theoryof-mode"
+        ],
+        "ordinal": 14,
+        "reportSha256": "e67fc2c8696f00e288dc6f09f0f2415985998423f7b145e7bcb91f3377c1bb11",
+        "reward": -0.04790361911696652,
+        "scoreSha256": "af0796a01d116c64ede8f579b891d51dfe47be6ed1b3e1aff2dfa4cd028a9ed0",
+        "speedupVsFreshDefault": 0.9951635563421022,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-4d71ac0e18a2df6b96e2",
+        "eligible": false,
+        "failedReplayCount": 0,
+        "geometricSpeedup": null,
+        "knownStatusTimeoutCount": 0,
+        "mask": 15,
+        "optionNames": [
+          "ee-mode",
+          "on-repeat-ite-simp",
+          "simp-with-care",
+          "theoryof-mode"
+        ],
+        "ordinal": 15,
+        "reportSha256": "686aed9f9354c546a5378d26ea2dbac6187bbb0d8c63f8290dfd4da4d5d496d3",
+        "reward": -5.0,
+        "scoreSha256": "7e1cd45322fd42e4956e7c08423f3b863fd88948bd2c17ebc5fea2b65de28768",
+        "speedupVsFreshDefault": null,
+        "wrongAnswerCount": 4
+      }
+    ],
+    "schemaVersion": "cvc5-option-subset-ablation-results-v0",
+    "selection": {
+      "kind": "all-subsets-v0"
+    },
+    "sourceCandidateId": "cvc5-random-v0-1637045cb9e75d3847f6",
+    "warmups": 0,
+    "workloadSha256": "1d7ebc4fcb4b2115fc7af83cb0c2d0b09c8bd3c781fce3efac917caa554c26a2"
+  },
+  "ablationDesign": {
+    "candidates": [
+      {
+        "candidateId": "cvc5-ablation-v0-c9c0efbf7bb15fd756c7",
+        "mask": 0,
+        "optionNames": [],
+        "ordinal": 0,
+        "path": "candidates/subset-00-v0.json",
+        "sha256": "69f9ec9dccbb2f4e756dfda1f0add7782e044fb63ba0428bcb535c04dfdba591"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-9b6c3c28d5c06e890d09",
+        "mask": 1,
+        "optionNames": [
+          "ee-mode"
+        ],
+        "ordinal": 1,
+        "path": "candidates/subset-01-v0.json",
+        "sha256": "4d873849bf4b8f276105497dea6b486db636435892857f44f3891006a440181e"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-d0892fceaa3cbec1eed2",
+        "mask": 2,
+        "optionNames": [
+          "on-repeat-ite-simp"
+        ],
+        "ordinal": 2,
+        "path": "candidates/subset-02-v0.json",
+        "sha256": "98512ef16430a0f23cfa4e332a0814e6e682a3d6c588980ac7166184480e5c69"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-5cbcb6d48680043e8c23",
+        "mask": 3,
+        "optionNames": [
+          "ee-mode",
+          "on-repeat-ite-simp"
+        ],
+        "ordinal": 3,
+        "path": "candidates/subset-03-v0.json",
+        "sha256": "37cab16f780c2dc9e6d3572b1c93627ed6247c3bff2a831c16278d163fe4076f"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-3e8dc2effd6d37ef828a",
+        "mask": 4,
+        "optionNames": [
+          "simp-with-care"
+        ],
+        "ordinal": 4,
+        "path": "candidates/subset-04-v0.json",
+        "sha256": "dc5d4d3a4d4a9d6374a72342ed608b74bd1eed30955f262e243ebbe66ae4ed6b"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-c5e42ca60873f1109d8f",
+        "mask": 5,
+        "optionNames": [
+          "ee-mode",
+          "simp-with-care"
+        ],
+        "ordinal": 5,
+        "path": "candidates/subset-05-v0.json",
+        "sha256": "913ab5a6c05dab9825099d757ee489ed7c4dd6ad81d1382fdbd139b8dab0f9c2"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-142698c17163d7a5d691",
+        "mask": 6,
+        "optionNames": [
+          "on-repeat-ite-simp",
+          "simp-with-care"
+        ],
+        "ordinal": 6,
+        "path": "candidates/subset-06-v0.json",
+        "sha256": "84971b4251c3195db7c424570416948437b181190a68ce3e7c255019bc6a75ac"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-4fece3d09387a8069d69",
+        "mask": 7,
+        "optionNames": [
+          "ee-mode",
+          "on-repeat-ite-simp",
+          "simp-with-care"
+        ],
+        "ordinal": 7,
+        "path": "candidates/subset-07-v0.json",
+        "sha256": "074a89784b026742b0dc528ed1efcf49da2283472d789945d58253e931266127"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-abdb76808cf13379382b",
+        "mask": 8,
+        "optionNames": [
+          "theoryof-mode"
+        ],
+        "ordinal": 8,
+        "path": "candidates/subset-08-v0.json",
+        "sha256": "b297e4c5b0f6f36631a1b4dd7f73d943b3b8b6e97821b6f3a828838d4acc0eec"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-68815191a75dadb20047",
+        "mask": 9,
+        "optionNames": [
+          "ee-mode",
+          "theoryof-mode"
+        ],
+        "ordinal": 9,
+        "path": "candidates/subset-09-v0.json",
+        "sha256": "662ed0c2007655b67b4bfe580f51e505b5c9597542e742b5da22dc7b0359c5e8"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-eae8a98a476a8032d630",
+        "mask": 10,
+        "optionNames": [
+          "on-repeat-ite-simp",
+          "theoryof-mode"
+        ],
+        "ordinal": 10,
+        "path": "candidates/subset-10-v0.json",
+        "sha256": "18dd68928961bb00bdc6d0cee557dc9aed6bbb24768a02fe3b5594ef97c94c45"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-bf6b5d9d276cf9686a72",
+        "mask": 11,
+        "optionNames": [
+          "ee-mode",
+          "on-repeat-ite-simp",
+          "theoryof-mode"
+        ],
+        "ordinal": 11,
+        "path": "candidates/subset-11-v0.json",
+        "sha256": "3e3dbef3956fd4b90e453dcf3b63ec41af6d0b57aa8c80353efc0c5f1975e751"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-a94e82d571e23270d18d",
+        "mask": 12,
+        "optionNames": [
+          "simp-with-care",
+          "theoryof-mode"
+        ],
+        "ordinal": 12,
+        "path": "candidates/subset-12-v0.json",
+        "sha256": "a2e03d1820e7d8430398083e35b0566d4bc60be9f599cd230b79d6fae176b3b7"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-619fea7e2b55007792ca",
+        "mask": 13,
+        "optionNames": [
+          "ee-mode",
+          "simp-with-care",
+          "theoryof-mode"
+        ],
+        "ordinal": 13,
+        "path": "candidates/subset-13-v0.json",
+        "sha256": "f2b84e3db59818e2a3f289658efe2bc2ffc3b7ad9ee02c023d34dbf2681bb6c4"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-71fe516e08e7d505fb21",
+        "mask": 14,
+        "optionNames": [
+          "on-repeat-ite-simp",
+          "simp-with-care",
+          "theoryof-mode"
+        ],
+        "ordinal": 14,
+        "path": "candidates/subset-14-v0.json",
+        "sha256": "3bb287a033fbe4fd581c1bce229c4184b0e96948c988d0701d530482f7688dcb"
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-4d71ac0e18a2df6b96e2",
+        "mask": 15,
+        "optionNames": [
+          "ee-mode",
+          "on-repeat-ite-simp",
+          "simp-with-care",
+          "theoryof-mode"
+        ],
+        "ordinal": 15,
+        "path": "candidates/subset-15-v0.json",
+        "sha256": "73aea6dfe232610f619cbbfb1174eaf768d0dd9364708cb6ab483de2a5219c39"
+      }
+    ],
+    "parameterSpace": {
+      "fileName": "cvc5-regular-bv-parameter-space-v0.json",
+      "parameterSpaceId": "cvc5-1.3.4-regular-bv-wide-v0",
+      "sha256": "d3adf4a89815e8b89a57bcc02589c88e2c6bf67c61728900ccdcb154200771d8"
+    },
+    "policy": {
+      "candidateCount": 16,
+      "kind": "exhaustive-explicit-option-subsets-v0",
+      "optionNames": [
+        "ee-mode",
+        "on-repeat-ite-simp",
+        "simp-with-care",
+        "theoryof-mode"
+      ]
+    },
+    "schemaVersion": "cvc5-option-subset-ablation-v0",
+    "sourceCandidate": {
+      "candidateId": "cvc5-random-v0-1637045cb9e75d3847f6",
+      "fileName": "random-seed23-candidate-v0.json",
+      "sha256": "ca6ad6864af72dcf3c272e11db51d701d870778837910c9b0fb4fd9db786717e"
+    }
+  },
+  "ablationPerformance": {
+    "baselineManifest": {
+      "fileName": "default-manifest-v0.json",
+      "sha256": "e9cdc156a06f8adbad5b8b080549976de1cc4462ea85bc02ffe63ff7a4039b67"
+    },
+    "complete": true,
+    "repetitions": 3,
+    "results": [
+      {
+        "candidateId": "cvc5-ablation-v0-c9c0efbf7bb15fd756c7",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 1.008464475042216,
+        "knownStatusTimeoutCount": 0,
+        "mask": 0,
+        "optionNames": [],
+        "ordinal": 0,
+        "reportSha256": "ba522a3f145f187fb4f3f32e7bcdf885cf69ccde6d968b5e17a788d38c7dfd32",
+        "reward": 0.008428852251007367,
+        "scoreSha256": "e0c5be3c06fd1d5c7557750d67b140864ec6b65d65aa5ec20c2c6d8aedfb285e",
+        "speedupVsFreshDefault": 1.0,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-9b6c3c28d5c06e890d09",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 1.086522760538858,
+        "knownStatusTimeoutCount": 0,
+        "mask": 1,
+        "optionNames": [
+          "ee-mode"
+        ],
+        "ordinal": 1,
+        "reportSha256": "122b42dc7739636c72e86dd9062bb715ba8f6249de2e89e781ce5fb4ad845f32",
+        "reward": 0.08298246898904763,
+        "scoreSha256": "c4bb616d43e119d8007b7a69d6c2ec96dd5474b65706bcd8749a39e78c1127df",
+        "speedupVsFreshDefault": 1.077403108813897,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-d0892fceaa3cbec1eed2",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 1.0075901816248818,
+        "knownStatusTimeoutCount": 0,
+        "mask": 2,
+        "optionNames": [
+          "on-repeat-ite-simp"
+        ],
+        "ordinal": 2,
+        "reportSha256": "5c4b267d29fef71af5a3325bd4b2d02c6e66a9c5bd971a474838597eab577784",
+        "reward": 0.007561521130542757,
+        "scoreSha256": "72c14505d9bd049d7ec4022e93e3d8fc20bac3a4bad97df6461ea104ff650082",
+        "speedupVsFreshDefault": 0.9991330449024517,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-5cbcb6d48680043e8c23",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 1.085210119142515,
+        "knownStatusTimeoutCount": 0,
+        "mask": 3,
+        "optionNames": [
+          "ee-mode",
+          "on-repeat-ite-simp"
+        ],
+        "ordinal": 3,
+        "reportSha256": "80c2250a3b18a96e2029ede0e12c0b56435aa85ec6f5b16a6588b10f487c10b3",
+        "reward": 0.0817736264389614,
+        "scoreSha256": "d4c08741ecf5f443bc27b07becd60e5ccc68a5a6ac2419e8b7171387e032bcd0",
+        "speedupVsFreshDefault": 1.0761014849800101,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-3e8dc2effd6d37ef828a",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9893974531445511,
+        "knownStatusTimeoutCount": 0,
+        "mask": 4,
+        "optionNames": [
+          "simp-with-care"
+        ],
+        "ordinal": 4,
+        "reportSha256": "d367ddd5263ad330a27f08090b65d3c7f41e741e4b3244ea885be0ee62192069",
+        "reward": -0.010659154333189145,
+        "scoreSha256": "9bcf64ebd77f2650078719b3b4914239a3389039a0a06e44c79af70c65e177f4",
+        "speedupVsFreshDefault": 0.9810930157982345,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-c5e42ca60873f1109d8f",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 1.0800086736553935,
+        "knownStatusTimeoutCount": 0,
+        "mask": 5,
+        "optionNames": [
+          "ee-mode",
+          "simp-with-care"
+        ],
+        "ordinal": 5,
+        "reportSha256": "def58a599c0a9864b3beed637c65605d09de0f81b68bd354ed08aae4f97f6c01",
+        "reward": 0.07696907226628015,
+        "scoreSha256": "35e80b410a7c03d53b00afbb183fe9806091ce83f943a045b2290ed4084d9968",
+        "speedupVsFreshDefault": 1.070943697456653,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-142698c17163d7a5d691",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 1.005400611581087,
+        "knownStatusTimeoutCount": 0,
+        "mask": 6,
+        "optionNames": [
+          "on-repeat-ite-simp",
+          "simp-with-care"
+        ],
+        "ordinal": 6,
+        "reportSha256": "e8ffae0a6312227e53458856d2bb63e42ea847b92156479bc628461ec1eecc04",
+        "reward": 0.0053860805724398105,
+        "scoreSha256": "82702ba859be8973164fc250c635fcb4ece29cb1860af0645b98ab9f4625fd4e",
+        "speedupVsFreshDefault": 0.9969618528595161,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-4fece3d09387a8069d69",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 1.0966746368811735,
+        "knownStatusTimeoutCount": 0,
+        "mask": 7,
+        "optionNames": [
+          "ee-mode",
+          "on-repeat-ite-simp",
+          "simp-with-care"
+        ],
+        "ordinal": 7,
+        "reportSha256": "f4a91d70322a5a93a9a2d477c5aef0de4a7407608d0e973ef9d4541d19136fba",
+        "reward": 0.09228254375556401,
+        "scoreSha256": "09f625c967da58839aa84d33bdb7c52bacef5990e6a7d015cf8ee713077fcdab",
+        "speedupVsFreshDefault": 1.0874697761021923,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-abdb76808cf13379382b",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9190350342439431,
+        "knownStatusTimeoutCount": 0,
+        "mask": 8,
+        "optionNames": [
+          "theoryof-mode"
+        ],
+        "ordinal": 8,
+        "reportSha256": "139bc6aba16c69b6ff3c389c5e4a29373b4d2fa479150e8efe506f17b97911cf",
+        "reward": -0.0844310352160366,
+        "scoreSha256": "7fbe42b72f5681a5e2def7d3b1a460b176a5bb5c737c082397ecbd7695a283aa",
+        "speedupVsFreshDefault": 0.9113211788699555,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-eae8a98a476a8032d630",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9146419882919795,
+        "knownStatusTimeoutCount": 0,
+        "mask": 10,
+        "optionNames": [
+          "on-repeat-ite-simp",
+          "theoryof-mode"
+        ],
+        "ordinal": 10,
+        "reportSha256": "47539c6c8be91c5def790d0586249d23f37126b228d065acd7dfca8897d93c2e",
+        "reward": -0.08922255989880044,
+        "scoreSha256": "eed9517023f984677486c5ebd2de8180cff7bd6832ebf070ee613caed9294a39",
+        "speedupVsFreshDefault": 0.9069650056375967,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-a94e82d571e23270d18d",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9155914620693457,
+        "knownStatusTimeoutCount": 0,
+        "mask": 12,
+        "optionNames": [
+          "simp-with-care",
+          "theoryof-mode"
+        ],
+        "ordinal": 12,
+        "reportSha256": "64d6006982f14a01e2994ebe78e150900b83ab6d72f33be8ccc335b8d1606ad4",
+        "reward": -0.0881850159042305,
+        "scoreSha256": "759cfe5d09fb43fa68e66128f06f6db8be4387c3d0961337874ece4961a7b22e",
+        "speedupVsFreshDefault": 0.9079065100741576,
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "cvc5-ablation-v0-71fe516e08e7d505fb21",
+        "eligible": true,
+        "failedReplayCount": 0,
+        "geometricSpeedup": 0.9142147117935072,
+        "knownStatusTimeoutCount": 0,
+        "mask": 14,
+        "optionNames": [
+          "on-repeat-ite-simp",
+          "simp-with-care",
+          "theoryof-mode"
+        ],
+        "ordinal": 14,
+        "reportSha256": "248142271f0eb98753395c987eb9d6cb242db462af20d1e0c36fcd455db036b6",
+        "reward": -0.08968982068115301,
+        "scoreSha256": "6de0a4878cafaa828a665762338e7e72bda8c22ecedc48ea498244fb768a3c83",
+        "speedupVsFreshDefault": 0.9065413154541082,
+        "wrongAnswerCount": 0
+      }
+    ],
+    "schemaVersion": "cvc5-option-subset-ablation-results-v0",
+    "selection": {
+      "kind": "eligible-from-results-v0",
+      "selectedMasks": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        12,
+        14
+      ],
+      "sourceFileName": "results-v0.json",
+      "sourceSha256": "35c055c3f9bdadd217e3aa5b545166d58454904dc5ea165c5cd6d704e4022a8f"
+    },
+    "sourceCandidateId": "cvc5-random-v0-1637045cb9e75d3847f6",
+    "warmups": 1,
+    "workloadSha256": "f2b2df53822ee4c5cffcc5064fa51ebf711cec0fbe98f2578e4bfc1331c1bc42"
+  },
+  "anytime": {
+    "algorithms": [
+      {
+        "aggregate": [
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.0,
+            "upperQuartileGeometricSpeedup": 1.0
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.1,
+            "upperQuartileGeometricSpeedup": 1.3802719600544848
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.25,
+            "upperQuartileGeometricSpeedup": 1.3802719600544848
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.3802719600544848,
+            "medianGeometricSpeedup": 1.7605439201089697,
+            "timeFraction": 0.5,
+            "upperQuartileGeometricSpeedup": 1.8846581162673504
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.3802719600544848,
+            "medianGeometricSpeedup": 1.7605439201089697,
+            "timeFraction": 0.75,
+            "upperQuartileGeometricSpeedup": 1.8846581162673504
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.3802719600544848,
+            "medianGeometricSpeedup": 1.7605439201089697,
+            "timeFraction": 1.0,
+            "upperQuartileGeometricSpeedup": 1.8846581162673504
+          }
+        ],
+        "algorithm": "random",
+        "runs": [
+          {
+            "algorithm": "random",
+            "completedEvaluationCount": 46,
+            "durationSeconds": 1800.371973903,
+            "finalCost": 0.5680062783881612,
+            "finalGeometricSpeedup": 1.7605439201089697,
+            "hasQualifiedIncumbent": true,
+            "normalizedAreaUnderSpeedupCurve": 1.7031596416659143,
+            "points": [
+              {
+                "candidateId": "cvc5-random-v0-2c1ffae2a1e336b867c4",
+                "cost": 0.5680062783881612,
+                "elapsedSeconds": 135.841,
+                "evaluationCount": 1,
+                "geometricSpeedup": 1.7605439201089697
+              }
+            ],
+            "seed": 17
+          },
+          {
+            "algorithm": "random",
+            "completedEvaluationCount": 19,
+            "durationSeconds": 1800.399316445,
+            "finalCost": 0.4978164990697383,
+            "finalGeometricSpeedup": 2.008772312425731,
+            "hasQualifiedIncumbent": true,
+            "normalizedAreaUnderSpeedupCurve": 1.6985892765064285,
+            "points": [
+              {
+                "candidateId": "cvc5-random-v0-1637045cb9e75d3847f6",
+                "cost": 0.4978164990697383,
+                "elapsedSeconds": 553.597,
+                "evaluationCount": 8,
+                "geometricSpeedup": 2.008772312425731
+              }
+            ],
+            "seed": 23
+          },
+          {
+            "algorithm": "random",
+            "completedEvaluationCount": 39,
+            "durationSeconds": 1800.386332509,
+            "finalCost": null,
+            "finalGeometricSpeedup": 1.0,
+            "hasQualifiedIncumbent": false,
+            "normalizedAreaUnderSpeedupCurve": 1.0,
+            "points": [],
+            "seed": 31
+          }
+        ],
+        "seedCount": 3
+      },
+      {
+        "aggregate": [
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.0,
+            "upperQuartileGeometricSpeedup": 1.0
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.1,
+            "upperQuartileGeometricSpeedup": 1.0
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.25,
+            "upperQuartileGeometricSpeedup": 1.0
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.5,
+            "upperQuartileGeometricSpeedup": 1.0
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.75,
+            "upperQuartileGeometricSpeedup": 1.0
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 1.0,
+            "upperQuartileGeometricSpeedup": 1.0
+          }
+        ],
+        "algorithm": "evolution",
+        "runs": [
+          {
+            "algorithm": "evolution",
+            "completedEvaluationCount": 17,
+            "durationSeconds": 1800.406536844,
+            "finalCost": null,
+            "finalGeometricSpeedup": 1.0,
+            "hasQualifiedIncumbent": false,
+            "normalizedAreaUnderSpeedupCurve": 1.0,
+            "points": [],
+            "seed": 17
+          },
+          {
+            "algorithm": "evolution",
+            "completedEvaluationCount": 16,
+            "durationSeconds": 1800.370272458,
+            "finalCost": null,
+            "finalGeometricSpeedup": 1.0,
+            "hasQualifiedIncumbent": false,
+            "normalizedAreaUnderSpeedupCurve": 1.0,
+            "points": [],
+            "seed": 23
+          },
+          {
+            "algorithm": "evolution",
+            "completedEvaluationCount": 26,
+            "durationSeconds": 1800.272612272,
+            "finalCost": null,
+            "finalGeometricSpeedup": 1.0,
+            "hasQualifiedIncumbent": false,
+            "normalizedAreaUnderSpeedupCurve": 1.0,
+            "points": [],
+            "seed": 31
+          }
+        ],
+        "seedCount": 3
+      },
+      {
+        "aggregate": [
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.0,
+            "upperQuartileGeometricSpeedup": 1.0
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.1,
+            "upperQuartileGeometricSpeedup": 1.0
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.25,
+            "upperQuartileGeometricSpeedup": 1.0
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.5,
+            "upperQuartileGeometricSpeedup": 1.0
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 0.75,
+            "upperQuartileGeometricSpeedup": 1.0
+          },
+          {
+            "lowerQuartileGeometricSpeedup": 1.0,
+            "medianGeometricSpeedup": 1.0,
+            "timeFraction": 1.0,
+            "upperQuartileGeometricSpeedup": 1.0
+          }
+        ],
+        "algorithm": "smac",
+        "runs": [
+          {
+            "algorithm": "smac",
+            "completedEvaluationCount": 32,
+            "durationSeconds": 1800.389258326,
+            "finalCost": null,
+            "finalGeometricSpeedup": 1.0,
+            "hasQualifiedIncumbent": false,
+            "normalizedAreaUnderSpeedupCurve": 1.0,
+            "points": [],
+            "seed": 17
+          },
+          {
+            "algorithm": "smac",
+            "completedEvaluationCount": 33,
+            "durationSeconds": 1800.404595727,
+            "finalCost": null,
+            "finalGeometricSpeedup": 1.0,
+            "hasQualifiedIncumbent": false,
+            "normalizedAreaUnderSpeedupCurve": 1.0,
+            "points": [],
+            "seed": 23
+          },
+          {
+            "algorithm": "smac",
+            "completedEvaluationCount": 33,
+            "durationSeconds": 1800.247327069,
+            "finalCost": null,
+            "finalGeometricSpeedup": 1.0,
+            "hasQualifiedIncumbent": false,
+            "normalizedAreaUnderSpeedupCurve": 1.0,
+            "points": [],
+            "seed": 31
+          }
+        ],
+        "seedCount": 3
+      }
+    ],
+    "campaignId": "cvc5-multi-workload-evidence-total-objective-v0",
+    "schemaVersion": "cvc5-multi-seed-anytime-summary-v0",
+    "timeFractions": [
+      0.0,
+      0.1,
+      0.25,
+      0.5,
+      0.75,
+      1.0
+    ]
+  },
+  "campaign": {
+    "algorithms": [
+      {
+        "name": "evolution",
+        "seeds": [
+          17,
+          23,
+          31
+        ]
+      },
+      {
+        "name": "random",
+        "seeds": [
+          17,
+          23,
+          31
+        ]
+      },
+      {
+        "name": "smac",
+        "seeds": [
+          17,
+          23,
+          31
+        ]
+      }
+    ],
+    "budget": {
+      "maximumEvaluations": 1000000,
+      "perTrialTimeoutSeconds": 600.0,
+      "wallClockSeconds": 1800.0
+    },
+    "campaignId": "cvc5-multi-workload-evidence-total-objective-v0",
+    "confirmation": {
+      "orderPolicy": "paired-randomized-interleaved-v0",
+      "repetitions": 3,
+      "scheduleSeed": 20261102
+    },
+    "corpus": {
+      "corpusId": "cvc5-multi-workload-evidence-v0-corpus-v0",
+      "path": "corpus-v0.json",
+      "sha256": "48b3a53bba2a559db64694d409eb6fd2541f84d875c32a1d962c20696389bb68"
+    },
+    "defaultCandidateId": "cvc5-1.3.4-regular-bv-default-v0",
+    "gate": {
+      "minimumPositiveGroupFraction": 0.6,
+      "minimumRelativeImprovement": 0.05,
+      "requireFailureFree": true,
+      "requirePositiveBootstrap95LowerBound": true
+    },
+    "objective": "workload-total-effective-cost-log-speedup-v0",
+    "schemaVersion": "cvc5-configurator-campaign-v0"
+  },
+  "confirmation": {
+    "bootstrapSeed": 20261102,
+    "results": [
+      {
+        "bootstrap95MeanLogSpeedup": {
+          "high": 0.015361704907653219,
+          "low": -0.027820073506475213
+        },
+        "candidateId": "random-seed17-v0",
+        "defaultControl": false,
+        "eligible": true,
+        "geometricSpeedup": 0.9887621535344118,
+        "groupRewards": [
+          {
+            "medianLogSpeedup": -0.027820073506475213,
+            "repetitions": 3,
+            "workloadGroupId": "storage-provider-test-v0"
+          },
+          {
+            "medianLogSpeedup": -0.021446035876558377,
+            "repetitions": 3,
+            "workloadGroupId": "restricted-wallet-test-v0"
+          },
+          {
+            "medianLogSpeedup": 0.015361704907653219,
+            "repetitions": 3,
+            "workloadGroupId": "highload-wallet-test-v0"
+          }
+        ],
+        "meanLogSpeedup": -0.011301468158460124,
+        "medianLogSpeedup": -0.021446035876558377,
+        "pairedRepetitionCount": 9,
+        "positiveGroupCount": 1,
+        "relativeImprovement": -0.011365571007564856,
+        "workloadGroupCount": 3
+      },
+      {
+        "bootstrap95MeanLogSpeedup": {
+          "high": 0.5763767764155737,
+          "low": -5.0
+        },
+        "candidateId": "random-seed23-v0",
+        "defaultControl": false,
+        "eligible": false,
+        "geometricSpeedup": 0.22788972917632802,
+        "groupRewards": [
+          {
+            "medianLogSpeedup": -0.013057009369479657,
+            "repetitions": 3,
+            "workloadGroupId": "storage-provider-test-v0"
+          },
+          {
+            "medianLogSpeedup": -5.0,
+            "repetitions": 3,
+            "workloadGroupId": "restricted-wallet-test-v0"
+          },
+          {
+            "medianLogSpeedup": 0.5763767764155737,
+            "repetitions": 3,
+            "workloadGroupId": "highload-wallet-test-v0"
+          }
+        ],
+        "meanLogSpeedup": -1.4788934109846352,
+        "medianLogSpeedup": -0.013057009369479657,
+        "pairedRepetitionCount": 9,
+        "positiveGroupCount": 1,
+        "relativeImprovement": -3.3880871841585156,
+        "workloadGroupCount": 3
+      }
+    ],
+    "scheduleSha256": "26402632d4b36c920fd2d1ba6844a95b04b0beebd14b29e75923a2a69e594ddb",
+    "schemaVersion": "cvc5-grouped-confirmation-summary-v0",
+    "scoreAggregation": "workload-total-effective-cost-log-speedup-v0"
+  },
+  "confirmationSchedule": {
+    "campaignId": "cvc5-multi-workload-evidence-total-objective-v0",
+    "candidates": [
+      {
+        "candidateId": "random-seed17-v0",
+        "defaultControl": false
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "defaultControl": false
+      }
+    ],
+    "defaultCandidateId": "cvc5-1.3.4-regular-bv-default-v0",
+    "policy": "paired-randomized-interleaved-v0",
+    "repetitions": 3,
+    "scheduleSha256": "26402632d4b36c920fd2d1ba6844a95b04b0beebd14b29e75923a2a69e594ddb",
+    "schemaVersion": "cvc5-confirmation-schedule-v0",
+    "seed": 20261102,
+    "trials": [
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "candidate",
+        "ordinal": 0,
+        "pairId": "pair-v0-8f044c126adf42d117b0",
+        "repetition": 1,
+        "trialId": "confirmation-trial-v0-90745b39bd8bf03ef8ba",
+        "workloadGroupId": "highload-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "default",
+        "ordinal": 1,
+        "pairId": "pair-v0-8f044c126adf42d117b0",
+        "repetition": 1,
+        "trialId": "confirmation-trial-v0-2774d4d802a76e0966ed",
+        "workloadGroupId": "highload-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "default",
+        "ordinal": 2,
+        "pairId": "pair-v0-a9f286f9e8b09944898c",
+        "repetition": 0,
+        "trialId": "confirmation-trial-v0-ccbcf4e05f2b8bf7d0ed",
+        "workloadGroupId": "highload-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "candidate",
+        "ordinal": 3,
+        "pairId": "pair-v0-a9f286f9e8b09944898c",
+        "repetition": 0,
+        "trialId": "confirmation-trial-v0-7290c3a7b47bd1b4f1fe",
+        "workloadGroupId": "highload-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "default",
+        "ordinal": 4,
+        "pairId": "pair-v0-16637820ebbd6bc7373e",
+        "repetition": 2,
+        "trialId": "confirmation-trial-v0-cc08bb946b70802d43a9",
+        "workloadGroupId": "highload-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "candidate",
+        "ordinal": 5,
+        "pairId": "pair-v0-16637820ebbd6bc7373e",
+        "repetition": 2,
+        "trialId": "confirmation-trial-v0-a4f29751ebcf2164f144",
+        "workloadGroupId": "highload-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "default",
+        "ordinal": 6,
+        "pairId": "pair-v0-ab1cb626f069a0d495fe",
+        "repetition": 2,
+        "trialId": "confirmation-trial-v0-d77cb0a0c985681716b8",
+        "workloadGroupId": "restricted-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "candidate",
+        "ordinal": 7,
+        "pairId": "pair-v0-ab1cb626f069a0d495fe",
+        "repetition": 2,
+        "trialId": "confirmation-trial-v0-aa7582fdd4f4bd3e7f97",
+        "workloadGroupId": "restricted-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "default",
+        "ordinal": 8,
+        "pairId": "pair-v0-9e9c3cf737e051b72378",
+        "repetition": 0,
+        "trialId": "confirmation-trial-v0-fb010eaad50b3f5d3de0",
+        "workloadGroupId": "restricted-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "candidate",
+        "ordinal": 9,
+        "pairId": "pair-v0-9e9c3cf737e051b72378",
+        "repetition": 0,
+        "trialId": "confirmation-trial-v0-dfbc710769f5e0d964cb",
+        "workloadGroupId": "restricted-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "default",
+        "ordinal": 10,
+        "pairId": "pair-v0-28cdf52f4f69189c2521",
+        "repetition": 1,
+        "trialId": "confirmation-trial-v0-a8020dcc10e8f0bca27f",
+        "workloadGroupId": "storage-provider-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "candidate",
+        "ordinal": 11,
+        "pairId": "pair-v0-28cdf52f4f69189c2521",
+        "repetition": 1,
+        "trialId": "confirmation-trial-v0-357152057160eebc0630",
+        "workloadGroupId": "storage-provider-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "default",
+        "ordinal": 12,
+        "pairId": "pair-v0-0bc5528449b287aaec3f",
+        "repetition": 2,
+        "trialId": "confirmation-trial-v0-8552469d30a78beca7f3",
+        "workloadGroupId": "highload-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "candidate",
+        "ordinal": 13,
+        "pairId": "pair-v0-0bc5528449b287aaec3f",
+        "repetition": 2,
+        "trialId": "confirmation-trial-v0-0c9644e1ad14daeed8d8",
+        "workloadGroupId": "highload-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "default",
+        "ordinal": 14,
+        "pairId": "pair-v0-025cff8371519ae52528",
+        "repetition": 1,
+        "trialId": "confirmation-trial-v0-c56c4ed0e822173c7607",
+        "workloadGroupId": "restricted-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "candidate",
+        "ordinal": 15,
+        "pairId": "pair-v0-025cff8371519ae52528",
+        "repetition": 1,
+        "trialId": "confirmation-trial-v0-bc57049aa0e529e197c8",
+        "workloadGroupId": "restricted-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "candidate",
+        "ordinal": 16,
+        "pairId": "pair-v0-d7dcb467a69d54306c49",
+        "repetition": 2,
+        "trialId": "confirmation-trial-v0-89f1a995ff3603a41bf5",
+        "workloadGroupId": "restricted-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "default",
+        "ordinal": 17,
+        "pairId": "pair-v0-d7dcb467a69d54306c49",
+        "repetition": 2,
+        "trialId": "confirmation-trial-v0-67cba4da7771e08f2220",
+        "workloadGroupId": "restricted-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "candidate",
+        "ordinal": 18,
+        "pairId": "pair-v0-423e7c5c866f3094bf47",
+        "repetition": 1,
+        "trialId": "confirmation-trial-v0-c0a218ada39ba7267163",
+        "workloadGroupId": "highload-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "default",
+        "ordinal": 19,
+        "pairId": "pair-v0-423e7c5c866f3094bf47",
+        "repetition": 1,
+        "trialId": "confirmation-trial-v0-21d67731ddb10e770b03",
+        "workloadGroupId": "highload-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "default",
+        "ordinal": 20,
+        "pairId": "pair-v0-573fee75d4e627ac7e0e",
+        "repetition": 0,
+        "trialId": "confirmation-trial-v0-7153fc1c3eec749fe8c2",
+        "workloadGroupId": "storage-provider-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "candidate",
+        "ordinal": 21,
+        "pairId": "pair-v0-573fee75d4e627ac7e0e",
+        "repetition": 0,
+        "trialId": "confirmation-trial-v0-93444a03217541583853",
+        "workloadGroupId": "storage-provider-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "candidate",
+        "ordinal": 22,
+        "pairId": "pair-v0-32716c873e8656d8db53",
+        "repetition": 1,
+        "trialId": "confirmation-trial-v0-9b4ade05aef50cac38d5",
+        "workloadGroupId": "restricted-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "default",
+        "ordinal": 23,
+        "pairId": "pair-v0-32716c873e8656d8db53",
+        "repetition": 1,
+        "trialId": "confirmation-trial-v0-a13a79459bbcd6011c84",
+        "workloadGroupId": "restricted-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "default",
+        "ordinal": 24,
+        "pairId": "pair-v0-e7f01194f5a3e7fb1b06",
+        "repetition": 0,
+        "trialId": "confirmation-trial-v0-67fec5cd032b84f26af1",
+        "workloadGroupId": "storage-provider-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "candidate",
+        "ordinal": 25,
+        "pairId": "pair-v0-e7f01194f5a3e7fb1b06",
+        "repetition": 0,
+        "trialId": "confirmation-trial-v0-1e3f903d548f77cf65ca",
+        "workloadGroupId": "storage-provider-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "default",
+        "ordinal": 26,
+        "pairId": "pair-v0-30a7e7fe94fb1aa92fe0",
+        "repetition": 0,
+        "trialId": "confirmation-trial-v0-27d424d3fecc76499581",
+        "workloadGroupId": "restricted-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "candidate",
+        "ordinal": 27,
+        "pairId": "pair-v0-30a7e7fe94fb1aa92fe0",
+        "repetition": 0,
+        "trialId": "confirmation-trial-v0-3a4c375438f614d1af7e",
+        "workloadGroupId": "restricted-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "default",
+        "ordinal": 28,
+        "pairId": "pair-v0-513d11990fd38b5c5fbb",
+        "repetition": 1,
+        "trialId": "confirmation-trial-v0-dfbf7d9b09df07654614",
+        "workloadGroupId": "storage-provider-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "candidate",
+        "ordinal": 29,
+        "pairId": "pair-v0-513d11990fd38b5c5fbb",
+        "repetition": 1,
+        "trialId": "confirmation-trial-v0-ab1b7926e44004893792",
+        "workloadGroupId": "storage-provider-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "candidate",
+        "ordinal": 30,
+        "pairId": "pair-v0-dbf87613f69d08d48e33",
+        "repetition": 2,
+        "trialId": "confirmation-trial-v0-12e193219d23273411cc",
+        "workloadGroupId": "storage-provider-test-v0"
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "configurationRole": "default",
+        "ordinal": 31,
+        "pairId": "pair-v0-dbf87613f69d08d48e33",
+        "repetition": 2,
+        "trialId": "confirmation-trial-v0-6b2a57a8d017a521fdaa",
+        "workloadGroupId": "storage-provider-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "candidate",
+        "ordinal": 32,
+        "pairId": "pair-v0-8d0f9f1f219bc5562312",
+        "repetition": 0,
+        "trialId": "confirmation-trial-v0-ce36a468cf26047b2b0e",
+        "workloadGroupId": "highload-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "default",
+        "ordinal": 33,
+        "pairId": "pair-v0-8d0f9f1f219bc5562312",
+        "repetition": 0,
+        "trialId": "confirmation-trial-v0-ca313ce2ffd3dc7973e9",
+        "workloadGroupId": "highload-wallet-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "default",
+        "ordinal": 34,
+        "pairId": "pair-v0-e9547a88dadea95640bb",
+        "repetition": 2,
+        "trialId": "confirmation-trial-v0-854212e1e334c084dff0",
+        "workloadGroupId": "storage-provider-test-v0"
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "configurationRole": "candidate",
+        "ordinal": 35,
+        "pairId": "pair-v0-e9547a88dadea95640bb",
+        "repetition": 2,
+        "trialId": "confirmation-trial-v0-7e27290688f2119f94ee",
+        "workloadGroupId": "storage-provider-test-v0"
+      }
+    ],
+    "workloadGroupIds": [
+      "storage-provider-test-v0",
+      "restricted-wallet-test-v0",
+      "highload-wallet-test-v0"
+    ]
+  },
+  "corpus": {
+    "corpusId": "cvc5-multi-workload-evidence-v0-corpus-v0",
+    "groupingKey": "contract-family-and-revision-v0",
+    "groups": [
+      {
+        "baselineManifest": {
+          "path": "../../workloads/nominator-pool-development-v0/baseline/default-manifest-v0.json",
+          "sha256": "8c3f0092dae96979296c9fa6ee701f3c717da9a340e86b66d46cbd3518dcb13f"
+        },
+        "groupId": "nominator-pool-development-v0",
+        "leakageGroupId": "nominator-pool-family-v0",
+        "partition": "development",
+        "sealedUntilFinalEvaluation": false
+      },
+      {
+        "baselineManifest": {
+          "path": "../../workloads/vesting-validation-v0/baseline/default-manifest-v0.json",
+          "sha256": "8541fe5f6c80ebb591db25aed8056b3b53dab913d0adc8ef6df654717464e0fd"
+        },
+        "groupId": "vesting-validation-v0",
+        "leakageGroupId": "vesting-family-v0",
+        "partition": "validation",
+        "sealedUntilFinalEvaluation": false
+      },
+      {
+        "baselineManifest": {
+          "path": "../../workloads/storage-provider-test-v0/baseline/default-manifest-v0.json",
+          "sha256": "ba5f02d5285d6b42c6f8f7c5c3ed7e7f27a3d1591245b0efa0339b81ede747b4"
+        },
+        "groupId": "storage-provider-test-v0",
+        "leakageGroupId": "storage-provider-family-v0",
+        "partition": "test",
+        "sealedUntilFinalEvaluation": true
+      },
+      {
+        "baselineManifest": {
+          "path": "../../workloads/restricted-wallet-test-v0/baseline/default-manifest-v0.json",
+          "sha256": "e6bd9c391322b8681c1d03fefb3995de5c51dec1c0384d551d784a20a2f5ce19"
+        },
+        "groupId": "restricted-wallet-test-v0",
+        "leakageGroupId": "restricted-wallet-family-v0",
+        "partition": "test",
+        "sealedUntilFinalEvaluation": true
+      },
+      {
+        "baselineManifest": {
+          "path": "../../workloads/highload-wallet-test-v0/baseline/default-manifest-v0.json",
+          "sha256": "e9cdc156a06f8adbad5b8b080549976de1cc4462ea85bc02ffe63ff7a4039b67"
+        },
+        "groupId": "highload-wallet-test-v0",
+        "leakageGroupId": "highload-wallet-family-v0",
+        "partition": "test",
+        "sealedUntilFinalEvaluation": true
+      }
+    ],
+    "parameterSpaceId": "cvc5-1.3.4-regular-bv-wide-v0",
+    "schemaVersion": "cvc5-workload-corpus-v0",
+    "solverVersion": "1.3.4",
+    "targetSolver": "cvc5"
+  },
+  "counts": {
+    "confirmationTrials": 36,
+    "correctnessVariants": 16,
+    "performanceVariants": 12,
+    "searches": 9
+  },
+  "pairedObservations": {
+    "complete": true,
+    "results": [
+      {
+        "candidateId": "random-seed23-v0",
+        "candidateReport": {
+          "path": "trials/000000-confirmation-trial-v0-90745b39bd8bf03ef8ba.json",
+          "sha256": "17b1b210c0e09dc516af72c68183c0de20a2b7ab7cb0a684dfbf25d88e74b051"
+        },
+        "defaultReport": {
+          "path": "trials/000001-confirmation-trial-v0-2774d4d802a76e0966ed.json",
+          "sha256": "cfceb09f7ad108bda2bdfa6c9d2cc0134ac76ffd30d9b9e1a23f6dd438724c1c"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-8f044c126adf42d117b0",
+        "repetition": 1,
+        "reward": 0.5763767764155737,
+        "timeoutCount": 0,
+        "workloadGroupId": "highload-wallet-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "candidateReport": {
+          "path": "trials/000003-confirmation-trial-v0-7290c3a7b47bd1b4f1fe.json",
+          "sha256": "13f5222d5e45d06578f379c19c44e70d60df753cb6c416835dfbd9f7b9ab093b"
+        },
+        "defaultReport": {
+          "path": "trials/000002-confirmation-trial-v0-ccbcf4e05f2b8bf7d0ed.json",
+          "sha256": "644e0c8412a6f578335cf389a45c42ee5d5610bcf5d5c2cf35479f53b9c24918"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-a9f286f9e8b09944898c",
+        "repetition": 0,
+        "reward": 0.575932250127857,
+        "timeoutCount": 0,
+        "workloadGroupId": "highload-wallet-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "candidateReport": {
+          "path": "trials/000005-confirmation-trial-v0-a4f29751ebcf2164f144.json",
+          "sha256": "95627ef11149428d436f99dfe1c75e888963a3f1f4ea88f66dbfe9d781527a6c"
+        },
+        "defaultReport": {
+          "path": "trials/000004-confirmation-trial-v0-cc08bb946b70802d43a9.json",
+          "sha256": "6156431761a674173032eef2feca6e3192ddf20bf1741327a4847b29e97602e0"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-16637820ebbd6bc7373e",
+        "repetition": 2,
+        "reward": 0.6403191877935436,
+        "timeoutCount": 0,
+        "workloadGroupId": "highload-wallet-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "candidateReport": {
+          "path": "trials/000007-confirmation-trial-v0-aa7582fdd4f4bd3e7f97.json",
+          "sha256": "572575308886fa6092e07d319b9283eedbe9b82812de9078ff3bf2bbc756ab00"
+        },
+        "defaultReport": {
+          "path": "trials/000006-confirmation-trial-v0-d77cb0a0c985681716b8.json",
+          "sha256": "914196252210a27b99aee16431bc1e9062ea3012d8c1fc288e2166195359a95f"
+        },
+        "eligible": false,
+        "failureCount": 0,
+        "pairId": "pair-v0-ab1cb626f069a0d495fe",
+        "repetition": 2,
+        "reward": -5.0,
+        "timeoutCount": 0,
+        "workloadGroupId": "restricted-wallet-test-v0",
+        "wrongAnswerCount": 4
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "candidateReport": {
+          "path": "trials/000009-confirmation-trial-v0-dfbc710769f5e0d964cb.json",
+          "sha256": "7eb16b7427f6ff5583bf20a3e7b347d2d582ca6d2037e2dea48cbd2b4e998449"
+        },
+        "defaultReport": {
+          "path": "trials/000008-confirmation-trial-v0-fb010eaad50b3f5d3de0.json",
+          "sha256": "f1dbceadc45c74bb8b3220c502027b8d5bcca9d97caf67a7fc6f61c66245c687"
+        },
+        "eligible": false,
+        "failureCount": 0,
+        "pairId": "pair-v0-9e9c3cf737e051b72378",
+        "repetition": 0,
+        "reward": -5.0,
+        "timeoutCount": 0,
+        "workloadGroupId": "restricted-wallet-test-v0",
+        "wrongAnswerCount": 4
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "candidateReport": {
+          "path": "trials/000011-confirmation-trial-v0-357152057160eebc0630.json",
+          "sha256": "e96323af6f4ecbca3fe9836989c4e846f575333a0c8b0d461d0793bcb6837b5b"
+        },
+        "defaultReport": {
+          "path": "trials/000010-confirmation-trial-v0-a8020dcc10e8f0bca27f.json",
+          "sha256": "8bea3823394b557693ed2ff5599c4f9a086b71632db1df6ee1089140134491b2"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-28cdf52f4f69189c2521",
+        "repetition": 1,
+        "reward": 0.02575406386964271,
+        "timeoutCount": 0,
+        "workloadGroupId": "storage-provider-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "candidateReport": {
+          "path": "trials/000013-confirmation-trial-v0-0c9644e1ad14daeed8d8.json",
+          "sha256": "0d2a01d0f83949e981c8020783a007a91671e4fe90229a333262a4a20959eb40"
+        },
+        "defaultReport": {
+          "path": "trials/000012-confirmation-trial-v0-8552469d30a78beca7f3.json",
+          "sha256": "ee79820188a296808c54abf71fd50962d1373cf1cd2fd15e9383ac93ccaa2dad"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-0bc5528449b287aaec3f",
+        "repetition": 2,
+        "reward": 0.015361704907653219,
+        "timeoutCount": 0,
+        "workloadGroupId": "highload-wallet-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "candidateReport": {
+          "path": "trials/000015-confirmation-trial-v0-bc57049aa0e529e197c8.json",
+          "sha256": "6d72f8e0f4d8b4abd6ac85dcd6626f542afb97d311a4c840dd0399cf2478c1f6"
+        },
+        "defaultReport": {
+          "path": "trials/000014-confirmation-trial-v0-c56c4ed0e822173c7607.json",
+          "sha256": "3e242cfb97d94e81eac111bdb81a017443466cd1a7fd1a57eb07d2589eae2e25"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-025cff8371519ae52528",
+        "repetition": 1,
+        "reward": -0.01740101934556505,
+        "timeoutCount": 0,
+        "workloadGroupId": "restricted-wallet-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "candidateReport": {
+          "path": "trials/000016-confirmation-trial-v0-89f1a995ff3603a41bf5.json",
+          "sha256": "442140846b57adb2a5b2446cb7d2007d755253452827a30a2aa29a3504214243"
+        },
+        "defaultReport": {
+          "path": "trials/000017-confirmation-trial-v0-67cba4da7771e08f2220.json",
+          "sha256": "ec6650f6346faccf33a9999676b1c1d82d7983a75d443916971b0cb0d26183d4"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-d7dcb467a69d54306c49",
+        "repetition": 2,
+        "reward": -0.021446035876558377,
+        "timeoutCount": 0,
+        "workloadGroupId": "restricted-wallet-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "candidateReport": {
+          "path": "trials/000018-confirmation-trial-v0-c0a218ada39ba7267163.json",
+          "sha256": "dedde333c217b14ac83276cbd69fe0891b85504dd1ff767dd0a2dad51301a3ba"
+        },
+        "defaultReport": {
+          "path": "trials/000019-confirmation-trial-v0-21d67731ddb10e770b03.json",
+          "sha256": "09ccca373d03aa0c14fb2cdb3c81703f55c2ca6b1e69442f16d70ac51aee059c"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-423e7c5c866f3094bf47",
+        "repetition": 1,
+        "reward": 0.004533447554766911,
+        "timeoutCount": 0,
+        "workloadGroupId": "highload-wallet-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "candidateReport": {
+          "path": "trials/000021-confirmation-trial-v0-93444a03217541583853.json",
+          "sha256": "de77cf8760dbee48f65814d0bb08e1f7f83d35b6f3e0e32f2ed15f99c4e38755"
+        },
+        "defaultReport": {
+          "path": "trials/000020-confirmation-trial-v0-7153fc1c3eec749fe8c2.json",
+          "sha256": "961ea18b835270434dc33af4aab0f569916bb787de54158ae2e23e446243ffbf"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-573fee75d4e627ac7e0e",
+        "repetition": 0,
+        "reward": -0.013057009369479657,
+        "timeoutCount": 0,
+        "workloadGroupId": "storage-provider-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "candidateReport": {
+          "path": "trials/000022-confirmation-trial-v0-9b4ade05aef50cac38d5.json",
+          "sha256": "04c2f80b634d3ce6cd2c4888ba53961927bb63225d458b6754885598154aa284"
+        },
+        "defaultReport": {
+          "path": "trials/000023-confirmation-trial-v0-a13a79459bbcd6011c84.json",
+          "sha256": "767f8751b453597b5c120efde240874d730bbb722c10407ee2e66529e8edd9b7"
+        },
+        "eligible": false,
+        "failureCount": 0,
+        "pairId": "pair-v0-32716c873e8656d8db53",
+        "repetition": 1,
+        "reward": -5.0,
+        "timeoutCount": 0,
+        "workloadGroupId": "restricted-wallet-test-v0",
+        "wrongAnswerCount": 4
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "candidateReport": {
+          "path": "trials/000025-confirmation-trial-v0-1e3f903d548f77cf65ca.json",
+          "sha256": "621e0adb89366af9c6f1eabc462375d64bde9f33ff77ea52d80b6bccd6824f3a"
+        },
+        "defaultReport": {
+          "path": "trials/000024-confirmation-trial-v0-67fec5cd032b84f26af1.json",
+          "sha256": "33b632ac414cdbd77d127b8e1579fdf67376af8ace4e6d2ce6097075c4b339be"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-e7f01194f5a3e7fb1b06",
+        "repetition": 0,
+        "reward": 0.030483832611764138,
+        "timeoutCount": 0,
+        "workloadGroupId": "storage-provider-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "candidateReport": {
+          "path": "trials/000027-confirmation-trial-v0-3a4c375438f614d1af7e.json",
+          "sha256": "d45253094e312b4b3749877984b04892a07d162ce536864c706e7e32f2ea3aba"
+        },
+        "defaultReport": {
+          "path": "trials/000026-confirmation-trial-v0-27d424d3fecc76499581.json",
+          "sha256": "e09a6233f678fb81d5560115404832a095e8971229c78a730c2031e71db69968"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-30a7e7fe94fb1aa92fe0",
+        "repetition": 0,
+        "reward": -0.03991971751940331,
+        "timeoutCount": 0,
+        "workloadGroupId": "restricted-wallet-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "candidateReport": {
+          "path": "trials/000029-confirmation-trial-v0-ab1b7926e44004893792.json",
+          "sha256": "37df0380c322e7cf315933afc9d9c2a8ca331b6f34e77bb7bba04754719613e8"
+        },
+        "defaultReport": {
+          "path": "trials/000028-confirmation-trial-v0-dfbf7d9b09df07654614.json",
+          "sha256": "bc8eff93444a63182def7ee7ccecbfb17d914314e69bbc543e7b2a40e4bb11e7"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-513d11990fd38b5c5fbb",
+        "repetition": 1,
+        "reward": -0.027820073506475213,
+        "timeoutCount": 0,
+        "workloadGroupId": "storage-provider-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed23-v0",
+        "candidateReport": {
+          "path": "trials/000030-confirmation-trial-v0-12e193219d23273411cc.json",
+          "sha256": "d8352a7c69022d347b64a361e50eb50921010d6942b8f1a403cfcc62468c7ea5"
+        },
+        "defaultReport": {
+          "path": "trials/000031-confirmation-trial-v0-6b2a57a8d017a521fdaa.json",
+          "sha256": "7b0ba8244c0dcf994fe620fe49cfe5289af232679f18126c06049ec2ce0033f6"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-dbf87613f69d08d48e33",
+        "repetition": 2,
+        "reward": -0.01606889217307542,
+        "timeoutCount": 0,
+        "workloadGroupId": "storage-provider-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "candidateReport": {
+          "path": "trials/000032-confirmation-trial-v0-ce36a468cf26047b2b0e.json",
+          "sha256": "609af916dd48b545e06299575c60dbc3d75cf359366f6738909350c2e13d4155"
+        },
+        "defaultReport": {
+          "path": "trials/000033-confirmation-trial-v0-ca313ce2ffd3dc7973e9.json",
+          "sha256": "c7dd6de176a8d7f75d247284e0085eda1277a3f1ce69a623b0530f2bc92127ce"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-8d0f9f1f219bc5562312",
+        "repetition": 0,
+        "reward": 0.02447845857320533,
+        "timeoutCount": 0,
+        "workloadGroupId": "highload-wallet-test-v0",
+        "wrongAnswerCount": 0
+      },
+      {
+        "candidateId": "random-seed17-v0",
+        "candidateReport": {
+          "path": "trials/000035-confirmation-trial-v0-7e27290688f2119f94ee.json",
+          "sha256": "151bbc1e590ca24ddd6adca0a90d21a0e885fe81cc907d56f220bebd835f497f"
+        },
+        "defaultReport": {
+          "path": "trials/000034-confirmation-trial-v0-854212e1e334c084dff0.json",
+          "sha256": "7766a9379b1f0c50e4415cde44194852eeb9c6580b8570351e4345f6ea14b6c3"
+        },
+        "eligible": true,
+        "failureCount": 0,
+        "pairId": "pair-v0-e9547a88dadea95640bb",
+        "repetition": 2,
+        "reward": -0.05937104897969892,
+        "timeoutCount": 0,
+        "workloadGroupId": "storage-provider-test-v0",
+        "wrongAnswerCount": 0
+      }
+    ],
+    "scheduleSha256": "26402632d4b36c920fd2d1ba6844a95b04b0beebd14b29e75923a2a69e594ddb",
+    "schemaVersion": "cvc5-confirmation-observations-v0",
+    "scoreAggregation": "workload-total-effective-cost-log-speedup-v0"
+  },
+  "qualification": {
+    "campaignId": "cvc5-multi-workload-evidence-total-objective-v0",
+    "finalists": [
+      {
+        "algorithm": "random",
+        "candidate": {
+          "path": "random-seed17-candidate-v0.json",
+          "sha256": "6821ed3df3e550f7d9526ed838b4ce519c348c1a9bfa8a9936be8be28723c8a4"
+        },
+        "candidateId": "cvc5-random-v0-2c1ffae2a1e336b867c4",
+        "developmentCost": 0.5680062783881612,
+        "finalistId": "random-seed17-v0",
+        "seed": 17,
+        "sourceRun": {
+          "eventsSha256": "d83cd7cbf3b0a4fe1f251d9e2cd0351eca0ea76bf2799809c3850c7f02de50b6",
+          "manifestSha256": "5b8537f9ea8e0c2b6948450917d8c207bb9fa3ac7275c6e986ad876e2a8e75f1",
+          "path": "../../runs/random/seed-17",
+          "stateSha256": "391c674ac37eb5436b2a3026ffbe512b88580e24a35d438aee685d1421a58a5c"
+        }
+      },
+      {
+        "algorithm": "random",
+        "candidate": {
+          "path": "random-seed23-candidate-v0.json",
+          "sha256": "ca6ad6864af72dcf3c272e11db51d701d870778837910c9b0fb4fd9db786717e"
+        },
+        "candidateId": "cvc5-random-v0-1637045cb9e75d3847f6",
+        "developmentCost": 0.4978164990697383,
+        "finalistId": "random-seed23-v0",
+        "seed": 23,
+        "sourceRun": {
+          "eventsSha256": "434f837a08561d278db50cab5db6c85d43cbd87f7b186451df945e60320979d9",
+          "manifestSha256": "1d7de12aa59cf9097780205cb1638ceecfe4abde25dc3a2bdb8dea5dc973bdeb",
+          "path": "../../runs/random/seed-23",
+          "stateSha256": "b3cd52bdd52a732f6e4ecd6132e178bf190052cbb601100b3bff26beafc59fd3"
+        }
+      }
+    ],
+    "qualificationPolicy": "complete-development-workload-success-v0",
+    "schemaVersion": "cvc5-finalist-index-v0",
+    "slotResults": [
+      {
+        "algorithm": "random",
+        "candidateId": "cvc5-random-v0-2c1ffae2a1e336b867c4",
+        "developmentCost": 0.5680062783881612,
+        "developmentCoverage": {
+          "expectedProfileCount": 10,
+          "observedProfileCount": 10,
+          "successfulProfileCount": 10
+        },
+        "finalistId": "random-seed17-v0",
+        "reason": "FULL_DEVELOPMENT_WORKLOAD_SUCCESS",
+        "seed": 17,
+        "sourceRun": {
+          "eventsSha256": "d83cd7cbf3b0a4fe1f251d9e2cd0351eca0ea76bf2799809c3850c7f02de50b6",
+          "manifestSha256": "5b8537f9ea8e0c2b6948450917d8c207bb9fa3ac7275c6e986ad876e2a8e75f1",
+          "path": "../../runs/random/seed-17",
+          "stateSha256": "391c674ac37eb5436b2a3026ffbe512b88580e24a35d438aee685d1421a58a5c"
+        },
+        "status": "QUALIFIED"
+      },
+      {
+        "algorithm": "random",
+        "candidateId": "cvc5-random-v0-1637045cb9e75d3847f6",
+        "developmentCost": 0.4978164990697383,
+        "developmentCoverage": {
+          "expectedProfileCount": 10,
+          "observedProfileCount": 10,
+          "successfulProfileCount": 10
+        },
+        "finalistId": "random-seed23-v0",
+        "reason": "FULL_DEVELOPMENT_WORKLOAD_SUCCESS",
+        "seed": 23,
+        "sourceRun": {
+          "eventsSha256": "434f837a08561d278db50cab5db6c85d43cbd87f7b186451df945e60320979d9",
+          "manifestSha256": "1d7de12aa59cf9097780205cb1638ceecfe4abde25dc3a2bdb8dea5dc973bdeb",
+          "path": "../../runs/random/seed-23",
+          "stateSha256": "b3cd52bdd52a732f6e4ecd6132e178bf190052cbb601100b3bff26beafc59fd3"
+        },
+        "status": "QUALIFIED"
+      },
+      {
+        "algorithm": "random",
+        "candidateId": null,
+        "developmentCost": null,
+        "developmentCoverage": {
+          "expectedProfileCount": 10,
+          "observedProfileCount": 0,
+          "successfulProfileCount": 0
+        },
+        "finalistId": null,
+        "reason": "NO_INCUMBENT",
+        "seed": 31,
+        "sourceRun": {
+          "eventsSha256": "e294c3ba709d614ce7aa8327ab545bf95c04d9da700cca8059c28a2b99f82e49",
+          "manifestSha256": "6847161783ba2b8fffb48af9858da7f065ac096c9804c6d722e5a626f4270df8",
+          "path": "../../runs/random/seed-31",
+          "stateSha256": "601ddbe1b3d820261bc6c41631f6d7cacd3cfb84627e460197a620f2b9e003aa"
+        },
+        "status": "NO_FEASIBLE_CANDIDATE"
+      },
+      {
+        "algorithm": "evolution",
+        "candidateId": null,
+        "developmentCost": null,
+        "developmentCoverage": {
+          "expectedProfileCount": 10,
+          "observedProfileCount": 0,
+          "successfulProfileCount": 0
+        },
+        "finalistId": null,
+        "reason": "NO_INCUMBENT",
+        "seed": 17,
+        "sourceRun": {
+          "eventsSha256": "b7c692be419907467bf3057a66f92ddf9fb61a2248f5cd0841e5d3ea6623a8bc",
+          "manifestSha256": "ac5ae36d2f6327800e4c4da5776a8419dfb11f3e8574c6fa3e3ac1a62287a0c6",
+          "path": "../../runs/evolution/seed-17",
+          "stateSha256": "2d5ed1de97f5bffb9c455e88316417c49867b97ba2335ded0d9286e305968332"
+        },
+        "status": "NO_FEASIBLE_CANDIDATE"
+      },
+      {
+        "algorithm": "evolution",
+        "candidateId": null,
+        "developmentCost": null,
+        "developmentCoverage": {
+          "expectedProfileCount": 10,
+          "observedProfileCount": 0,
+          "successfulProfileCount": 0
+        },
+        "finalistId": null,
+        "reason": "NO_INCUMBENT",
+        "seed": 23,
+        "sourceRun": {
+          "eventsSha256": "37da1ee9909270fe2eaf30790804d4289e2945271880c033244f5fc867aaf1c3",
+          "manifestSha256": "97de480d0021ea8427faba5cfc681028fc2601005ebbeeece6f454b27d459a74",
+          "path": "../../runs/evolution/seed-23",
+          "stateSha256": "3f1973eaa5c16df82cd6d4282f066232db6c81c38b09dcfaf5f96877aaf4b11d"
+        },
+        "status": "NO_FEASIBLE_CANDIDATE"
+      },
+      {
+        "algorithm": "evolution",
+        "candidateId": null,
+        "developmentCost": null,
+        "developmentCoverage": {
+          "expectedProfileCount": 10,
+          "observedProfileCount": 0,
+          "successfulProfileCount": 0
+        },
+        "finalistId": null,
+        "reason": "NO_INCUMBENT",
+        "seed": 31,
+        "sourceRun": {
+          "eventsSha256": "fa91bf7f662f79f1a65fba0b9e72771b844e7a94d9998b69db2e8fea8e3953b9",
+          "manifestSha256": "099432aac970ae77aee394203ff73ea99a96af8ec7b9c4233f2979bb1dec306b",
+          "path": "../../runs/evolution/seed-31",
+          "stateSha256": "c8f15762db9ac6c839be65bb51fdfdeaf3b8edec78ff4a39cb43a336a924dc6b"
+        },
+        "status": "NO_FEASIBLE_CANDIDATE"
+      },
+      {
+        "algorithm": "smac",
+        "candidateId": "cvc5-configspace-v0-40d3c8234fc03c24b33c",
+        "developmentCost": 148.83295766897828,
+        "developmentCoverage": {
+          "expectedProfileCount": 10,
+          "observedProfileCount": 10,
+          "successfulProfileCount": 9
+        },
+        "finalistId": null,
+        "reason": "INCUMBENT_INELIGIBLE_ON_DEVELOPMENT",
+        "seed": 17,
+        "sourceRun": {
+          "eventsSha256": "4d5e5edb8b59a6f5336e70b87b88f4f074a082ee1539b8ece2497a2dd0b8f776",
+          "manifestSha256": "32bbe9bd7be238c677eddcddc1efea4c43d009ed72a49b9bf8db1c5fa182c194",
+          "path": "../../runs/smac/seed-17",
+          "stateSha256": "1e52af2e9fb86fa61b8eb32daeda8360abe66f9818c9404a8f6f849207004a1e"
+        },
+        "status": "NO_FEASIBLE_CANDIDATE"
+      },
+      {
+        "algorithm": "smac",
+        "candidateId": "cvc5-configspace-v0-2a04485067af2cc2c04c",
+        "developmentCost": 297.17288692140085,
+        "developmentCoverage": {
+          "expectedProfileCount": 10,
+          "observedProfileCount": 10,
+          "successfulProfileCount": 8
+        },
+        "finalistId": null,
+        "reason": "INCUMBENT_INELIGIBLE_ON_DEVELOPMENT",
+        "seed": 23,
+        "sourceRun": {
+          "eventsSha256": "84cacbc8fb91885caf3582283288bcaefbf9afb976922dd1ba5231faf03ce5b4",
+          "manifestSha256": "c797c8c42e857b45fa136a5abcab0b0dc504f879e9d8c9be50d306ad2ca060d9",
+          "path": "../../runs/smac/seed-23",
+          "stateSha256": "5e6deaf5a2771612ab6f4cea1ffbe5360edac3b1d15deaebb176e5cd847dd546"
+        },
+        "status": "NO_FEASIBLE_CANDIDATE"
+      },
+      {
+        "algorithm": "smac",
+        "candidateId": "cvc5-configspace-v0-ff2bcb5977eaf7948d0a",
+        "developmentCost": 148.836350636754,
+        "developmentCoverage": {
+          "expectedProfileCount": 10,
+          "observedProfileCount": 10,
+          "successfulProfileCount": 9
+        },
+        "finalistId": null,
+        "reason": "INCUMBENT_INELIGIBLE_ON_DEVELOPMENT",
+        "seed": 31,
+        "sourceRun": {
+          "eventsSha256": "0bc19c28f587928923833d296159334f41c8ff06554968347fc0daba89981353",
+          "manifestSha256": "0f154b54fa21b48a721ce7cef42e6c89953d621c2e8f46c589410dc45d3d4515",
+          "path": "../../runs/smac/seed-31",
+          "stateSha256": "a87b2bbbf37baa64c7b69ad9b6845233203f88ad66820effb823b7266c5e6bae"
+        },
+        "status": "NO_FEASIBLE_CANDIDATE"
+      }
+    ]
+  },
+  "runManifests": [
+    {
+      "experimentSha256": "c2ec17efc57272473fb634e2c0503c7999004f8befc42448201cfd4f9fac02c3",
+      "path": "campaign-workspace-total-objective-v0/runs/evolution/seed-17/manifest.json",
+      "sha256": "ac5ae36d2f6327800e4c4da5776a8419dfb11f3e8574c6fa3e3ac1a62287a0c6"
+    },
+    {
+      "experimentSha256": "f687230e95e2bd4114e920226092d3aafac462e98169f59e805d1bec8930b98b",
+      "path": "campaign-workspace-total-objective-v0/runs/evolution/seed-23/manifest.json",
+      "sha256": "97de480d0021ea8427faba5cfc681028fc2601005ebbeeece6f454b27d459a74"
+    },
+    {
+      "experimentSha256": "033b78080510f77706bf1d4b4a2e7f56531c7456a461b40d72cbb86a1c370178",
+      "path": "campaign-workspace-total-objective-v0/runs/evolution/seed-31/manifest.json",
+      "sha256": "099432aac970ae77aee394203ff73ea99a96af8ec7b9c4233f2979bb1dec306b"
+    },
+    {
+      "experimentSha256": "679f2515ca99d33cc04d518b3289e897642e4cac66b09e63e68859078f7e8cef",
+      "path": "campaign-workspace-total-objective-v0/runs/random/seed-17/manifest.json",
+      "sha256": "5b8537f9ea8e0c2b6948450917d8c207bb9fa3ac7275c6e986ad876e2a8e75f1"
+    },
+    {
+      "experimentSha256": "44c445687dac09d3a8a584712fa2c32fad28c79d4301a0e4a7b39205e02c2097",
+      "path": "campaign-workspace-total-objective-v0/runs/random/seed-23/manifest.json",
+      "sha256": "1d7de12aa59cf9097780205cb1638ceecfe4abde25dc3a2bdb8dea5dc973bdeb"
+    },
+    {
+      "experimentSha256": "ed90f908e043b8529934017e37543e266863e82cc84e49cd58d5b753c5ed12e5",
+      "path": "campaign-workspace-total-objective-v0/runs/random/seed-31/manifest.json",
+      "sha256": "6847161783ba2b8fffb48af9858da7f065ac096c9804c6d722e5a626f4270df8"
+    },
+    {
+      "experimentSha256": "7975cfc6460a73f3efab753c8e38e76207d9c97379dfdb55df5b3aaa53557c67",
+      "path": "campaign-workspace-total-objective-v0/runs/smac/seed-17/manifest.json",
+      "sha256": "32bbe9bd7be238c677eddcddc1efea4c43d009ed72a49b9bf8db1c5fa182c194"
+    },
+    {
+      "experimentSha256": "840ac6a39b58e3dbfebfb25c117a3156b6aaa1867d0b30386df16045524c0642",
+      "path": "campaign-workspace-total-objective-v0/runs/smac/seed-23/manifest.json",
+      "sha256": "c797c8c42e857b45fa136a5abcab0b0dc504f879e9d8c9be50d306ad2ca060d9"
+    },
+    {
+      "experimentSha256": "261a16e2150de32a050177e0c2d6e316ecc3786fb210bd176d3b3f124f5a2af2",
+      "path": "campaign-workspace-total-objective-v0/runs/smac/seed-31/manifest.json",
+      "sha256": "0f154b54fa21b48a721ce7cef42e6c89953d621c2e8f46c589410dc45d3d4515"
+    }
+  ],
+  "sources": {
+    "ablationCorrectness": {
+      "path": "diagnostics/seed23-option-subset-ablation-v0/restricted-wallet-correctness-v0/results-v0.json",
+      "sha256": "35c055c3f9bdadd217e3aa5b545166d58454904dc5ea165c5cd6d704e4022a8f"
+    },
+    "ablationDesign": {
+      "path": "diagnostics/seed23-option-subset-ablation-v0/manifest-v0.json",
+      "sha256": "aaf3e9b70284ba32eaf91def1e3f577776d13c4c7a3d3f6166c523e2d7baef09"
+    },
+    "ablationPerformance": {
+      "path": "diagnostics/seed23-option-subset-ablation-v0/highload-wallet-performance-v0/results-v0.json",
+      "sha256": "be7e853daba37481a6f67c01fd0c9c37945907ccfbc7ab29e262c872af154d92"
+    },
+    "anytime": {
+      "path": "campaign-workspace-total-objective-v0/reports/anytime-summary-v0.json",
+      "sha256": "b257b29659ea1a474c9ec86e0bf76237a4fa7ddc6a93b52ee848d6798e9dc95c"
+    },
+    "campaign": {
+      "path": "campaign-workspace-total-objective-v0/design/campaign-v0.json",
+      "sha256": "55769a0a99164ad29ce0ecaad3ef2d6ac311d3cfef4c659e56b99d68d58a4f27"
+    },
+    "confirmation": {
+      "path": "campaign-workspace-total-objective-v0/reports/confirmation-summary-v0.json",
+      "sha256": "423ec415e7cb6bfbd5d52ee515e2844f223373d08e9f2319101fceeab35733d1"
+    },
+    "confirmationSchedule": {
+      "path": "campaign-workspace-total-objective-v0/confirmation/schedule-v0.json",
+      "sha256": "eda696ef1bed3a6c986e0080f918be8b1ebfddb83f1c63897bd2a9e256b5d669"
+    },
+    "corpus": {
+      "path": "campaign-workspace-total-objective-v0/design/corpus-v0.json",
+      "sha256": "48b3a53bba2a559db64694d409eb6fd2541f84d875c32a1d962c20696389bb68"
+    },
+    "pairedObservations": {
+      "path": "campaign-workspace-total-objective-v0/confirmation/run/observations-v0.json",
+      "sha256": "79536e8728ce1aaaae1452013f2f14b8f7c06012a89e902e90bd86d58807a83f"
+    },
+    "qualification": {
+      "path": "campaign-workspace-total-objective-v0/confirmation/finalists/index-v0.json",
+      "sha256": "52d4d64b25399ad3feed056c75d32f5a3da7eb73de978ab7b8613ee73e8bd212"
+    },
+    "workspace": {
+      "path": "campaign-workspace-total-objective-v0/workspace-v0.json",
+      "sha256": "afb2773f59db8da88c4222146bde5cd56e09915f1b6d46722ecbc44c4aed8dcc"
+    }
+  },
+  "workspace": {
+    "campaign": {
+      "path": "design/campaign-v0.json",
+      "sha256": "55769a0a99164ad29ce0ecaad3ef2d6ac311d3cfef4c659e56b99d68d58a4f27"
+    },
+    "campaignId": "cvc5-multi-workload-evidence-total-objective-v0",
+    "corpus": {
+      "path": "design/corpus-v0.json",
+      "sha256": "48b3a53bba2a559db64694d409eb6fd2541f84d875c32a1d962c20696389bb68"
+    },
+    "runSlots": [
+      {
+        "algorithm": "random",
+        "path": "runs/random/seed-17",
+        "seed": 17
+      },
+      {
+        "algorithm": "random",
+        "path": "runs/random/seed-23",
+        "seed": 23
+      },
+      {
+        "algorithm": "random",
+        "path": "runs/random/seed-31",
+        "seed": 31
+      },
+      {
+        "algorithm": "evolution",
+        "path": "runs/evolution/seed-17",
+        "seed": 17
+      },
+      {
+        "algorithm": "evolution",
+        "path": "runs/evolution/seed-23",
+        "seed": 23
+      },
+      {
+        "algorithm": "evolution",
+        "path": "runs/evolution/seed-31",
+        "seed": 31
+      },
+      {
+        "algorithm": "smac",
+        "path": "runs/smac/seed-17",
+        "seed": 17
+      },
+      {
+        "algorithm": "smac",
+        "path": "runs/smac/seed-23",
+        "seed": 23
+      },
+      {
+        "algorithm": "smac",
+        "path": "runs/smac/seed-31",
+        "seed": 31
+      }
+    ],
+    "schemaVersion": "cvc5-campaign-workspace-v0"
+  }
+}

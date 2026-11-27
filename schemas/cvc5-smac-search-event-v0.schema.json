@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-smac-search-event-v0.schema.json",
+  "title": "append-only durable SMAC search event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sequence", "atEpochMillis", "type", "payload"],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-smac-search-event-v0" },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "atEpochMillis": { "type": "integer", "minimum": 0 },
+    "type": {
+      "enum": [
+        "EXPERIMENT_CREATED",
+        "EXPERIMENT_RESUMED",
+        "TRIAL_PROPOSED",
+        "TRIAL_STARTED",
+        "TRIAL_RECOVERED",
+        "CACHE_HIT",
+        "UNCLEAN_TRIAL_RECOVERED",
+        "TRIAL_FINISHED",
+        "INCUMBENT_CHANGED",
+        "EXPERIMENT_INTERRUPTED",
+        "EXPERIMENT_FINISHED"
+      ]
+    },
+    "payload": { "type": "object" }
+  }
+}

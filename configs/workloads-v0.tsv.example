@@ -1,0 +1,16 @@
+# Seven TAB-separated fields, one independent workload group per line:
+# partition  group-id  leakage-group-id  contract.fc  capture-seconds  method-count-hint  minimum-profiles
+#
+# Allowed partitions: development, validation, test.
+# Use exactly one development group for the first fixed-configuration campaign,
+# at least one validation group, and at least three independent test groups.
+# Every row must be an independent family with a distinct leakage-group-id.
+# Related revisions or methods must be captured into one workload group, not
+# represented as independent rows.
+#
+# Example (replace paths and counts with reviewed real workloads):
+# development	nominator-dev-v0	nominator-family-v0	../tsa/tsa-test/src/test/resources/contracts/nominator-pool/pool.fc	900	12	5
+# validation	vesting-validation-v0	vesting-family-v0	../tsa/tsa-test/src/test/resources/contracts/vesting/vesting_wallet.fc	600	4	2
+# test	wallet-v5-test-v0	wallet-v5-family-v0	../tsa/tsa-test/src/test/resources/contracts/wallet-v5/wallet_v5.fc	600	4	2
+# test	payment-channel-test-v0	payment-channel-family-v0	../tsa/tsa-test/src/test/resources/contracts/payment-channel/payment-channel-code.fc	600	4	2
+# test	highload-wallet-test-v0	highload-wallet-family-v0	../tsa/tsa-test/src/test/resources/contracts/highload-wallet-v3/highload-wallet-v3.fc	600	4	2

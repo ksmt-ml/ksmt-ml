@@ -1,0 +1,47 @@
+{
+  "campaignId": "baseline-smoke-production-experiment-post-rebase-v0",
+  "createdAt": "2026-10-21T12:42:15Z",
+  "frozenInputs": {
+    "defaultCandidateSha256": "dc6ef1bb8ae1d0ab0d53a577ced59c72d6cba2c578cb18fa8df63ea23b68bcfa",
+    "parameterSpaceSha256": "d3adf4a89815e8b89a57bcc02589c88e2c6bf67c61728900ccdcb154200771d8",
+    "tsaCliJarSha256": "0ab7342d74ab4a7061c0c03f63cd1e608e2b8280b2f3830b01f5ae83f3f6a622"
+  },
+  "javaVersion": "openjdk version \"17.0.20\" 2026-07-21\nOpenJDK Runtime Environment Temurin-17.0.20+8 (build 17.0.20+8)\nOpenJDK 64-Bit Server VM Temurin-17.0.20+8 (build 17.0.20+8, mixed mode, sharing)",
+  "repositories": {
+    "ksmt": {
+      "branch": "dev/litvinovmitch11/demo",
+      "commit": "169eec558c1b4c704f255ad93413ba694412c6ff"
+    },
+    "ksmt-ml": {
+      "branch": "dev/litvinovmitch11/demo",
+      "commit": "7707a128b6324eca1551713314e316d027fe2346"
+    },
+    "ksmt-ml-tuner": {
+      "branch": "dev/litvinovmitch11/demo",
+      "commit": "bb8e1177c53312b4952f499294c37650406cc437"
+    },
+    "tsa": {
+      "branch": "dev/litvinovmitch11/demo",
+      "commit": "1f98faa68036971fa56562fb1708354f5f772b7f"
+    }
+  },
+  "schemaVersion": "baseline-smoke-production-experiment-provenance-v0",
+  "system": "Linux 6.17.0-1033-oem #33-Ubuntu SMP PREEMPT_DYNAMIC Mon Aug 24 05:45:54 UTC 2026 x86_64 GNU/Linux",
+  "workloads": {
+    "analyzeLowPriorityStates": false,
+    "dev": {
+      "contract": "pool.fc",
+      "methodCount": 10,
+      "sha256": "e06804fecc73914f539ef1ebb30ebbffa65fc0495ea6e91d1798b346ca0ede11",
+      "target": "all-methods"
+    },
+    "holdout": {
+      "contract": "vesting_wallet.fc",
+      "methodCount": 9,
+      "sha256": "89ddb09e11ce36be1857e31df6def9d740048fd4a81dcfe59b550e7f95228236",
+      "target": "all-methods"
+    },
+    "methodTimeoutSeconds": 30,
+    "resolveMode": "full"
+  }
+}

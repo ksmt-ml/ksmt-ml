@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "baseline-smoke-profile-summary-v0",
+  "datasetRole": "dev",
+  "backendRole": "regular-bv",
+  "profileCount": 10,
+  "closedProfileCount": 10,
+  "captureCompleteProfileCount": 10,
+  "replayableProfileCount": 10,
+  "solverVersions": [
+    "1.3.4"
+  ],
+  "totalEventCount": 20076,
+  "totalCheckCount": 4535,
+  "totalRecordedCheckDurationNanos": 133727182933,
+  "recordedStatuses": {
+    "SAT": 2036,
+    "UNKNOWN": 4,
+    "UNSAT": 2495
+  },
+  "recordedFailureEventCount": 0,
+  "profileIds": [
+    "02e8f207-d79c-4a6f-895f-dcb9697e37c7",
+    "132945a0-6024-43f5-a695-87293afacbd6",
+    "44a72f24-c09e-410c-9967-526678200469",
+    "66f67b60-29a2-478e-ba02-ecc1061731bc",
+    "6b1733f6-2194-4be8-b842-6adb247e897e",
+    "7e25f9da-f1cb-482a-bd0d-dda2512628a8",
+    "85fe9917-b72f-4d98-8cdc-051e56c17acc",
+    "c62c0ed2-9d58-46c2-ac25-f65f794272a6",
+    "e1dffa39-9de8-4c4a-a849-d1c8e1511164",
+    "e76f3947-eb59-4ab2-aefa-192c188ea45d"
+  ]
+}

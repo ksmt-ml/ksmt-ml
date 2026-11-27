@@ -44,6 +44,6 @@ algorithm configuration.
 
 ## Current state
 
-This branch defines provider responsibilities only. Experimental RS, ES, and
-SMAC code is preserved on `dev/litvinovmitch11/demo` and is not a production
-worker or a compatibility promise.
+This repository defines provider responsibilities, schemas, and handoff
+requirements. The experimental RS, ES, and SMAC implementations provide
+reference code for a future protocol-conformant worker.

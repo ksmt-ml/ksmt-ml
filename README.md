@@ -10,9 +10,9 @@ Two provider artifacts are planned:
 2. a separately deployable Python search worker providing Random Search,
    evolutionary search, and SMAC through the tuner worker protocol.
 
-Neither production artifact is implemented on this interface-only branch.
-Experimental evaluator, search, persistence, and campaign implementations are
-preserved on dev/litvinovmitch11/demo as non-production reference code.
+This repository owns provider schemas, handoff documentation, and the
+experimental evaluator, search, persistence, and campaign implementations.
+The ONNX bundle and deployable search worker are still planned.
 
 ## System boundary
 
@@ -24,7 +24,7 @@ preserved on dev/litvinovmitch11/demo as non-production reference code.
 
     ksmt-ml-tuner
         production JVM API, validation, lifecycle, fallback, telemetry
-        ONNX adapter and external-worker host implementations
+        planned ONNX adapter and external-worker host implementations
 
     ksmt-ml
         ONNX bundle producer
@@ -71,9 +71,8 @@ only algorithm state and proposal selection. The tuner host remains
 authoritative for budgets, cancellation, process isolation, correctness,
 artifacts, validation, and fallback.
 
-The worker may reuse the experimental RS, ES, and SMAC implementations from the
-demo branch after they are separated from TSA execution and hardened against
-the protocol conformance suite.
+The worker may reuse the experimental RS, ES, and SMAC implementations after
+they are separated from TSA execution and pass protocol conformance checks.
 
 ## Stable and experimental surfaces
 
@@ -96,12 +95,14 @@ Not production interfaces:
 
 | Area | Status |
 |---|---|
-| KSMT profiling API | contract defined in KSMT |
-| tuner inference/search API | contract defined in ksmt-ml-tuner |
-| TSA launch/evaluator API | contract defined in TSA |
-| RS / ES / SMAC worker | experimental reference exists only on demo |
+| KSMT profiling API | profile contract and recording implementation |
+| tuner inference/search API | JVM inference pipeline with smoke stubs, search contracts |
+| TSA launch/evaluator API | opt-in cvc5 capture and replay |
+| RS / ES / SMAC | experimental search implementations; worker packaging pending |
 | ONNX model and bundle | not implemented |
-| performance claims | none |
+| historical replay smoke | complete; no strategy passed the holdout gain gate |
+| multi-seed campaign and ablation | complete; no general gain, one finalist rejected for wrong answers |
+| positive performance claim | none |
 
 ## Development
 
@@ -113,6 +114,92 @@ Requirements are Python 3.12 and GNU Make.
 
 The roadmap is PROJECT_PLAN.md. Claim-bearing evaluation requirements are in
 docs/experiment-protocol.md.
+
+The operational walkthrough for the experimental pipeline is in
+docs/demo-end-to-end-ru.md.
+
+The historical Russian runbook for the completed multi-seed campaign is in
+docs/next-multi-seed-experiment-runbook-ru.md. Its scripts stop after capture,
+baseline construction, validation-only noise calibration, each configurator,
+and sealed confirmation so artifacts can be reviewed between costly stages.
+
+The [experiment archive](docs/experiments/README.md) contains the frozen results.
+For a new corpus, the design commands validate the manifest and build a deterministic paired schedule:
+
+    PYTHONPATH=src python3 -m ksmt_ml.experiment_design build-corpus \
+        --corpus-id <corpus-v0> --solver-version 1.3.4 \
+        --parameter-space-id <space-id> \
+        --grouping-key contract-family-and-revision-v0 \
+        --group development <group-id> <leakage-group-id> <baseline-manifest> \
+        --group validation <group-id> <leakage-group-id> <baseline-manifest> \
+        --group test <group-id> <leakage-group-id> <baseline-manifest> \
+        --output <corpus.json>
+    PYTHONPATH=src python3 -m ksmt_ml.experiment_design validate-corpus \
+        --manifest <corpus.json>
+    PYTHONPATH=src python3 -m ksmt_ml.experiment_design validate-campaign \
+        --manifest <campaign.json>
+    PYTHONPATH=src python3 -m ksmt_ml.experiment_design build-confirmation-schedule \
+        --campaign <campaign.json> --candidate <candidate-id> \
+        --output <schedule.json>
+
+The schedule keeps every matched default/candidate pair adjacent while
+randomizing pair order and within-pair order from the frozen seed. It also has
+an opt-in balanced mode for repeated default/default calibration. Grouped final
+statistics treat a workload group—not an individual solver check—as the
+independent unit.
+
+After a campaign manifest is frozen, measure the host noise floor by executing
+the same default configuration on both sides of every randomized pair:
+
+    scripts/run-default-noise-calibration-v0.sh \
+        <corpus.json> <campaign.json> <parameter-space.json> \
+        <tsa-cli.jar> <output-directory>
+
+The runner writes one report per scheduled trial, validates and reuses completed
+reports after interruption, persists observations after every pair, and emits a
+dedicated v0 noise summary. By default it measures 12 balanced pairs, bootstraps
+the repeated pairs, reports replay-proxy, full solver, and wall-time intervals,
+and fails automatically unless their noise is small relative to the campaign's
+minimum useful effect. Search entrypoints verify this bound artifact and refuse
+to start unless its gate passed. This calibration is required before a costly
+search.
+
+For a multi-seed comparison, materialize the frozen campaign before starting
+any optimizer:
+
+    PYTHONPATH=src python3 -m ksmt_ml.multi_seed_campaign initialize \
+        --campaign <campaign.json> \
+        --output-dir <campaign-workspace>
+
+The workspace creates one explicit run slot for each combination of
+`random/evolution/smac` and seed. Populate those directories through the common
+`ksmt_ml.tuning run` interface. The collector rejects unfinished runs, a seed or
+algorithm mismatch, a non-development baseline, and budgets different from the
+campaign manifest. A finished slot without a feasible incumbent is preserved as
+`NO_FEASIBLE_CANDIDATE`, rather than treated as a corrupt experiment. Only an
+incumbent that successfully covered the complete development workload is
+qualified for sealed confirmation; partial SMAC instance results and penalized
+incumbents are retained as negative evidence but are not test candidates.
+
+Current claim-bearing campaigns use
+`workload-total-effective-cost-log-speedup-v0`: effective profile costs are
+summed before the log ratio is calculated. Random Search and evolution score the
+whole replay matrix directly. SMAC receives baseline-cost-weighted instance
+costs whose mean is algebraically equal to the same whole-workload normalized
+cost. The old unweighted profile-macro objective remains readable for artifact
+compatibility but is not the default for newly prepared campaigns.
+
+After every declared run is finished, extract all seed incumbents, build the
+common sealed-test schedule, execute it resume-safely, and write the grouped and
+anytime reports with:
+
+    scripts/finalize-multi-seed-campaign-v0.sh \
+        <campaign-workspace> <parameter-space.json> <tsa-cli.jar>
+
+This records the outcome of every seed and confirms every development-qualified
+seed finalist. It does not choose the best seed after seeing sealed-test
+measurements. Generated run, confirmation, and raw report directories remain
+outside Git.
 
 ## Data policy
 

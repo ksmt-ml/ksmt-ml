@@ -1,0 +1,17 @@
+allprojects {
+    afterEvaluate { p ->
+        if (p.path == ':usvm-jvm') {
+            p.tasks.register('printTestCp') {
+                dependsOn p.sourceSets.test.runtimeClasspath
+                doLast {
+                    println 'CP=' + p.sourceSets.test.runtimeClasspath.asPath
+                    def api = p.configurations.usvmApiJarConfiguration.resolvedConfiguration.files
+                    def approx = p.configurations.approximations.resolvedConfiguration.files
+                    assert api.size() == 1 && approx.size() == 1
+                    println 'APIJAR=' + api.iterator().next()
+                    println 'APPROXJAR=' + approx.iterator().next()
+                }
+            }
+        }
+    }
+}

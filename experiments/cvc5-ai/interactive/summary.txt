@@ -1,0 +1,7 @@
+**The full hour of interactive Sol search showed no clear improvement over the bounded Sol-auto call.** On 26 fresh held-out programs, interactive Sol scored **0.797 s PAR2** versus **0.805 s** for prior Sol-auto, a 1.0% reduction. The paired program-and-seed 95% interval for the ratio was **0.940–1.037**. Native SMAC scored 0.789 s and cvc5 defaults scored 0.777 s.
+
+All three searches used the full 57-minute search window and completed validation within the 60-minute budget. Sol replanned in every seed using real per-session results. I verified the budget and live countdown in all 49 captured prompts, as well as all 936 held-out replays.
+
+The baseline tuning runs were historical. The new runs used different concurrency, and seed 59077 ran on a different physical core. Those differences limit attribution to interactivity alone.
+
+[Results, prompts, logs, and reproduction commands](/home/butvinm/Dev/cvc5-ai-pilot/interactive/RESULTS.md) · [Replay verification](/home/butvinm/Dev/cvc5-ai-pilot/interactive/runs/interactive-v1/final/VERIFY.json)

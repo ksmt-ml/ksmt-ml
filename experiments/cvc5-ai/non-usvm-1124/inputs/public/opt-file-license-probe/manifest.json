@@ -1,0 +1,16 @@
+{
+  "start": "2026-11-24T10:41:00.551+03:00",
+  "stop": "2026-11-24T10:41:05.967+03:00",
+  "consumption": "opt",
+  "logic": "QF_IDL",
+  "original_md5": "6184ac582caed208c956da2bc38e22fe",
+  "sha256": "c738a4182da245c6d76c81e0d39f0c13e2169789cfd8db71c1ce19680a713f9f",
+  "counts": {
+    "family_members": 400,
+    "excluded_metadata_or_nonstatic": 33,
+    "excluded_missing_license": 367,
+    "eligible": 0,
+    "admitted": 0
+  },
+  "items": []
+}

@@ -1,0 +1,201 @@
+diff --git a/usvm-core/src/main/kotlin/org/usvm/solver/Solver.kt b/usvm-core/src/main/kotlin/org/usvm/solver/Solver.kt
+index 3607a91..48d4fc8 100644
+--- a/usvm-core/src/main/kotlin/org/usvm/solver/Solver.kt
++++ b/usvm-core/src/main/kotlin/org/usvm/solver/Solver.kt
+@@ -1,6 +1,7 @@
+ package org.usvm.solver
+ 
+ import io.ksmt.solver.KSolver
++import io.ksmt.solver.KSolverConfiguration
+ import io.ksmt.solver.KSolverStatus
+ import io.ksmt.utils.asExpr
+ import org.usvm.UBoolExpr
+@@ -30,13 +31,25 @@ abstract class USolver<in Query, out Model> {
+ 
+ open class USolverBase<Type>(
+     protected val ctx: UContext<*>,
+-    protected val smtSolver: KSolver<*>,
++    smtSolverRaw: KSolver<*>,
+     protected val typeSolver: UTypeSolver<Type>,
+     protected val translator: UExprTranslator<Type, *>,
+     protected val decoder: UModelDecoder<UModelBase<Type>>,
+     // TODO this timeout must not exceed time budget for the MUT
+     private val timeout: Duration
+ ) : USolver<UPathConstraints<Type>, UModelBase<Type>>(), AutoCloseable {
++    @Suppress("UNCHECKED_CAST")
++    protected val smtSolver: KSolver<*> = (smtSolverRaw as KSolver<KSolverConfiguration>)
++        .let { if (System.getenv("USVM_TABLE_ITE") == "1") TableIteSolver(ctx, it) else it }
++        .let { if (ClientStats.enabled) TimedSolver(it) else it }
++        .let {
++            when {
++                SessionTraceSolver.directory != null -> SessionTraceSolver(ctx, it)
++                SmtQueryLog.enabled -> LoggingSolver(ctx, it)
++                else -> it
++            }
++        }
++
+ 
+     override fun check(query: UPathConstraints<Type>): USolverResult<UModelBase<Type>> =
+         internalCheck(query, softConstraints = emptyList())
+@@ -49,20 +62,39 @@ open class USolverBase<Type>(
+     private fun internalCheck(
+         pc: UPathConstraints<Type>,
+         softConstraints: Iterable<UBoolExpr>,
++    ): USolverResult<UModelBase<Type>> {
++        if (!ClientStats.enabled) return internalCheckImpl(pc, softConstraints)
++        val t0 = System.nanoTime()
++        try {
++            return internalCheckImpl(pc, softConstraints)
++        } finally {
++            ClientStats.internalCheckNs += System.nanoTime() - t0
++            ClientStats.internalChecks++
++        }
++    }
++
++    private fun internalCheckImpl(
++        pc: UPathConstraints<Type>,
++        softConstraints: Iterable<UBoolExpr>,
+     ): USolverResult<UModelBase<Type>> {
+         if (pc.isFalse) {
++            ClientStats.pcFalseShortcuts++
+             return UUnsatResult()
+         }
+ 
+         smtSolver.withAssertionsScope {
++            val tTr0 = System.nanoTime()
+             val assertions = pc.constraints(translator).toList()
++            ClientStats.translateNs += System.nanoTime() - tTr0
+             smtSolver.assert(assertions)
+ 
++            val tTr1 = System.nanoTime()
+             val translatedSoftConstraints = softConstraints
+                 .asSequence()
+                 .map(translator::translate)
+                 .filterNot(UBoolExpr::isFalse)
+                 .toMutableList()
++            ClientStats.translateNs += System.nanoTime() - tTr1
+ 
+             // DPLL(T)-like solve procedure
+             var iter = 0
+@@ -72,13 +104,20 @@ open class USolverBase<Type>(
+ 
+                 // first, get a model from the SMT solver
+                 val kModel = when (internalCheckWithSoftConstraints(translatedSoftConstraints)) {
+-                    KSolverStatus.SAT -> smtSolver.model().detach()
++                    KSolverStatus.SAT -> {
++                        val tM = System.nanoTime()
++                        val m = smtSolver.model().detach()
++                        ClientStats.modelNs += System.nanoTime() - tM
++                        m
++                    }
+                     KSolverStatus.UNSAT -> return UUnsatResult()
+                     KSolverStatus.UNKNOWN -> return UUnknownResult()
+                 }
+ 
+                 // second, decode it unto uModel
++                val tD = System.nanoTime()
+                 val uModel = decoder.decode(kModel, assertions)
++                ClientStats.decodeNs += System.nanoTime() - tD
+ 
+                 // find interpretations of type constraints
+ 
+@@ -97,7 +136,11 @@ open class USolverBase<Type>(
+                 )
+ 
+                 // fourth, check it satisfies typeConstraints
+-                when (val typeResult = typeSolver.check(typeSolverQuery)) {
++                val tT = System.nanoTime()
++                val typeResultTimed = typeSolver.check(typeSolverQuery)
++                ClientStats.typeSolverNs += System.nanoTime() - tT
++                if (typeResultTimed is UTypeUnsatResult<*>) ClientStats.typeUnsatRounds++
++                when (val typeResult = typeResultTimed) {
+                     is USatResult -> return USatResult(
+                         UModelBase(
+                             ctx,
+diff --git a/usvm-jvm/src/main/kotlin/org/usvm/machine/JcMachine.kt b/usvm-jvm/src/main/kotlin/org/usvm/machine/JcMachine.kt
+index a3ea739..df7b73b 100644
+--- a/usvm-jvm/src/main/kotlin/org/usvm/machine/JcMachine.kt
++++ b/usvm-jvm/src/main/kotlin/org/usvm/machine/JcMachine.kt
+@@ -191,6 +191,17 @@ class JcMachine(
+             observers.add(JcDebugProfileObserver(pathSelector))
+         }
+ 
++        observers.add(object : UMachineObserver<JcState> {
++            override fun onState(parent: JcState, forks: Sequence<JcState>) {
++                org.usvm.solver.ClientStats.steps++
++                if (forks.iterator().hasNext()) org.usvm.solver.ClientStats.forkingSteps++
++            }
++
++            override fun onStateTerminated(state: JcState, stateReachable: Boolean) {
++                org.usvm.solver.ClientStats.terminated++
++            }
++        })
++
+         run(
+             interpreter,
+             pathSelector,
+@@ -199,6 +210,7 @@ class JcMachine(
+             stopStrategy = stopStrategy,
+         )
+ 
++        org.usvm.solver.ClientStats.coveragePct = coverageStatistics.getTotalCoverage().toDouble()
+         return statesCollector.collectedStates
+     }
+ 
+diff --git a/usvm-jvm/src/main/kotlin/org/usvm/machine/JcSolverFactory.kt b/usvm-jvm/src/main/kotlin/org/usvm/machine/JcSolverFactory.kt
+index 2b6e32c..3044781 100644
+--- a/usvm-jvm/src/main/kotlin/org/usvm/machine/JcSolverFactory.kt
++++ b/usvm-jvm/src/main/kotlin/org/usvm/machine/JcSolverFactory.kt
+@@ -38,10 +38,21 @@ private object SameProcessSolverFactory : SolverFactory {
+             }
+         }
+ 
+-        SolverType.Z3 -> KZ3Solver(ctx).apply {
+-            configure {
+-                optimizeForTheories(setOf(KTheory.Array, KTheory.BV, KTheory.UF, KTheory.FP))
++        // Experiment hook: USVM_SOLVER=cvc5 swaps the default Z3 for cvc5 (not an upstream option)
++        SolverType.Z3 -> if (System.getenv("USVM_SOLVER") == "cvc5") {
++            val t0 = System.nanoTime()
++            val s = io.ksmt.solver.cvc5.KCvc5Solver(ctx)
++            org.usvm.solver.ClientStats.createSolverNs += System.nanoTime() - t0
++            s
++        } else {
++            val t0 = System.nanoTime()
++            val s = KZ3Solver(ctx).apply {
++                configure {
++                    optimizeForTheories(setOf(KTheory.Array, KTheory.BV, KTheory.UF, KTheory.FP))
++                }
+             }
++            org.usvm.solver.ClientStats.createSolverNs += System.nanoTime() - t0
++            s
+         }
+     }
+ 
+diff --git a/usvm-python/usvm-python-main/src/main/kotlin/org/usvm/machine/PyMachine.kt b/usvm-python/usvm-python-main/src/main/kotlin/org/usvm/machine/PyMachine.kt
+index b08db03..b22912c 100644
+--- a/usvm-python/usvm-python-main/src/main/kotlin/org/usvm/machine/PyMachine.kt
++++ b/usvm-python/usvm-python-main/src/main/kotlin/org/usvm/machine/PyMachine.kt
+@@ -118,6 +118,9 @@ class PyMachine(
+         timeoutPerRunMs: Long? = null,
+         unfoldGenerator: Boolean = true,
+     ): Int {
++        if (org.usvm.solver.SmtQueryLog.enabled) {
++            org.usvm.solver.SmtQueryLog.tag = "usvm-python/${pythonCallable.module}.${pythonCallable.tag}"
++        }
+         if (pythonCallable.module != null && typeSystem is PythonTypeSystemWithMypyInfo) {
+             typeSystem.resortTypes(pythonCallable.module)
+         }
+diff --git a/usvm-ts/src/main/kotlin/org/usvm/machine/TsMachine.kt b/usvm-ts/src/main/kotlin/org/usvm/machine/TsMachine.kt
+index 5c5d344..2cbb679 100644
+--- a/usvm-ts/src/main/kotlin/org/usvm/machine/TsMachine.kt
++++ b/usvm-ts/src/main/kotlin/org/usvm/machine/TsMachine.kt
+@@ -110,6 +110,9 @@ class TsMachine(
+         methods: List<EtsMethod>,
+         targets: List<TsTarget> = emptyList(),
+     ): TsAnalysisResult {
++        if (org.usvm.solver.SmtQueryLog.enabled) {
++            org.usvm.solver.SmtQueryLog.tag = "usvm-ts/" + methods.joinToString(",") { it.signature.toString() }
++        }
+         val initialStates = mutableMapOf<EtsMethod, TsState>()
+         methods.forEach { initialStates[it] = interpreter.getInitialState(it, targets) }
+ 

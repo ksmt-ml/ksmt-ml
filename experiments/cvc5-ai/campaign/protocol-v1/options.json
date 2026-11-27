@@ -1,0 +1,67 @@
+{
+  "bv-abstraction": [
+    "auto",
+    "on",
+    "off"
+  ],
+  "bv-eager-eval": [
+    "auto",
+    "on",
+    "off"
+  ],
+  "bv-eq-engine": [
+    "auto",
+    "on",
+    "off"
+  ],
+  "bv-gauss-elim": [
+    "auto",
+    "on",
+    "off"
+  ],
+  "bv-sat-solver": [
+    "auto",
+    "cadical"
+  ],
+  "bv-solver": [
+    "auto",
+    "bitblast",
+    "bitblast-internal"
+  ],
+  "bv-to-bool": [
+    "auto",
+    "on",
+    "off"
+  ],
+  "ext-rew-prep": [
+    "auto",
+    "off",
+    "use",
+    "agg"
+  ],
+  "ite-simp": [
+    "auto",
+    "on",
+    "off"
+  ],
+  "minisat-simplification": [
+    "auto",
+    "clause-elim",
+    "none"
+  ],
+  "repeat-simp": [
+    "auto",
+    "on",
+    "off"
+  ],
+  "sat-solver": [
+    "auto",
+    "minisat",
+    "cadical"
+  ],
+  "simplification": [
+    "auto",
+    "none",
+    "batch"
+  ]
+}

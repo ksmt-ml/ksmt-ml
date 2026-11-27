@@ -1,0 +1,80 @@
+diff --git a/ksmt-cvc5/ksmt-cvc5-core/src/main/kotlin/io/ksmt/solver/cvc5/KCvc5ExprConverter.kt b/ksmt-cvc5/ksmt-cvc5-core/src/main/kotlin/io/ksmt/solver/cvc5/KCvc5ExprConverter.kt
+index 0084e06..1f80c89 100644
+--- a/ksmt-cvc5/ksmt-cvc5-core/src/main/kotlin/io/ksmt/solver/cvc5/KCvc5ExprConverter.kt
++++ b/ksmt-cvc5/ksmt-cvc5-core/src/main/kotlin/io/ksmt/solver/cvc5/KCvc5ExprConverter.kt
+@@ -528,6 +528,7 @@ open class KCvc5ExprConverter(
+             Kind.NULLABLE_LIFT,
+             Kind.SKOLEM -> error("no support in ksmt")
+             null -> error("kind can't be null")
++            else -> error("Unsupported cvc5 1.4.1 expression kind: ${expr.kind}")
+         }
+ 
+     }
+diff --git a/ksmt-cvc5/ksmt-cvc5-core/src/main/kotlin/io/ksmt/solver/cvc5/KCvc5TermManager.kt b/ksmt-cvc5/ksmt-cvc5-core/src/main/kotlin/io/ksmt/solver/cvc5/KCvc5TermManager.kt
+index bf6e0dd..4d164f4 100644
+--- a/ksmt-cvc5/ksmt-cvc5-core/src/main/kotlin/io/ksmt/solver/cvc5/KCvc5TermManager.kt
++++ b/ksmt-cvc5/ksmt-cvc5-core/src/main/kotlin/io/ksmt/solver/cvc5/KCvc5TermManager.kt
+@@ -1,6 +1,6 @@
+ package io.ksmt.solver.cvc5
+ 
+-import io.github.cvc5.AbstractPointer
++import io.github.cvc5.PointerAccess
+ import io.github.cvc5.Kind
+ import io.github.cvc5.Op
+ import io.github.cvc5.Sort
+@@ -69,42 +69,43 @@ class KCvc5TermManager : AutoCloseable {
+     fun mkOp(kind: Kind, args: IntArray): Op =
+         termManager.mkOp(kind, args).also { registerPointer(it) }
+ 
+-    inline fun <reified T : AbstractPointer> builder(body: TermManager.() -> T): T =
++    inline fun <reified T : Any> builder(body: TermManager.() -> T): T =
+         body(termManager).also { registerPointer(it) }
+ 
+     fun termSort(term: Term): Sort = term.sort.also { registerPointer(it) }
+ 
+     fun termChild(term: Term, idx: Int): Term = term.getChild(idx).also { registerPointer(it) }
+ 
+-    inline fun <reified T : AbstractPointer> termOp(term: Term, body: Term.() -> T): T =
++    inline fun <reified T : Any> termOp(term: Term, body: Term.() -> T): T =
+         body(term).also { registerPointer(it) }
+ 
+-    inline fun <reified T : AbstractPointer> sortOp(sort: Sort, body: Sort.() -> T): T =
++    inline fun <reified T : Any> sortOp(sort: Sort, body: Sort.() -> T): T =
+         body(sort).also { registerPointer(it) }
+ 
+-    private val pointers = ObjectOpenCustomHashSet(PointerHash)
++    private val pointers = ObjectOpenCustomHashSet<Any>(PointerHash)
+ 
+-    fun <T : AbstractPointer> registerPointer(ptr: T): T {
++    // cvc5 1.4.x made AbstractPointer package-private, so pointers are handled through the shim io.github.cvc5.PointerAccess
++    fun <T : Any> registerPointer(ptr: T): T {
+         pointers.add(ptr)
+         return ptr
+     }
+ 
+     override fun close() {
+         for (ptr in pointers) {
+-            ptr.deletePointer()
++            PointerAccess.delete(ptr)
+         }
+-        termManager.deletePointer()
++        PointerAccess.delete(termManager)
+     }
+ 
+-    private object PointerHash : Hash.Strategy<AbstractPointer> {
+-        override fun equals(p0: AbstractPointer?, p1: AbstractPointer?): Boolean {
++    private object PointerHash : Hash.Strategy<Any> {
++        override fun equals(p0: Any?, p1: Any?): Boolean {
+             if (p0 == null || p1 == null) return p0 === p1
+-            return p0.pointer == p1.pointer
++            return PointerAccess.pointer(p0) == PointerAccess.pointer(p1)
+         }
+ 
+-        override fun hashCode(p0: AbstractPointer?): Int {
++        override fun hashCode(p0: Any?): Int {
+             if (p0 == null) return 0
+-            return HashCommon.long2int(p0.pointer)
++            return HashCommon.long2int(PointerAccess.pointer(p0))
+         }
+     }
+ }

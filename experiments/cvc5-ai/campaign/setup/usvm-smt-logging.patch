@@ -1,0 +1,349 @@
+diff --git a/usvm-core/src/main/kotlin/org/usvm/solver/SmtQueryLogger.kt b/usvm-core/src/main/kotlin/org/usvm/solver/SmtQueryLogger.kt
+new file mode 100644
+index 0000000..6e1fcc0
+--- /dev/null
++++ b/usvm-core/src/main/kotlin/org/usvm/solver/SmtQueryLogger.kt
+@@ -0,0 +1,152 @@
++package org.usvm.solver
++
++import io.ksmt.KContext
++import io.ksmt.expr.KExpr
++import io.ksmt.solver.KModel
++import io.ksmt.solver.KSolver
++import io.ksmt.solver.KSolverConfiguration
++import io.ksmt.solver.KSolverStatus
++import io.ksmt.solver.z3.KZ3Solver
++import io.ksmt.sort.KBoolSort
++import java.io.File
++import java.io.FileWriter
++import kotlin.time.Duration
++
++/**
++ * Experiment hook (not part of upstream USVM): dumps every SMT check of USVM as a standalone SMT-LIB 2 file.
++ * Enabled by the environment variable USVM_SMT_DIR.
++ * The driver sets [SmtQueryLog.tag] to the id of the analysed method.
++ */
++object SmtQueryLog {
++    val dir: String? = System.getenv("USVM_SMT_DIR")
++    private val maxPerTag: Int = System.getenv("USVM_SMT_MAX_PER_TAG")?.toIntOrNull() ?: 3000
++
++    @Volatile
++    var tag: String = "untagged"
++
++    private val counters = HashMap<String, Int>()
++    private var jsonl: FileWriter? = null
++
++    val enabled: Boolean get() = dir != null
++
++    @Synchronized
++    fun record(tag: String, build: (Int) -> Pair<String, String>?) {
++        val d = dir ?: return
++        val n = counters.getOrDefault(tag, 0)
++        if (n >= maxPerTag) return
++        val safe = tag.replace(Regex("[^A-Za-z0-9_.$-]"), "_").take(100) + "_" + Integer.toHexString(tag.hashCode())
++        val res = build(n) ?: return
++        val tagDir = File(d, safe)
++        tagDir.mkdirs()
++        val rel = "$safe/q%06d.smt2.gz".format(n)
++        java.util.zip.GZIPOutputStream(File(d, rel).outputStream()).use {
++            it.write(res.first.toByteArray())
++        }
++        val w = jsonl ?: FileWriter(File(d, "queries.jsonl"), true).also { jsonl = it }
++        w.write(res.second.dropLast(1) + ",\"file\":\"$rel\"}\n")
++        w.flush()
++        counters[tag] = n + 1
++    }
++}
++
++private fun sha256(s: String): String =
++    java.security.MessageDigest.getInstance("SHA-256").digest(s.toByteArray()).joinToString("") { "%02x".format(it) }
++
++@Suppress("TooManyFunctions")
++class LoggingSolver(
++    private val ctx: KContext,
++    private val delegate: KSolver<KSolverConfiguration>,
++) : KSolver<KSolverConfiguration> {
++    // When the real solver is Z3 its own native solver is printed, otherwise a mirror Z3 solver is kept.
++    private val shadow: KZ3Solver? = if (delegate is KZ3Solver) null else KZ3Solver(ctx)
++    private val printer: KZ3Solver = delegate as? KZ3Solver ?: shadow!!
++    private val stack = ArrayList<KExpr<KBoolSort>>()
++    private val scopeSizes = ArrayList<Int>()
++    private var lastChecked: List<KExpr<KBoolSort>> = emptyList()
++
++    override fun configure(configurator: KSolverConfiguration.() -> Unit) = delegate.configure(configurator)
++
++    override fun assert(expr: KExpr<KBoolSort>) {
++        delegate.assert(expr)
++        shadow?.assert(expr)
++        stack += expr
++    }
++
++    override fun assert(exprs: List<KExpr<KBoolSort>>) {
++        exprs.forEach { assert(it) }
++    }
++
++    override fun assertAndTrack(expr: KExpr<KBoolSort>) {
++        delegate.assertAndTrack(expr)
++        shadow?.assert(expr)
++        stack += expr
++    }
++
++    override fun assertAndTrack(exprs: List<KExpr<KBoolSort>>) {
++        exprs.forEach { assertAndTrack(it) }
++    }
++
++    override fun push() {
++        delegate.push()
++        shadow?.push()
++        scopeSizes += stack.size
++    }
++
++    override fun pop(n: UInt) {
++        delegate.pop(n)
++        shadow?.pop(n)
++        repeat(n.toInt()) {
++            val size = scopeSizes.removeAt(scopeSizes.size - 1)
++            while (stack.size > size) stack.removeAt(stack.size - 1)
++        }
++    }
++
++    override fun check(timeout: Duration): KSolverStatus = logged(emptyList()) { delegate.check(timeout) }
++
++    override fun checkWithAssumptions(assumptions: List<KExpr<KBoolSort>>, timeout: Duration): KSolverStatus =
++        logged(assumptions) { delegate.checkWithAssumptions(assumptions, timeout) }
++
++    private fun logged(assumptions: List<KExpr<KBoolSort>>, run: () -> KSolverStatus): KSolverStatus {
++        if (!SmtQueryLog.enabled) return run()
++        val t0 = System.nanoTime()
++        val status = run()
++        val ms = (System.nanoTime() - t0) / 1_000_000.0
++        val tag = SmtQueryLog.tag
++        SmtQueryLog.record(tag) { qid ->
++            val text = if (assumptions.isEmpty()) {
++                printer.nativeSolver().toString()
++            } else {
++                // The real solver must keep its current model, so print from a short-lived solver.
++                KZ3Solver(ctx).use { tmp ->
++                    stack.forEach { tmp.assert(it) }
++                    assumptions.forEach { tmp.assert(it) }
++                    tmp.nativeSolver().toString()
++                }
++            }
++            val all = stack + assumptions
++            var common = 0
++            while (common < all.size && common < lastChecked.size && all[common] == lastChecked[common]) common++
++            lastChecked = all
++            val body = "(set-logic ALL)\n" + text + "\n(check-sat)\n"
++            val json = "{\"tag\":\"${tag.replace("\\", "\\\\").replace("\"", "\\\"")}\",\"qid\":$qid," +
++                "\"n_assert\":${stack.size},\"n_assume\":${assumptions.size},\"depth\":${scopeSizes.size}," +
++                "\"prefix_with_prev\":$common,\"bytes\":${body.length},\"sha256\":\"${sha256(body)}\",\"usvm_status\":\"$status\"," +
++                "\"usvm_ms\":$ms}"
++            body to json
++        }
++        return status
++    }
++
++    override fun model(): KModel = delegate.model()
++
++    override fun unsatCore(): List<KExpr<KBoolSort>> = delegate.unsatCore()
++
++    override fun reasonOfUnknown(): String = delegate.reasonOfUnknown()
++
++    override fun interrupt() = delegate.interrupt()
++
++    override fun close() {
++        delegate.close()
++        shadow?.close()
++    }
++}
+diff --git a/usvm-core/src/main/kotlin/org/usvm/solver/Solver.kt b/usvm-core/src/main/kotlin/org/usvm/solver/Solver.kt
+index 3607a91..d5a416e 100644
+--- a/usvm-core/src/main/kotlin/org/usvm/solver/Solver.kt
++++ b/usvm-core/src/main/kotlin/org/usvm/solver/Solver.kt
+@@ -1,6 +1,7 @@
+ package org.usvm.solver
+ 
+ import io.ksmt.solver.KSolver
++import io.ksmt.solver.KSolverConfiguration
+ import io.ksmt.solver.KSolverStatus
+ import io.ksmt.utils.asExpr
+ import org.usvm.UBoolExpr
+@@ -30,13 +31,17 @@ abstract class USolver<in Query, out Model> {
+ 
+ open class USolverBase<Type>(
+     protected val ctx: UContext<*>,
+-    protected val smtSolver: KSolver<*>,
++    smtSolverRaw: KSolver<*>,
+     protected val typeSolver: UTypeSolver<Type>,
+     protected val translator: UExprTranslator<Type, *>,
+     protected val decoder: UModelDecoder<UModelBase<Type>>,
+     // TODO this timeout must not exceed time budget for the MUT
+     private val timeout: Duration
+ ) : USolver<UPathConstraints<Type>, UModelBase<Type>>(), AutoCloseable {
++    @Suppress("UNCHECKED_CAST")
++    protected val smtSolver: KSolver<*> =
++        if (SmtQueryLog.enabled) LoggingSolver(ctx, smtSolverRaw as KSolver<KSolverConfiguration>) else smtSolverRaw
++
+ 
+     override fun check(query: UPathConstraints<Type>): USolverResult<UModelBase<Type>> =
+         internalCheck(query, softConstraints = emptyList())
+diff --git a/usvm-jvm/src/test/kotlin/org/usvm/dataset/DatasetDriver.kt b/usvm-jvm/src/test/kotlin/org/usvm/dataset/DatasetDriver.kt
+new file mode 100644
+index 0000000..09940e2
+--- /dev/null
++++ b/usvm-jvm/src/test/kotlin/org/usvm/dataset/DatasetDriver.kt
+@@ -0,0 +1,126 @@
++package org.usvm.dataset
++
++import org.jacodb.api.jvm.JcClassOrInterface
++import org.jacodb.api.jvm.JcMethod
++import org.usvm.CoverageZone
++import org.usvm.PathSelectionStrategy
++import org.usvm.UMachineOptions
++import org.usvm.machine.JcMachine
++import org.usvm.samples.JacoDBContainer
++import org.usvm.samples.samplesWithApproximationsKey
++import org.usvm.solver.SmtQueryLog
++import java.io.File
++import java.util.zip.ZipFile
++import kotlin.random.Random
++import kotlin.time.Duration.Companion.milliseconds
++import kotlin.time.Duration.Companion.seconds
++
++/**
++ * Experiment driver (not part of upstream USVM): runs USVM on public methods of classes from the given jars/dirs
++ * and lets [SmtQueryLog] dump every solver query. Arguments are key=value:
++ * project=NAME cp=a.jar:b.jar targets=a.jar (jars or dirs whose classes are analysed) pkg=prefix
++ * methodTimeoutMs=N totalSeconds=N maxMethodsPerClass=N maxClasses=N seed=N shard=I/K solverTimeoutMs=N
++ */
++fun main(args: Array<String>) {
++    org.burningwave.core.assembler.StaticComponentContainer.Modules.exportAllToAll()
++    val a = args.associate { it.substringBefore('=') to it.substringAfter('=') }
++    val project = a.getValue("project")
++    val cpFiles = a.getValue("cp").split(File.pathSeparator).map { File(it) }
++    val targetFiles = a.getValue("targets").split(File.pathSeparator).map { File(it) }
++    val pkg = a["pkg"] ?: ""
++    val methodTimeout = (a["methodTimeoutMs"] ?: "10000").toLong()
++    val totalSeconds = (a["totalSeconds"] ?: "600").toLong()
++    val maxPerClass = (a["maxMethodsPerClass"] ?: "6").toInt()
++    val maxClasses = (a["maxClasses"] ?: "100000").toInt()
++    val solverTimeoutMs = (a["solverTimeoutMs"] ?: "3000").toLong()
++    val seed = (a["seed"] ?: "1").toLong()
++    val shard = (a["shard"] ?: "0/1").split("/").map { it.toInt() }
++    val resultsFile = File(System.getenv("USVM_SMT_DIR") ?: ".", "methods.jsonl")
++
++    val classNames = targetFiles.flatMap { f ->
++        if (f.isDirectory) {
++            f.walkTopDown().filter { it.extension == "class" }
++                .map { it.relativeTo(f).path.removeSuffix(".class").replace('/', '.') }.toList()
++        } else {
++            ZipFile(f).use { z ->
++                z.entries().asSequence().map { it.name }.filter { it.endsWith(".class") }
++                    .map { it.removeSuffix(".class").replace('/', '.') }.toList()
++            }
++        }
++    }.filter { it.startsWith(pkg) && !it.contains("module-info") && !it.contains("package-info") }
++        .filter { !it.substringAfterLast('.').contains('$') }
++        .sorted()
++        .filterIndexed { i, _ -> i % shard[1] == shard[0] }
++
++    val container = JacoDBContainer(samplesWithApproximationsKey, cpFiles)
++    val cp = container.cp
++    val rnd = Random(seed)
++    val deadlineEpochMs = a["deadlineEpoch"]?.toLong()?.times(1000) ?: (System.currentTimeMillis() + totalSeconds * 1000)
++    val rssLimitMb = (a["rssLimitMb"] ?: "2500").toLong()
++    val done: Set<String> = if (resultsFile.exists()) {
++        resultsFile.readLines().map { it.substringAfter("\"tag\":\"").substringBefore("\",\"status\"") }.toSet()
++    } else {
++        emptySet()
++    }
++    var nMethods = 0
++    var nClasses = 0
++    for (cn in classNames.shuffled(rnd)) {
++        if (nClasses >= maxClasses || System.currentTimeMillis() > deadlineEpochMs) break
++        val jc: JcClassOrInterface = runCatching { cp.findClassOrNull(cn) }.getOrNull() ?: continue
++        if (jc.isInterface || jc.isAbstract || jc.isAnonymous || jc.isAnnotation || !jc.isPublic) continue
++        val methods = jc.declaredMethods.filter {
++            it.isPublic && !it.isAbstract && !it.isNative && !it.isConstructor && !it.isClassInitializer &&
++                !it.isSynthetic && it.name != "hashCode" && it.name != "equals" && it.name != "toString"
++        }.shuffled(rnd).take(maxPerClass)
++        if (methods.isEmpty()) continue
++        nClasses++
++        for (m in methods) {
++            if (System.currentTimeMillis() > deadlineEpochMs) break
++            val tag = "$project/${m.enclosingClass.name}.${m.name}${m.description}"
++            if (tag in done) continue
++            runMethod(project, m, methodTimeout, solverTimeoutMs, resultsFile)
++            nMethods++
++            System.gc()
++            if (rssMb() > rssLimitMb) {
++                System.err.println("[driver] RSS limit reached, restart requested")
++                System.exit(3)
++            }
++        }
++        System.err.println("[driver] $project classes=$nClasses methods=$nMethods last=$cn")
++    }
++    System.err.println("[driver] DONE $project classes=$nClasses methods=$nMethods")
++    System.exit(0)
++}
++
++private fun rssMb(): Long =
++    File("/proc/self/status").readLines().first { it.startsWith("VmRSS:") }.split(Regex("\\s+"))[1].toLong() / 1024
++
++private fun runMethod(project: String, m: JcMethod, timeoutMs: Long, solverTimeoutMs: Long, results: File) {
++    val tag = "$project/${m.enclosingClass.name}.${m.name}${m.description}"
++    SmtQueryLog.tag = tag
++    val options = UMachineOptions(
++        pathSelectionStrategies = listOf(PathSelectionStrategy.FORK_DEPTH),
++        coverageZone = CoverageZone.TRANSITIVE,
++        exceptionsPropagation = true,
++        timeout = timeoutMs.milliseconds,
++        stepsFromLastCovered = 3500L,
++        solverTimeout = solverTimeoutMs.milliseconds,
++        typeOperationsTimeout = 1.seconds,
++    )
++    val t0 = System.nanoTime()
++    var status = "ok"
++    var states = 0
++    try {
++        JcMachine(m.enclosingClass.classpath, options).use { machine ->
++            states = machine.analyze(m).size
++        }
++    } catch (e: Throwable) {
++        status = "error:" + e.javaClass.simpleName
++        System.err.println("[driver] ERROR in $tag: $e " + e.cause)
++    }
++    val ms = (System.nanoTime() - t0) / 1_000_000
++    val esc = tag.replace("\\", "\\\\").replace("\"", "\\\"")
++    synchronized(results) {
++        results.appendText("{\"tag\":\"$esc\",\"status\":\"$status\",\"states\":$states,\"wall_ms\":$ms}\n")
++    }
++}
+diff --git a/usvm-python/usvm-python-main/src/main/kotlin/org/usvm/machine/PyMachine.kt b/usvm-python/usvm-python-main/src/main/kotlin/org/usvm/machine/PyMachine.kt
+index b08db03..b22912c 100644
+--- a/usvm-python/usvm-python-main/src/main/kotlin/org/usvm/machine/PyMachine.kt
++++ b/usvm-python/usvm-python-main/src/main/kotlin/org/usvm/machine/PyMachine.kt
+@@ -118,6 +118,9 @@ class PyMachine(
+         timeoutPerRunMs: Long? = null,
+         unfoldGenerator: Boolean = true,
+     ): Int {
++        if (org.usvm.solver.SmtQueryLog.enabled) {
++            org.usvm.solver.SmtQueryLog.tag = "usvm-python/${pythonCallable.module}.${pythonCallable.tag}"
++        }
+         if (pythonCallable.module != null && typeSystem is PythonTypeSystemWithMypyInfo) {
+             typeSystem.resortTypes(pythonCallable.module)
+         }
+diff --git a/usvm-ts/src/main/kotlin/org/usvm/machine/TsMachine.kt b/usvm-ts/src/main/kotlin/org/usvm/machine/TsMachine.kt
+index 5c5d344..2cbb679 100644
+--- a/usvm-ts/src/main/kotlin/org/usvm/machine/TsMachine.kt
++++ b/usvm-ts/src/main/kotlin/org/usvm/machine/TsMachine.kt
+@@ -110,6 +110,9 @@ class TsMachine(
+         methods: List<EtsMethod>,
+         targets: List<TsTarget> = emptyList(),
+     ): TsAnalysisResult {
++        if (org.usvm.solver.SmtQueryLog.enabled) {
++            org.usvm.solver.SmtQueryLog.tag = "usvm-ts/" + methods.joinToString(",") { it.signature.toString() }
++        }
+         val initialStates = mutableMapOf<EtsMethod, TsState>()
+         methods.forEach { initialStates[it] = interpreter.getInitialState(it, targets) }
+ 

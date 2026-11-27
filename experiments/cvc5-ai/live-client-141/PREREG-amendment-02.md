@@ -1,0 +1,3 @@
+# Amendment 02 — integrity evidence before holdout
+
+Smoke 01 observed Z3 0.5.26's normal KSMT loader unlinking the extracted shared objects after mapping. Keep the original Z3 loader and Java binding. Expose byte-identical libz3.so and libz3java.so from the installed native JAR as persistent classpath file resources inside the workspace so the original loader's file-resource branch loads them directly. Hash both maps-backed files inside the JVM and independently from the JAR. This also removes temporary unpack/archive overhead from the cold-start comparison, which remains descriptive. Warm measurements are after the synthetic warmup. Fix coverage log serialization to encode sorted values as maps. No held-out runtime outcomes exist at the time of this amendment.

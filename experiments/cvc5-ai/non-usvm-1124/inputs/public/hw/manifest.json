@@ -1,0 +1,111 @@
+{
+  "start": "2026-11-24T07:43:26.117+03:00",
+  "stop": "2026-11-24T07:43:26.143+03:00",
+  "consumption": "hw",
+  "logic": "QF_AUFBV",
+  "original_md5": "ea411cc9f28e6df7bd8ba70d2320bf49",
+  "sha256": "38f094ace203ae8c01cb78ebfd5a53f6845a696f34f31a9620f50728dfa6334a",
+  "counts": {
+    "family_members": 10,
+    "eligible": 10,
+    "admitted": 8
+  },
+  "items": [
+    {
+      "id": "pub-08987a8710",
+      "producer": "public",
+      "path": "inputs/public/hw/pub-08987a8710.smt2",
+      "sha256": "ab6c10922307f7226116120b5fb02b7591a9de2a65dd17b75f5f14bebfdf2318",
+      "family": "zipcpu",
+      "expected": "unsat",
+      "original": "non-incremental/QF_AUFBV/2019-Wolf-fmbench/2018E/zipcpu-pfcache-compact-mem.smt2",
+      "license": "GPL",
+      "category": "industrial",
+      "bytes": 160898
+    },
+    {
+      "id": "pub-1dd062eedb",
+      "producer": "public",
+      "path": "inputs/public/hw/pub-1dd062eedb.smt2",
+      "sha256": "9c4cc2c638751468040d07b7f293156fbc1b27c03bff3c00bd3d3c5097c8a494",
+      "family": "VexRiscv",
+      "expected": "unsat",
+      "original": "non-incremental/QF_AUFBV/2019-Wolf-fmbench/2018E/VexRiscv-regch0-20-compact-mem.smt2",
+      "license": "MIT",
+      "category": "industrial",
+      "bytes": 128192
+    },
+    {
+      "id": "pub-5d95a67550",
+      "producer": "public",
+      "path": "inputs/public/hw/pub-5d95a67550.smt2",
+      "sha256": "ff87d56545e1e0311ece28892a4b8cd29cc9e9e6f0e0d02e154b6ce7aecb8e85",
+      "family": "zipcpu",
+      "expected": "unsat",
+      "original": "non-incremental/QF_AUFBV/2019-Wolf-fmbench/2018E/zipcpu-busdelay-compact-mem.smt2",
+      "license": "GPL",
+      "category": "industrial",
+      "bytes": 113110
+    },
+    {
+      "id": "pub-67394eeb24",
+      "producer": "public",
+      "path": "inputs/public/hw/pub-67394eeb24.smt2",
+      "sha256": "2eb467f9bcc74876a042b5012b217a95a31793ed0375a07dc58e4480c00bbdb1",
+      "family": "picorv32",
+      "expected": "unsat",
+      "original": "non-incremental/QF_AUFBV/2019-Wolf-fmbench/2018E/picorv32-check-compact-mem.smt2",
+      "license": "ISC",
+      "category": "industrial",
+      "bytes": 154055
+    },
+    {
+      "id": "pub-6e5c5b2d34",
+      "producer": "public",
+      "path": "inputs/public/hw/pub-6e5c5b2d34.smt2",
+      "sha256": "b817d376afbe64b05ca1b8fb90a9a3c1249d13faf2d63f22c3bd34aabb12a113",
+      "family": "VexRiscv",
+      "expected": "unsat",
+      "original": "non-incremental/QF_AUFBV/2019-Wolf-fmbench/2018E/VexRiscv-regch0-30-compact-mem.smt2",
+      "license": "MIT",
+      "category": "industrial",
+      "bytes": 130682
+    },
+    {
+      "id": "pub-b8c5124aa5",
+      "producer": "public",
+      "path": "inputs/public/hw/pub-b8c5124aa5.smt2",
+      "sha256": "101f79ea24f692f35dcfd8c692f3351d4f6f88babb8e9c6b5607daf3713393c8",
+      "family": "ponylink",
+      "expected": "sat",
+      "original": "non-incremental/QF_AUFBV/2019-Wolf-fmbench/2018E/ponylink-slaveTXlen-sat-compact-mem.smt2",
+      "license": "ISC",
+      "category": "industrial",
+      "bytes": 216996
+    },
+    {
+      "id": "pub-d0c7b94464",
+      "producer": "public",
+      "path": "inputs/public/hw/pub-d0c7b94464.smt2",
+      "sha256": "03c1f3cb373cdc6d489518bce742250d388ba4da96fab6ccbc3486d04492933d",
+      "family": "ponylink",
+      "expected": "unsat",
+      "original": "non-incremental/QF_AUFBV/2019-Wolf-fmbench/2018E/ponylink-slaveTXlen-unsat-compact-mem.smt2",
+      "license": "ISC",
+      "category": "industrial",
+      "bytes": 217249
+    },
+    {
+      "id": "pub-ee9a7ec579",
+      "producer": "public",
+      "path": "inputs/public/hw/pub-ee9a7ec579.smt2",
+      "sha256": "25ac4e5b11418fc771be511383bd22ed1d288479e7dc6c1e2a8e6a3b1d7ee1e7",
+      "family": "picorv32",
+      "expected": "unsat",
+      "original": "non-incremental/QF_AUFBV/2019-Wolf-fmbench/2018E/picorv32-pcregs-compact-mem.smt2",
+      "license": "ISC",
+      "category": "industrial",
+      "bytes": 166613
+    }
+  ]
+}

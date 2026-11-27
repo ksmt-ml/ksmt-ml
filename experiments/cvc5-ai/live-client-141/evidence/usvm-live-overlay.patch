@@ -1,0 +1,586 @@
+--- a/usvm-core/src/main/kotlin/org/usvm/solver/ClientStats.kt
++++ b/usvm-core/src/main/kotlin/org/usvm/solver/ClientStats.kt
+@@ -56,6 +56,13 @@
+     @JvmField var forkingSteps = 0L
+     @JvmField var terminated = 0L
+     @JvmField var coveragePct = 0.0
++    var completedPaths = 0L
++    var returnedPaths = 0L
++    var stopReason = "queue_exhausted"
++    val branchEdges = sortedSetOf<String>()
++    val exceptionTypes = sortedMapOf<String, Int>()
++    val unknownReasons = sortedMapOf<String, Int>()
++    var afterFirstCheck: (() -> Unit)? = null
+     @JvmField var assertTotalAtChecks = 0L
+     @JvmField var sumCheckNsOver100ms = 0L
+     @JvmField var checksOver100ms = 0L
+@@ -81,8 +88,13 @@
+             "\"assert_total_at_checks\":$assertTotalAtChecks,\"checks_over_100ms\":$checksOver100ms,\"checks_over_100ms_ms\":${sumCheckNsOver100ms / 1e6}," +
+             "\"check_ms_list\":[${checkMsList.joinToString(",") { "%.3f".format(java.util.Locale.ROOT, it) }}]," +
+             "\"assert_ms_per_check_list\":[${assertMsPerCheckList.joinToString(",") { "%.3f".format(java.util.Locale.ROOT, it) }}]}"
++        val json = kotlinx.serialization.json.Json
++        val extra = ",\"stop_reason\":\"${stopReason}\",\"branch_edges\":${json.encodeToString(branchEdges.toList())}" +
++            ",\"completed_paths\":$completedPaths,\"returned_paths\":$returnedPaths" +
++            ",\"exception_types\":${json.encodeToString<Map<String, Int>>(exceptionTypes)}" +
++            ",\"unknown_reasons\":${json.encodeToString<Map<String, Int>>(unknownReasons)}"
+         reset()
+-        return s
++        return s.dropLast(1) + extra + "}"
+     }
+ 
+     @Synchronized
+@@ -97,6 +109,8 @@
+         steps = 0; forkingSteps = 0; terminated = 0; coveragePct = 0.0
+         assertTotalAtChecks = 0; sumCheckNsOver100ms = 0; checksOver100ms = 0
+         checkMsList = ArrayList(); assertMsPerCheckList = ArrayList()
++        completedPaths = 0L; returnedPaths = 0L; stopReason = "queue_exhausted"
++        branchEdges.clear(); exceptionTypes.clear(); unknownReasons.clear()
+     }
+ 
+     inline fun <T> timed(add: (Long) -> Unit, block: () -> T): T {
+@@ -192,6 +206,10 @@
+         val t0 = System.nanoTime()
+         val status = run()
+         val d = System.nanoTime() - t0
++        ClientStats.afterFirstCheck?.let {
++            ClientStats.afterFirstCheck = null
++            it()
++        }
+         ClientStats.checks++
+         ClientStats.checkNs += d
+         ClientStats.assertTotalAtChecks += all.size
+@@ -203,7 +221,11 @@
+         when (status) {
+             KSolverStatus.SAT -> { ClientStats.sat++; ClientStats.satNs += d }
+             KSolverStatus.UNSAT -> { ClientStats.unsat++; ClientStats.unsatNs += d }
+-            KSolverStatus.UNKNOWN -> { ClientStats.unknown++; ClientStats.unknownNs += d }
++            KSolverStatus.UNKNOWN -> {
++                ClientStats.unknown++
++                ClientStats.unknownNs += d
++                ClientStats.unknownReasons.merge(delegate.reasonOfUnknown(), 1, Int::plus)
++            }
+         }
+         if (dupOrder) { ClientStats.dupOrderChecks++; ClientStats.dupOrderNs += d }
+         if (dupSet) { ClientStats.dupSetChecks++; ClientStats.dupSetNs += d }
+--- a/usvm-core/src/main/kotlin/org/usvm/stopstrategies/StopStrategyFactory.kt
++++ b/usvm-core/src/main/kotlin/org/usvm/stopstrategies/StopStrategyFactory.kt
+@@ -17,18 +17,18 @@
+ ) : StopStrategy {
+     val stepsStatistics = lazy { requireNotNull(stepsStatisticsFactory()) { "Steps statistics is required for selected stopping strategy" } }
+ 
+-    val stopStrategies = mutableListOf<StopStrategy>()
++    val stopStrategies = mutableListOf<Pair<String, StopStrategy>>()
+ 
+     val stepLimit = options.stepLimit
+     if (stepLimit != null) {
+-        stopStrategies.add(StepLimitStopStrategy(stepLimit, stepsStatistics.value))
++        stopStrategies.add("step_limit" to StepLimitStopStrategy(stepLimit, stepsStatistics.value))
+     }
+     if (options.stopOnCoverage in 1..100) {
+         val coverageStatistics = requireNotNull(coverageStatisticsFactory()) {
+             "Coverage statistics is required for stopping on expected coverage achieved"
+         }
+         val coverageStopStrategy = StopStrategy { coverageStatistics.getTotalCoverage() >= options.stopOnCoverage }
+-        stopStrategies.add(coverageStopStrategy)
++        stopStrategies.add("coverage_goal" to coverageStopStrategy)
+     }
+     val collectedStatesLimit = options.collectedStatesLimit
+     if (collectedStatesLimit != null && collectedStatesLimit > 0) {
+@@ -36,12 +36,12 @@
+             "Collected states count getter is required for stopping on collected states limit"
+         }
+         val collectedStatesCountStopStrategy = StopStrategy { getCollectedStatesCount() >= collectedStatesLimit }
+-        stopStrategies.add(collectedStatesCountStopStrategy)
++        stopStrategies.add("states_limit" to collectedStatesCountStopStrategy)
+     }
+ 
+     if (options.timeout < Duration.INFINITE) {
+         val timeStatistics = requireNotNull(timeStatisticsFactory()) { "Time statistics is required for stopping on timeout" }
+-        stopStrategies.add(TimeoutStopStrategy(options.timeout, timeStatistics))
++        stopStrategies.add("method_timeout" to TimeoutStopStrategy(options.timeout, timeStatistics))
+     }
+ 
+     val stepsFromLastCovered = options.stepsFromLastCovered
+@@ -51,18 +51,27 @@
+             getCollectedStatesCount,
+             stepsStatistics.value
+         )
+-        stopStrategies.add(stepsFromLastCoveredStopStrategy)
++        stopStrategies.add("stagnation" to stepsFromLastCoveredStopStrategy)
+     }
+ 
+     if (options.stopOnTargetsReached) {
+-        stopStrategies.add(TargetsReachedStopStrategy(targets))
++        stopStrategies.add("targets" to TargetsReachedStopStrategy(targets))
+     }
+ 
+     if (stopStrategies.isEmpty()) {
+         return StopStrategy { false }
+     }
+-    if (stopStrategies.size == 1) {
+-        return stopStrategies.first()
++    if (!org.usvm.solver.ClientStats.enabled) {
++        val delegates = stopStrategies.map { it.second }
++        return delegates.singleOrNull() ?: GroupedStopStrategy(delegates)
+     }
+-    return GroupedStopStrategy(stopStrategies)
++    return object : StopStrategy {
++        override fun shouldStop(): Boolean {
++            val match = stopStrategies.firstOrNull { it.second.shouldStop() } ?: return false
++            org.usvm.solver.ClientStats.stopReason = match.first
++            return true
++        }
++
++        override fun stopReason(): String = org.usvm.solver.ClientStats.stopReason
++    }
+ }
+--- a/usvm-jvm/src/main/kotlin/org/usvm/machine/JcMachine.kt
++++ b/usvm-jvm/src/main/kotlin/org/usvm/machine/JcMachine.kt
+@@ -17,6 +17,9 @@
+ import org.usvm.machine.state.JcMethodResult
+ import org.usvm.machine.state.JcState
+ import org.usvm.machine.state.lastStmt
++import org.jacodb.api.jvm.cfg.JcIfInst
++import org.jacodb.api.jvm.cfg.JcSwitchInst
++import org.usvm.PathNode
+ import org.usvm.ps.createPathSelector
+ import org.usvm.statistics.CompositeUMachineObserver
+ import org.usvm.statistics.CoverageStatistics
+@@ -192,13 +195,50 @@
+         }
+ 
+         observers.add(object : UMachineObserver<JcState> {
++            private var entryBranch: PathNode<JcInst>? = null
++
++            override fun onStatePeeked(state: JcState) {
++                val stmt = state.lastStmt
++                entryBranch = if (stmt.location.method == state.entrypoint &&
++                    (stmt is JcIfInst || stmt is JcSwitchInst)
++                ) state.pathNode else null
++            }
++
++            private fun observeBranch(source: PathNode<JcInst>, state: JcState) {
++                val destination = state.pathNode
++                if (destination.parent !== source) return
++                val stmt = source.statement
++                val next = destination.statement
++                if (next.location.method != stmt.location.method) return
++                val to = next.location.index
++                val isTarget = when (stmt) {
++                    is JcIfInst -> to == stmt.trueBranch.index || to == stmt.falseBranch.index
++                    is JcSwitchInst -> to == stmt.default.index || stmt.branches.values.any { it.index == to }
++                    else -> false
++                }
++                if (isTarget) org.usvm.solver.ClientStats.branchEdges.add("${stmt.location.index}:$to")
++            }
++
+             override fun onState(parent: JcState, forks: Sequence<JcState>) {
++                entryBranch?.let { source ->
++                    observeBranch(source, parent)
++                    forks.forEach { observeBranch(source, it) }
++                }
+                 org.usvm.solver.ClientStats.steps++
+                 if (forks.iterator().hasNext()) org.usvm.solver.ClientStats.forkingSteps++
+             }
+ 
+             override fun onStateTerminated(state: JcState, stateReachable: Boolean) {
+                 org.usvm.solver.ClientStats.terminated++
++                if (state.callStack.isEmpty()) {
++                    org.usvm.solver.ClientStats.completedPaths++
++                    when (val result = state.methodResult) {
++                        is JcMethodResult.Success -> org.usvm.solver.ClientStats.returnedPaths++
++                        is JcMethodResult.JcException ->
++                            org.usvm.solver.ClientStats.exceptionTypes.merge(result.type.typeName, 1, Int::plus)
++                        else -> Unit
++                    }
++                }
+             }
+         })
+ 
+--- a/usvm-jvm/src/main/kotlin/org/usvm/machine/JcSolverFactory.kt
++++ b/usvm-jvm/src/main/kotlin/org/usvm/machine/JcSolverFactory.kt
+@@ -41,16 +41,12 @@
+         // Experiment hook: USVM_SOLVER=cvc5 swaps the default Z3 for cvc5 (not an upstream option)
+         SolverType.Z3 -> if (System.getenv("USVM_SOLVER") == "cvc5") {
+             val t0 = System.nanoTime()
+-            val s = io.ksmt.solver.cvc5.KCvc5Solver(ctx)
++            val s = Live141Backend.cvc5(ctx)
+             org.usvm.solver.ClientStats.createSolverNs += System.nanoTime() - t0
+             s
+         } else {
+             val t0 = System.nanoTime()
+-            val s = KZ3Solver(ctx).apply {
+-                configure {
+-                    optimizeForTheories(setOf(KTheory.Array, KTheory.BV, KTheory.UF, KTheory.FP))
+-                }
+-            }
++            val s = Live141Backend.defaultZ3(ctx)
+             org.usvm.solver.ClientStats.createSolverNs += System.nanoTime() - t0
+             s
+         }
+--- /dev/null
++++ b/usvm-jvm/src/main/kotlin/org/usvm/machine/Live141Backend.kt
+@@ -0,0 +1,125 @@
++package org.usvm.machine
++
++import com.microsoft.z3.Version
++import io.github.cvc5.Solver
++import io.ksmt.KContext
++import io.ksmt.solver.cvc5.KCvc5Solver
++import io.ksmt.solver.z3.KZ3Solver
++import org.usvm.solver.ClientStats
++import java.io.File
++import java.security.MessageDigest
++import kotlinx.serialization.json.Json
++import kotlinx.serialization.json.buildJsonObject
++import kotlinx.serialization.json.put
++
++internal object Live141Backend {
++    val arm = System.getenv("LIVE141_ARM").orEmpty()
++    private var initial = emptyMap<String, String>()
++    private var effective = emptyMap<String, String>()
++    private var version = ""
++    private var optionBefore = ""
++    private var javaApiSource = ""
++    private var adapterSource = ""
++    private var z3Help = ""
++    private var dumpWritten = false
++
++    private val loadCvc5 by lazy {
++        val file = File(System.getProperty("live141.cvc5.jni")).canonicalFile
++        check(System.getProperty("cvc5.skipLibraryLoad") == "true")
++        System.load(file.path)
++    }
++
++    fun cvc5(ctx: KContext): KCvc5Solver {
++        check(arm == "cvc5-default" || arm == "cvc5-none")
++        loadCvc5
++        val solver = KCvc5Solver(ctx)
++        try {
++            val native = solver.nativeSolver()
++            val before = native.getOption("simplification")
++            if (arm == "cvc5-none") native.setOption("simplification", "none")
++            check(native.getOption("simplification") == if (arm == "cvc5-none") "none" else before)
++            if (version.isEmpty()) {
++                version = native.getVersion()
++                check(version == "1.4.1") { "Expected native cvc5 1.4.1, loaded $version" }
++                optionBefore = before
++                javaApiSource = Solver::class.java.protectionDomain.codeSource.location.toString()
++                adapterSource = KCvc5Solver::class.java.protectionDomain.codeSource.location.toString()
++                initial = options(native)
++                ClientStats.afterFirstCheck = { effective = options(native) }
++            }
++            return solver
++        } catch (e: Throwable) {
++            solver.close()
++            throw e
++        }
++    }
++
++    fun defaultZ3(ctx: KContext): KZ3Solver = KZ3Solver(ctx).apply {
++        configure {
++            optimizeForTheories(setOf(io.ksmt.solver.KTheory.Array, io.ksmt.solver.KTheory.BV,
++                io.ksmt.solver.KTheory.UF, io.ksmt.solver.KTheory.FP))
++        }
++        recordZ3(this)
++    }
++
++    private fun recordZ3(solver: KZ3Solver) {
++        if (version.isNotEmpty()) return
++        check(arm == "z3")
++        val native = solver.nativeSolver()
++        version = Version.getString()
++        javaApiSource = Version::class.java.protectionDomain.codeSource.location.toString()
++        adapterSource = KZ3Solver::class.java.protectionDomain.codeSource.location.toString()
++        z3Help = native.help
++    }
++
++    private fun options(solver: Solver): Map<String, String> =
++        solver.optionNames.sorted().associateWith { key ->
++            runCatching { solver.getOption(key) }.getOrElse { e -> "ERROR ${e.message}" }
++        }
++
++    private fun sha(file: File): String {
++        val hash = MessageDigest.getInstance("SHA-256")
++        val buf = ByteArray(128 * 1024)
++        file.inputStream().use { stream ->
++            while (true) {
++                val n = stream.read(buf)
++                if (n == -1) break
++                hash.update(buf, 0, n)
++            }
++        }
++        return java.util.HexFormat.of().formatHex(hash.digest())
++    }
++
++    fun dump(directory: File) {
++        check(!dumpWritten && version.isNotEmpty())
++        if (arm.startsWith("cvc5")) check(effective.isNotEmpty()) { "No timed native check observed" }
++        val maps = File("/proc/self/maps").readLines().filter {
++            it.contains("libcvc5") || it.contains("/libz3")
++        }
++        File(directory, "backend-maps.txt").writeText(maps.joinToString("\n", postfix = "\n"))
++        val paths = maps.map { it.substring(it.indexOf('/')).removeSuffix(" (deleted)") }.distinct()
++        val libraries = paths.associateWith { sha(File(it)) }
++        if (arm == "z3") check(libraries.keys.map { File(it).name }.toSet() == setOf("libz3.so", "libz3java.so"))
++        else check(libraries.keys == setOf(File(System.getProperty("live141.cvc5.jni")).canonicalPath))
++        val affinity = File("/proc/self/status").useLines { lines ->
++            lines.first { it.startsWith("Cpus_allowed_list:") }.substringAfter(':').trim()
++        }
++        val metadata = buildJsonObject {
++            put("arm", arm)
++            put("version", version)
++            put("cpu", affinity)
++            put("java_api", javaApiSource)
++            put("adapter", adapterSource)
++            put("java_runtime", System.getProperty("java.runtime.version"))
++            put("processors", Runtime.getRuntime().availableProcessors())
++            put("simplification_before_override", optionBefore)
++            put("libraries", Json.encodeToJsonElement(kotlinx.serialization.serializer<Map<String, String>>(), libraries))
++            put("initial_options", Json.encodeToJsonElement(kotlinx.serialization.serializer<Map<String, String>>(), initial))
++            put("after_first_native_check",
++                Json.encodeToJsonElement(kotlinx.serialization.serializer<Map<String, String>>(), effective))
++        }
++        File(directory, "backend.json").writeText(metadata.toString() + "\n")
++        if (arm == "z3") File(directory, "z3-help.txt").writeText(z3Help)
++        dumpWritten = true
++    }
++}
+--- /dev/null
++++ b/usvm-jvm/src/test/kotlin/org/usvm/dataset/Live141Driver.kt
+@@ -0,0 +1,179 @@
++package org.usvm.dataset
++
++import kotlinx.coroutines.runBlocking
++import kotlinx.serialization.json.Json
++import kotlinx.serialization.json.buildJsonObject
++import kotlinx.serialization.json.jsonObject
++import kotlinx.serialization.json.put
++import org.jacodb.api.jvm.JcClassType
++import org.jacodb.api.jvm.JcClasspath
++import org.jacodb.api.jvm.JcMethod
++import org.usvm.CoverageZone
++import org.usvm.PathSelectionStrategy
++import org.usvm.StateCollectionStrategy
++import org.usvm.UMachineOptions
++import org.usvm.api.util.JcTestInterpreter
++import org.usvm.machine.JcMachine
++import org.usvm.machine.Live141Backend
++import org.usvm.samples.JacoDBContainer
++import org.usvm.samples.samplesWithApproximationsKey
++import org.usvm.solver.ClientStats
++import java.io.File
++import java.lang.management.ManagementFactory
++import java.net.URLClassLoader
++import java.time.Instant
++import kotlin.time.Duration.Companion.milliseconds
++import kotlin.time.Duration.Companion.seconds
++
++private val warmups = listOf(
++    "warm/livefixture.Control.scalar(I)I",
++    "warm/livefixture.Control.array([II)I",
++    "warm/livefixture.Control.floating(F)I",
++)
++
++fun main(args: Array<String>) {
++    val cfg = args.associate { it.substringBefore('=') to it.substringAfter('=') }
++    val directory = File(cfg.getValue("out"))
++    val events = File(directory, "events.tsv")
++    val runStart = System.nanoTime()
++    fun event(label: String, tag: String = "") {
++        events.appendText("$label\t${Instant.now()}\t${(System.nanoTime() - runStart) / 1e6}\t$tag\n")
++    }
++    event("driver_start")
++    if (cfg["contract"] == "1") {
++        solverContract(directory)
++        return
++    }
++
++    org.burningwave.core.assembler.StaticComponentContainer.Modules.exportAllToAll()
++    val fixture = File(cfg.getValue("fixture"))
++    val cpFiles = cfg["cp"].orEmpty().split(File.pathSeparator).filter { it.isNotEmpty() }.map(::File)
++    val opts = UMachineOptions(
++        pathSelectionStrategies = listOf(PathSelectionStrategy.FORK_DEPTH),
++        randomSeed = 0,
++        coverageZone = CoverageZone.TRANSITIVE,
++        exceptionsPropagation = true,
++        timeout = 6000.milliseconds,
++        solverTimeout = 1600.milliseconds,
++        typeOperationsTimeout = 1.seconds,
++        stepLimit = 4000uL,
++        stepsFromLastCovered = 3500L,
++        runSolverInAnotherProcess = false,
++        throwExceptionOnStepFailure = true,
++    )
++    File(directory, "usvm-options.txt").writeText("$opts\n")
++    event("index_start")
++    val container = JacoDBContainer(samplesWithApproximationsKey, cpFiles + fixture)
++    val cp = container.cp
++    event("index_end")
++    event("warmup_start")
++    for (tag in warmups) {
++        val row = measure(cp, tag, opts)
++        File(directory, "warmup.jsonl").appendText(row.first + "\n")
++        check(row.second) { "Warmup failed on $tag" }
++    }
++    event("warmup_end")
++    Live141Backend.dump(directory)
++    event("identity_end")
++    if (cfg["smoke"] == "1") {
++        liveSmoke(cp, fixture, opts)
++        event("live_smoke_pass")
++    }
++    if (cfg.containsKey("methods")) {
++        val requested = File(cfg.getValue("methods")).readLines()
++        val results = File(directory, "results.jsonl")
++        event("batch_start")
++        for (tag in requested) {
++            event("method_start", tag)
++            val (row) = measure(cp, tag, opts)
++            results.appendText(row + "\n")
++            event("method_end", tag)
++            System.gc()
++            check(rssMb() <= 3200) { "JVM RSS guard: ${rssMb()} MiB" }
++        }
++        event("batch_end")
++    }
++    event("teardown_start")
++    runBlocking {
++        cp.close()
++        container.db.close()
++    }
++    event("driver_end")
++    System.exit(0)
++}
++
++private fun find(cp: JcClasspath, tag: String): JcMethod {
++    val path = tag.substringAfter('/')
++    val start = path.indexOf('(')
++    val dot = path.lastIndexOf('.', start)
++    val cls = checkNotNull(cp.findClassOrNull(path.substring(0, dot))) { "Class not found $tag" }
++    return cls.declaredMethods.single { it.name == path.substring(dot + 1, start) &&
++        it.description == path.substring(start) }
++}
++
++private fun measure(cp: JcClasspath, tag: String, opts: UMachineOptions): Pair<String, Boolean> {
++    ClientStats.reset()
++    val os = ManagementFactory.getOperatingSystemMXBean() as com.sun.management.OperatingSystemMXBean
++    val cpu = os.processCpuTime
++    val start = System.nanoTime()
++    var init = 0L
++    var analysis = 0L
++    var count = 0
++    var status = "ok"
++    var message = ""
++    try {
++        val m = find(cp, tag)
++        JcMachine(cp, opts).use { machine ->
++            init = System.nanoTime() - start
++            val t0 = System.nanoTime()
++            count = machine.analyze(m).size
++            analysis = System.nanoTime() - t0
++        }
++    } catch (e: Throwable) {
++        status = "error:" + e.javaClass.simpleName
++        message = e.message.orEmpty().take(400)
++        System.err.println("METHOD_ERROR $tag $e")
++        e.printStackTrace(System.err)
++    }
++    val wall = (System.nanoTime() - start) / 1e6
++    val cpuMs = (os.processCpuTime - cpu) / 1e6
++    val stats = Json.parseToJsonElement(ClientStats.snapshotAndReset()).jsonObject
++    val row = buildJsonObject {
++        put("tag", tag)
++        put("arm", Live141Backend.arm)
++        put("status", status)
++        put("message", message)
++        put("wall_ms", wall)
++        put("cpu_ms", cpuMs)
++        put("construct_ms", init / 1e6)
++        put("analyze_ms", analysis / 1e6)
++        put("states", count)
++        put("stats", stats)
++    }
++    return row.toString() to (status == "ok")
++}
++
++private fun liveSmoke(cp: JcClasspath, fixture: File, opts: UMachineOptions) {
++    val m = find(cp, warmups.first())
++    val typed = (cp.findTypeOrNull("livefixture.Control") as JcClassType).declaredMethods.single { it.method == m }
++    URLClassLoader(arrayOf(fixture.toURI().toURL()), JcMachine::class.java.classLoader).use { loader ->
++        val control = loader.loadClass("livefixture.Control").getMethod("scalar", Int::class.javaPrimitiveType)
++        val resolver = JcTestInterpreter(loader)
++        val actual = JcMachine(cp, opts.copy(stopOnCoverage = 0, stateCollectionStrategy = StateCollectionStrategy.ALL)).use { machine ->
++            machine.analyze(m).map { state ->
++                val test = resolver.resolve(typed, state)
++                val x = test.before.parameters.single() as Int
++                val y = test.result.getOrThrow() as Int
++                check(control.invoke(null, x) == y) { "Witness disagrees at x=$x, y=$y" }
++                println("WITNESS scalar x=$x returns=$y")
++                y
++            }.toSet()
++        }
++        check(actual == setOf(-11, 22, 33)) { "Unexpected feasible Java outcomes: $actual" }
++    }
++    println("LIVE_SMOKE_PASS three feasible returns and no infeasible return")
++}
++
++private fun rssMb() =
++    File("/proc/self/status").useLines { it.first { r -> r.startsWith("VmRSS:") } }
++        .split(Regex("\\s+"))[1].toLong() / 1024
+--- /dev/null
++++ b/usvm-jvm/src/test/kotlin/org/usvm/dataset/Live141Contract.kt
+@@ -0,0 +1,53 @@
++package org.usvm.dataset
++
++import io.ksmt.KContext
++import io.ksmt.solver.KSolverStatus.SAT
++import io.ksmt.solver.KSolverStatus.UNSAT
++import org.usvm.machine.Live141Backend
++import org.usvm.solver.TimedSolver
++import java.io.File
++import kotlin.time.Duration.Companion.milliseconds
++
++internal fun solverContract(directory: File) {
++    val cap = 1600.milliseconds
++    KContext().use { ctx ->
++        with(ctx) {
++            val native = if (Live141Backend.arm == "z3") Live141Backend.defaultZ3(ctx) else Live141Backend.cvc5(ctx)
++            var witness: io.ksmt.solver.KModel? = null
++            val x = mkConst("live_x", bv32Sort)
++            val fp = mkConst("live_fp", fp32Sort)
++            val arr = mkConst("live_array", mkArraySort(bv32Sort, bv32Sort))
++            val index = mkBv(11)
++            val slot = mkArraySelect(arr, index)
++            val seven = mkBv(7)
++            val fortyOne = mkBv(41)
++            val two = mkFp32(2.0f)
++            val fact = mkEq(x, seven)
++            val opposite = mkNot(fact)
++            @Suppress("UNCHECKED_CAST")
++            val delegate = native as io.ksmt.solver.KSolver<io.ksmt.solver.KSolverConfiguration>
++            TimedSolver(delegate).use { s ->
++                s.assert(fact)
++                s.assert(mkEq(fp, two))
++                s.assert(mkEq(slot, fortyOne))
++                check(s.check(cap) == SAT)
++                witness = s.model().detach()
++                check(witness!!.eval(x, isComplete = true) == seven)
++                check(witness!!.eval(fp, isComplete = true) == two)
++                check(witness!!.eval(slot, isComplete = true) == fortyOne)
++                s.push()
++                s.assertAndTrack(opposite)
++                check(s.check(cap) == UNSAT && opposite in s.unsatCore())
++                s.pop()
++                check(s.checkWithAssumptions(listOf(opposite), cap) == UNSAT)
++                check(opposite in s.unsatCore())
++                check(s.checkWithAssumptions(listOf(fact), cap) == SAT)
++                check(s.check(cap) == SAT)
++                Live141Backend.dump(directory)
++            }
++            check(witness!!.eval(x, isComplete = true) == seven)
++            check(witness!!.eval(slot, isComplete = true) == fortyOne)
++        }
++    }
++    println("CONTRACT_PASS scalar fp array detach after close scopes assumptions unsat core")
++}

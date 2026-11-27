@@ -1,0 +1,8 @@
+package examples.kernels;
+public final class BucketDelete2 {
+    public static int run(int x, int y) {
+        int a=(x^69)&127, b=(y+69)&127;
+        int[] t=new int[4]; t[a&3]=a+1; t[b&3]=0;
+        if(t[b&3]!=0) return -1; return t[a&3]==0 ? 0 : t[a&3]>16 ? 1 : 2;
+    }
+}

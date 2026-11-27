@@ -1,0 +1,3 @@
+# Amendment 01 — static eligibility only
+
+The ASM scan (evidence/freeze-01.log) found five eligible classes in re2j, so the original eight distinct classes are impossible there. Before any new solver result, keep eight methods per project wherever possible. Freeze distinct-class selections first. If there are fewer than eight eligible classes, fill from the same balanced strata with a cap of three methods/class and at least four classes total. If that still yields fewer than eight, replace the project in declared order from Apache Commons Pool 2.12.0 (org.apache.commons.pool2) and ICU4J 75.1 (com.ibm.icu.text). Use the original salt, no solver feedback. Project remains the unit of paired assignment and inference.

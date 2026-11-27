@@ -1,0 +1,15 @@
+Completed all five smoke arms and all 12 full tuning runs, with 60-minute caps across three paired seeds. After locking every configuration, I ran 1,170 paired cvc5 replays on 26 fresh USVM Java programs from the same generator.
+
+| Method | Held-out PAR2 ↓ | Solved / 234 |
+|---|---:|---:|
+| Default | 0.544 s | 214 |
+| Random search | 0.540 s | 214 |
+| Native SMAC | **0.501 s** | **218** |
+| Sol warm-start SMAC | 0.555 s | 212 |
+| Autonomous Sol | 0.540 s | 214 |
+
+Native SMAC had the lowest observed PAR2, 7.9% below default. Its 95% program-and-seed bootstrap interval for the ratio to default was 0.781–1.037. Neither Sol arm showed a clear improvement over native SMAC. There were 98 held-out timeouts and zero incorrect answers, unknowns, or solver errors.
+
+The frozen search space included an ITE simplification setting incompatible with unsat-core production. It caused 770 rejected training trials, unevenly distributed across methods. One capped Sol call lacked token telemetry, while its wall time and call count were recorded.
+
+[Results](/home/butvinm/Dev/cvc5-ai-pilot/campaign/RESULTS.md) · [Verified measurement logs](/home/butvinm/Dev/cvc5-ai-pilot/campaign/runs/campaign-v1/VERIFY.json) · [Reproduction commands](/home/butvinm/Dev/cvc5-ai-pilot/campaign/REPRODUCE.md)

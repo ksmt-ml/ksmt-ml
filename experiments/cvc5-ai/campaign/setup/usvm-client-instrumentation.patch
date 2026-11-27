@@ -1,0 +1,953 @@
+diff --git a/usvm-core/src/main/kotlin/org/usvm/solver/ClientStats.kt b/usvm-core/src/main/kotlin/org/usvm/solver/ClientStats.kt
+new file mode 100644
+index 00000000..6b235cce
+--- /dev/null
++++ b/usvm-core/src/main/kotlin/org/usvm/solver/ClientStats.kt
+@@ -0,0 +1,233 @@
++package org.usvm.solver
++
++import io.ksmt.expr.KExpr
++import io.ksmt.solver.KModel
++import io.ksmt.solver.KSolver
++import io.ksmt.solver.KSolverConfiguration
++import io.ksmt.solver.KSolverStatus
++import io.ksmt.sort.KBoolSort
++import kotlin.time.Duration
++
++/**
++ * Experiment hook (not part of upstream USVM): accumulates how USVM uses the SMT solver and where the time goes.
++ * Enabled by the environment variable USVM_CLIENT_STATS=1. The driver calls [snapshotAndReset] after each method.
++ */
++object ClientStats {
++    val enabled: Boolean = System.getenv("USVM_CLIENT_STATS") == "1"
++
++    // all times in nanoseconds
++    @JvmField var internalCheckNs = 0L
++    @JvmField var internalChecks = 0L
++    @JvmField var pcFalseShortcuts = 0L
++    @JvmField var translateNs = 0L
++    @JvmField var assertNs = 0L
++    @JvmField var assertCalls = 0L
++    @JvmField var assertedExprs = 0L
++    @JvmField var pushNs = 0L
++    @JvmField var popNs = 0L
++    @JvmField var pushes = 0L
++    @JvmField var pops = 0L
++    @JvmField var checkNs = 0L
++    @JvmField var checks = 0L
++    @JvmField var checksWithAssumptions = 0L
++    @JvmField var assumptionExprs = 0L
++    @JvmField var sat = 0L
++    @JvmField var unsat = 0L
++    @JvmField var unknown = 0L
++    @JvmField var satNs = 0L
++    @JvmField var unsatNs = 0L
++    @JvmField var unknownNs = 0L
++    @JvmField var maxCheckNs = 0L
++    @JvmField var modelNs = 0L
++    @JvmField var modelCalls = 0L
++    @JvmField var unsatCoreNs = 0L
++    @JvmField var unsatCoreCalls = 0L
++    @JvmField var decodeNs = 0L
++    @JvmField var typeSolverNs = 0L
++    @JvmField var typeUnsatRounds = 0L
++    @JvmField var createSolverNs = 0L
++    @JvmField var dupOrderChecks = 0L
++    @JvmField var dupOrderNs = 0L
++    @JvmField var dupSetChecks = 0L
++    @JvmField var dupSetNs = 0L
++    @JvmField var dupSatNs = 0L
++    @JvmField var dupSatChecks = 0L
++    @JvmField var steps = 0L
++    @JvmField var forkingSteps = 0L
++    @JvmField var terminated = 0L
++    @JvmField var coveragePct = 0.0
++    @JvmField var assertTotalAtChecks = 0L
++    @JvmField var sumCheckNsOver100ms = 0L
++    @JvmField var checksOver100ms = 0L
++    @JvmField var checkMsList = ArrayList<Double>()
++    @JvmField var assertMsPerCheckList = ArrayList<Double>()
++
++    @Synchronized
++    fun snapshotAndReset(): String {
++        val s = "{" +
++            "\"internal_checks\":$internalChecks,\"pc_false_shortcuts\":$pcFalseShortcuts,\"internal_check_ms\":${internalCheckNs / 1e6}," +
++            "\"translate_ms\":${translateNs / 1e6},\"assert_ms\":${assertNs / 1e6},\"assert_calls\":$assertCalls,\"asserted_exprs\":$assertedExprs," +
++            "\"push_ms\":${pushNs / 1e6},\"pop_ms\":${popNs / 1e6},\"pushes\":$pushes,\"pops\":$pops," +
++            "\"check_ms\":${checkNs / 1e6},\"checks\":$checks,\"checks_assume\":$checksWithAssumptions,\"assume_exprs\":$assumptionExprs," +
++            "\"sat\":$sat,\"unsat\":$unsat,\"unknown\":$unknown,\"sat_ms\":${satNs / 1e6},\"unsat_ms\":${unsatNs / 1e6},\"unknown_ms\":${unknownNs / 1e6}," +
++            "\"max_check_ms\":${maxCheckNs / 1e6},\"model_ms\":${modelNs / 1e6},\"model_calls\":$modelCalls," +
++            "\"unsat_core_ms\":${unsatCoreNs / 1e6},\"unsat_core_calls\":$unsatCoreCalls," +
++            "\"decode_ms\":${decodeNs / 1e6},\"type_solver_ms\":${typeSolverNs / 1e6},\"type_unsat_rounds\":$typeUnsatRounds," +
++            "\"create_solver_ms\":${createSolverNs / 1e6}," +
++            "\"dup_order_checks\":$dupOrderChecks,\"dup_order_ms\":${dupOrderNs / 1e6}," +
++            "\"dup_set_checks\":$dupSetChecks,\"dup_set_ms\":${dupSetNs / 1e6}," +
++            "\"dup_sat_checks\":$dupSatChecks,\"dup_sat_ms\":${dupSatNs / 1e6}," +
++            "\"steps\":$steps,\"forking_steps\":$forkingSteps,\"terminated\":$terminated,\"coverage_pct\":$coveragePct," +
++            "\"assert_total_at_checks\":$assertTotalAtChecks,\"checks_over_100ms\":$checksOver100ms,\"checks_over_100ms_ms\":${sumCheckNsOver100ms / 1e6}," +
++            "\"check_ms_list\":[${checkMsList.joinToString(",") { "%.3f".format(java.util.Locale.ROOT, it) }}]," +
++            "\"assert_ms_per_check_list\":[${assertMsPerCheckList.joinToString(",") { "%.3f".format(java.util.Locale.ROOT, it) }}]}"
++        reset()
++        return s
++    }
++
++    @Synchronized
++    fun reset() {
++        internalCheckNs = 0; internalChecks = 0; pcFalseShortcuts = 0; translateNs = 0
++        assertNs = 0; assertCalls = 0; assertedExprs = 0; pushNs = 0; popNs = 0; pushes = 0; pops = 0
++        checkNs = 0; checks = 0; checksWithAssumptions = 0; assumptionExprs = 0
++        sat = 0; unsat = 0; unknown = 0; satNs = 0; unsatNs = 0; unknownNs = 0; maxCheckNs = 0
++        modelNs = 0; modelCalls = 0; unsatCoreNs = 0; unsatCoreCalls = 0
++        decodeNs = 0; typeSolverNs = 0; typeUnsatRounds = 0; createSolverNs = 0
++        dupOrderChecks = 0; dupOrderNs = 0; dupSetChecks = 0; dupSetNs = 0; dupSatNs = 0; dupSatChecks = 0
++        steps = 0; forkingSteps = 0; terminated = 0; coveragePct = 0.0
++        assertTotalAtChecks = 0; sumCheckNsOver100ms = 0; checksOver100ms = 0
++        checkMsList = ArrayList(); assertMsPerCheckList = ArrayList()
++    }
++
++    inline fun <T> timed(add: (Long) -> Unit, block: () -> T): T {
++        val t0 = System.nanoTime()
++        try {
++            return block()
++        } finally {
++            add(System.nanoTime() - t0)
++        }
++    }
++}
++
++/** Times every call to the underlying KSMT solver and detects exact duplicate checks (same assertion stack). */
++@Suppress("TooManyFunctions")
++class TimedSolver(private val delegate: KSolver<KSolverConfiguration>) : KSolver<KSolverConfiguration> {
++    private val stack = ArrayList<KExpr<KBoolSort>>()
++    private val scopeSizes = ArrayList<Int>()
++    private val seenOrder = HashSet<List<KExpr<KBoolSort>>>()
++    private val seenSet = HashSet<Set<KExpr<KBoolSort>>>()
++    private val satKeys = HashSet<List<KExpr<KBoolSort>>>()
++    private var assertNsSinceCheck = 0L
++
++    override fun configure(configurator: KSolverConfiguration.() -> Unit) = delegate.configure(configurator)
++
++    override fun assert(expr: KExpr<KBoolSort>) {
++        val t0 = System.nanoTime()
++        delegate.assert(expr)
++        val d = System.nanoTime() - t0
++        ClientStats.assertNs += d; assertNsSinceCheck += d
++        ClientStats.assertCalls++; ClientStats.assertedExprs++
++        stack += expr
++    }
++
++    override fun assert(exprs: List<KExpr<KBoolSort>>) {
++        val t0 = System.nanoTime()
++        delegate.assert(exprs)
++        val d = System.nanoTime() - t0
++        ClientStats.assertNs += d; assertNsSinceCheck += d
++        ClientStats.assertCalls++; ClientStats.assertedExprs += exprs.size
++        stack += exprs
++    }
++
++    override fun assertAndTrack(expr: KExpr<KBoolSort>) {
++        val t0 = System.nanoTime()
++        delegate.assertAndTrack(expr)
++        val d = System.nanoTime() - t0
++        ClientStats.assertNs += d; assertNsSinceCheck += d
++        ClientStats.assertCalls++; ClientStats.assertedExprs++
++        stack += expr
++    }
++
++    override fun assertAndTrack(exprs: List<KExpr<KBoolSort>>) {
++        val t0 = System.nanoTime()
++        delegate.assertAndTrack(exprs)
++        val d = System.nanoTime() - t0
++        ClientStats.assertNs += d; assertNsSinceCheck += d
++        ClientStats.assertCalls++; ClientStats.assertedExprs += exprs.size
++        stack += exprs
++    }
++
++    override fun push() {
++        val t0 = System.nanoTime()
++        delegate.push()
++        ClientStats.pushNs += System.nanoTime() - t0
++        ClientStats.pushes++
++        scopeSizes += stack.size
++    }
++
++    override fun pop(n: UInt) {
++        val t0 = System.nanoTime()
++        delegate.pop(n)
++        ClientStats.popNs += System.nanoTime() - t0
++        ClientStats.pops += n.toLong()
++        repeat(n.toInt()) {
++            val size = scopeSizes.removeAt(scopeSizes.size - 1)
++            while (stack.size > size) stack.removeAt(stack.size - 1)
++        }
++    }
++
++    override fun check(timeout: Duration): KSolverStatus =
++        timedCheck(emptyList()) { delegate.check(timeout) }
++
++    override fun checkWithAssumptions(assumptions: List<KExpr<KBoolSort>>, timeout: Duration): KSolverStatus {
++        ClientStats.checksWithAssumptions++
++        ClientStats.assumptionExprs += assumptions.size
++        return timedCheck(assumptions) { delegate.checkWithAssumptions(assumptions, timeout) }
++    }
++
++    private fun timedCheck(assumptions: List<KExpr<KBoolSort>>, run: () -> KSolverStatus): KSolverStatus {
++        val all: List<KExpr<KBoolSort>> = if (assumptions.isEmpty()) ArrayList(stack) else stack + assumptions
++        val dupOrder = !seenOrder.add(all)
++        val dupSet = !seenSet.add(all.toHashSet())
++        val t0 = System.nanoTime()
++        val status = run()
++        val d = System.nanoTime() - t0
++        ClientStats.checks++
++        ClientStats.checkNs += d
++        ClientStats.assertTotalAtChecks += all.size
++        if (d > ClientStats.maxCheckNs) ClientStats.maxCheckNs = d
++        if (d > 100_000_000L) { ClientStats.checksOver100ms++; ClientStats.sumCheckNsOver100ms += d }
++        ClientStats.checkMsList.add(d / 1e6)
++        ClientStats.assertMsPerCheckList.add(assertNsSinceCheck / 1e6)
++        assertNsSinceCheck = 0
++        when (status) {
++            KSolverStatus.SAT -> { ClientStats.sat++; ClientStats.satNs += d }
++            KSolverStatus.UNSAT -> { ClientStats.unsat++; ClientStats.unsatNs += d }
++            KSolverStatus.UNKNOWN -> { ClientStats.unknown++; ClientStats.unknownNs += d }
++        }
++        if (dupOrder) { ClientStats.dupOrderChecks++; ClientStats.dupOrderNs += d }
++        if (dupSet) { ClientStats.dupSetChecks++; ClientStats.dupSetNs += d }
++        if (dupSet && status != KSolverStatus.UNKNOWN) { ClientStats.dupSatChecks++; ClientStats.dupSatNs += d }
++        return status
++    }
++
++    override fun model(): KModel {
++        // model extraction time (including detach) is measured in USolverBase
++        ClientStats.modelCalls++
++        return delegate.model()
++    }
++
++    override fun unsatCore(): List<KExpr<KBoolSort>> {
++        val t0 = System.nanoTime()
++        val c = delegate.unsatCore()
++        ClientStats.unsatCoreNs += System.nanoTime() - t0
++        ClientStats.unsatCoreCalls++
++        return c
++    }
++
++    override fun reasonOfUnknown(): String = delegate.reasonOfUnknown()
++
++    override fun interrupt() = delegate.interrupt()
++
++    override fun close() = delegate.close()
++}
+diff --git a/usvm-core/src/main/kotlin/org/usvm/solver/Solver.kt b/usvm-core/src/main/kotlin/org/usvm/solver/Solver.kt
+index d5a416e6..e9229fb3 100644
+--- a/usvm-core/src/main/kotlin/org/usvm/solver/Solver.kt
++++ b/usvm-core/src/main/kotlin/org/usvm/solver/Solver.kt
+@@ -39,8 +39,10 @@ open class USolverBase<Type>(
+     private val timeout: Duration
+ ) : USolver<UPathConstraints<Type>, UModelBase<Type>>(), AutoCloseable {
+     @Suppress("UNCHECKED_CAST")
+-    protected val smtSolver: KSolver<*> =
+-        if (SmtQueryLog.enabled) LoggingSolver(ctx, smtSolverRaw as KSolver<KSolverConfiguration>) else smtSolverRaw
++    protected val smtSolver: KSolver<*> = (smtSolverRaw as KSolver<KSolverConfiguration>)
++        .let { if (System.getenv("USVM_TABLE_ITE") == "1") TableIteSolver(ctx, it) else it }
++        .let { if (ClientStats.enabled) TimedSolver(it) else it }
++        .let { if (SmtQueryLog.enabled) LoggingSolver(ctx, it) else it }
+ 
+ 
+     override fun check(query: UPathConstraints<Type>): USolverResult<UModelBase<Type>> =
+@@ -54,20 +56,39 @@ open class USolverBase<Type>(
+     private fun internalCheck(
+         pc: UPathConstraints<Type>,
+         softConstraints: Iterable<UBoolExpr>,
++    ): USolverResult<UModelBase<Type>> {
++        if (!ClientStats.enabled) return internalCheckImpl(pc, softConstraints)
++        val t0 = System.nanoTime()
++        try {
++            return internalCheckImpl(pc, softConstraints)
++        } finally {
++            ClientStats.internalCheckNs += System.nanoTime() - t0
++            ClientStats.internalChecks++
++        }
++    }
++
++    private fun internalCheckImpl(
++        pc: UPathConstraints<Type>,
++        softConstraints: Iterable<UBoolExpr>,
+     ): USolverResult<UModelBase<Type>> {
+         if (pc.isFalse) {
++            ClientStats.pcFalseShortcuts++
+             return UUnsatResult()
+         }
+ 
+         smtSolver.withAssertionsScope {
++            val tTr0 = System.nanoTime()
+             val assertions = pc.constraints(translator).toList()
++            ClientStats.translateNs += System.nanoTime() - tTr0
+             smtSolver.assert(assertions)
+ 
++            val tTr1 = System.nanoTime()
+             val translatedSoftConstraints = softConstraints
+                 .asSequence()
+                 .map(translator::translate)
+                 .filterNot(UBoolExpr::isFalse)
+                 .toMutableList()
++            ClientStats.translateNs += System.nanoTime() - tTr1
+ 
+             // DPLL(T)-like solve procedure
+             var iter = 0
+@@ -77,13 +98,20 @@ open class USolverBase<Type>(
+ 
+                 // first, get a model from the SMT solver
+                 val kModel = when (internalCheckWithSoftConstraints(translatedSoftConstraints)) {
+-                    KSolverStatus.SAT -> smtSolver.model().detach()
++                    KSolverStatus.SAT -> {
++                        val tM = System.nanoTime()
++                        val m = smtSolver.model().detach()
++                        ClientStats.modelNs += System.nanoTime() - tM
++                        m
++                    }
+                     KSolverStatus.UNSAT -> return UUnsatResult()
+                     KSolverStatus.UNKNOWN -> return UUnknownResult()
+                 }
+ 
+                 // second, decode it unto uModel
++                val tD = System.nanoTime()
+                 val uModel = decoder.decode(kModel, assertions)
++                ClientStats.decodeNs += System.nanoTime() - tD
+ 
+                 // find interpretations of type constraints
+ 
+@@ -102,7 +130,11 @@ open class USolverBase<Type>(
+                 )
+ 
+                 // fourth, check it satisfies typeConstraints
+-                when (val typeResult = typeSolver.check(typeSolverQuery)) {
++                val tT = System.nanoTime()
++                val typeResultTimed = typeSolver.check(typeSolverQuery)
++                ClientStats.typeSolverNs += System.nanoTime() - tT
++                if (typeResultTimed is UTypeUnsatResult<*>) ClientStats.typeUnsatRounds++
++                when (val typeResult = typeResultTimed) {
+                     is USatResult -> return USatResult(
+                         UModelBase(
+                             ctx,
+diff --git a/usvm-core/src/main/kotlin/org/usvm/solver/TableIteSolver.kt b/usvm-core/src/main/kotlin/org/usvm/solver/TableIteSolver.kt
+new file mode 100644
+index 00000000..fe0c1132
+--- /dev/null
++++ b/usvm-core/src/main/kotlin/org/usvm/solver/TableIteSolver.kt
+@@ -0,0 +1,75 @@
++@file:Suppress("UNCHECKED_CAST")
++
++package org.usvm.solver
++
++import io.ksmt.KContext
++import io.ksmt.expr.KArrayConst
++import io.ksmt.expr.KArraySelect
++import io.ksmt.expr.KArrayStore
++import io.ksmt.expr.KExpr
++import io.ksmt.expr.transformer.KNonRecursiveTransformer
++import io.ksmt.solver.KModel
++import io.ksmt.solver.KSolver
++import io.ksmt.solver.KSolverConfiguration
++import io.ksmt.solver.KSolverStatus
++import io.ksmt.sort.KArraySort
++import io.ksmt.sort.KBoolSort
++import io.ksmt.sort.KSort
++import kotlin.time.Duration
++
++/**
++ * Experiment workaround (not part of upstream USVM) for the slow cvc5 model construction on constant lookup tables.
++ * A read of a store chain over a constant array, select(store(...store(const(d), i0, v0)..., in, vn), idx), is rewritten to
++ * ite(idx = in, vn, ... ite(idx = i0, v0, d)), which is equivalent (the last store wins) and removes the array from the query.
++ * The unsat core is mapped back to the original assumptions. Enabled by the environment variable USVM_TABLE_ITE=1.
++ */
++class TableIteTransformer(ctx: KContext) : KNonRecursiveTransformer(ctx) {
++    var rewritten = 0L
++
++    override fun <D : KSort, R : KSort> transform(expr: KArraySelect<D, R>): KExpr<R> =
++        transformExprAfterTransformed(expr, expr.array, expr.index) { array0, index ->
++            var array: KExpr<*> = array0
++            val stores = ArrayList<Pair<KExpr<*>, KExpr<*>>>()
++            while (array is KArrayStore<*, *>) {
++                stores += array.index to array.value
++                array = array.array
++            }
++            if (array is KArrayConst<*, *> && stores.isNotEmpty()) {
++                rewritten++
++                var acc: KExpr<R> = array.value as KExpr<R>
++                for ((i, v) in stores.asReversed()) {
++                    acc = ctx.mkIte(ctx.mkEq(index as KExpr<KSort>, i as KExpr<KSort>), v as KExpr<R>, acc)
++                }
++                acc
++            } else {
++                ctx.mkArraySelect(array0 as KExpr<KArraySort<D, R>>, index as KExpr<D>)
++            }
++        }
++}
++
++class TableIteSolver(private val ctx: KContext, private val delegate: KSolver<KSolverConfiguration>) : KSolver<KSolverConfiguration> {
++    private val transformer = TableIteTransformer(ctx)
++    private val back = HashMap<KExpr<KBoolSort>, KExpr<KBoolSort>>()
++
++    private fun t(e: KExpr<KBoolSort>): KExpr<KBoolSort> = transformer.apply(e)
++
++    override fun configure(configurator: KSolverConfiguration.() -> Unit) = delegate.configure(configurator)
++    override fun assert(expr: KExpr<KBoolSort>) = delegate.assert(t(expr))
++    override fun assert(exprs: List<KExpr<KBoolSort>>) = delegate.assert(exprs.map(::t))
++    override fun assertAndTrack(expr: KExpr<KBoolSort>) = delegate.assertAndTrack(t(expr))
++    override fun assertAndTrack(exprs: List<KExpr<KBoolSort>>) = delegate.assertAndTrack(exprs.map(::t))
++    override fun push() = delegate.push()
++    override fun pop(n: UInt) = delegate.pop(n)
++    override fun check(timeout: Duration): KSolverStatus = delegate.check(timeout)
++    override fun checkWithAssumptions(assumptions: List<KExpr<KBoolSort>>, timeout: Duration): KSolverStatus {
++        back.clear()
++        val ta = assumptions.map { a -> t(a).also { back[it] = a } }
++        return delegate.checkWithAssumptions(ta, timeout)
++    }
++
++    override fun model(): KModel = delegate.model()
++    override fun unsatCore(): List<KExpr<KBoolSort>> = delegate.unsatCore().map { back[it] ?: it }
++    override fun reasonOfUnknown(): String = delegate.reasonOfUnknown()
++    override fun interrupt() = delegate.interrupt()
++    override fun close() = delegate.close()
++}
+diff --git a/usvm-jvm/src/main/kotlin/org/usvm/machine/JcMachine.kt b/usvm-jvm/src/main/kotlin/org/usvm/machine/JcMachine.kt
+index a3ea7395..df7b73b9 100644
+--- a/usvm-jvm/src/main/kotlin/org/usvm/machine/JcMachine.kt
++++ b/usvm-jvm/src/main/kotlin/org/usvm/machine/JcMachine.kt
+@@ -191,6 +191,17 @@ class JcMachine(
+             observers.add(JcDebugProfileObserver(pathSelector))
+         }
+ 
++        observers.add(object : UMachineObserver<JcState> {
++            override fun onState(parent: JcState, forks: Sequence<JcState>) {
++                org.usvm.solver.ClientStats.steps++
++                if (forks.iterator().hasNext()) org.usvm.solver.ClientStats.forkingSteps++
++            }
++
++            override fun onStateTerminated(state: JcState, stateReachable: Boolean) {
++                org.usvm.solver.ClientStats.terminated++
++            }
++        })
++
+         run(
+             interpreter,
+             pathSelector,
+@@ -199,6 +210,7 @@ class JcMachine(
+             stopStrategy = stopStrategy,
+         )
+ 
++        org.usvm.solver.ClientStats.coveragePct = coverageStatistics.getTotalCoverage().toDouble()
+         return statesCollector.collectedStates
+     }
+ 
+diff --git a/usvm-jvm/src/main/kotlin/org/usvm/machine/JcSolverFactory.kt b/usvm-jvm/src/main/kotlin/org/usvm/machine/JcSolverFactory.kt
+index 2b6e32c7..30447817 100644
+--- a/usvm-jvm/src/main/kotlin/org/usvm/machine/JcSolverFactory.kt
++++ b/usvm-jvm/src/main/kotlin/org/usvm/machine/JcSolverFactory.kt
+@@ -38,10 +38,21 @@ private object SameProcessSolverFactory : SolverFactory {
+             }
+         }
+ 
+-        SolverType.Z3 -> KZ3Solver(ctx).apply {
+-            configure {
+-                optimizeForTheories(setOf(KTheory.Array, KTheory.BV, KTheory.UF, KTheory.FP))
++        // Experiment hook: USVM_SOLVER=cvc5 swaps the default Z3 for cvc5 (not an upstream option)
++        SolverType.Z3 -> if (System.getenv("USVM_SOLVER") == "cvc5") {
++            val t0 = System.nanoTime()
++            val s = io.ksmt.solver.cvc5.KCvc5Solver(ctx)
++            org.usvm.solver.ClientStats.createSolverNs += System.nanoTime() - t0
++            s
++        } else {
++            val t0 = System.nanoTime()
++            val s = KZ3Solver(ctx).apply {
++                configure {
++                    optimizeForTheories(setOf(KTheory.Array, KTheory.BV, KTheory.UF, KTheory.FP))
++                }
+             }
++            org.usvm.solver.ClientStats.createSolverNs += System.nanoTime() - t0
++            s
+         }
+     }
+ 
+diff --git a/usvm-jvm/src/test/kotlin/org/usvm/dataset/ClientDriver.kt b/usvm-jvm/src/test/kotlin/org/usvm/dataset/ClientDriver.kt
+new file mode 100644
+index 00000000..9df6f1fd
+--- /dev/null
++++ b/usvm-jvm/src/test/kotlin/org/usvm/dataset/ClientDriver.kt
+@@ -0,0 +1,131 @@
++package org.usvm.dataset
++
++import org.jacodb.api.jvm.JcClassOrInterface
++import org.jacodb.api.jvm.JcMethod
++import org.usvm.CoverageZone
++import org.usvm.PathSelectionStrategy
++import org.usvm.UMachineOptions
++import org.usvm.machine.JcMachine
++import org.usvm.samples.JacoDBContainer
++import org.usvm.samples.samplesWithApproximationsKey
++import org.usvm.solver.ClientStats
++import java.io.File
++import kotlin.time.Duration.Companion.milliseconds
++import kotlin.time.Duration.Companion.seconds
++
++/**
++ * Experiment driver (not part of upstream USVM): analyses a fixed list of methods and records per-method solver statistics.
++ * Arguments are key=value: project=NAME cp=a.jar:b.jar methods=FILE (one method tag per line, as in the query dataset)
++ * out=FILE.jsonl methodTimeoutMs=N solverTimeoutMs=N totalSeconds=N deadlineEpoch=N rssLimitMb=N.
++ * The solver is chosen by the environment variable USVM_SOLVER (z3 by default, cvc5), statistics need USVM_CLIENT_STATS=1.
++ */
++fun main(args: Array<String>) {
++    org.burningwave.core.assembler.StaticComponentContainer.Modules.exportAllToAll()
++    val a = args.associate { it.substringBefore('=') to it.substringAfter('=') }
++    val project = a.getValue("project")
++    val cpFiles = a.getValue("cp").split(File.pathSeparator).map { File(it) }
++    val tags = File(a.getValue("methods")).readLines().filter { it.isNotBlank() }
++    val out = File(a.getValue("out"))
++    val methodTimeout = (a["methodTimeoutMs"] ?: "10000").toLong()
++    val solverTimeoutMs = (a["solverTimeoutMs"] ?: "3000").toLong()
++    val deadlineEpochMs = a["deadlineEpoch"]?.toLong()?.times(1000)
++        ?: (System.currentTimeMillis() + (a["totalSeconds"] ?: "1500").toLong() * 1000)
++    val rssLimitMb = (a["rssLimitMb"] ?: "2200").toLong()
++    val solverName = System.getenv("USVM_SOLVER") ?: "z3"
++
++    val done: Set<String> = if (out.exists()) {
++        out.readLines().map { it.substringAfter("\"tag\":\"").substringBefore("\",\"solver\"") }.toSet()
++    } else {
++        emptySet()
++    }
++
++    val container = JacoDBContainer(samplesWithApproximationsKey, cpFiles)
++    val cp = container.cp
++    var n = 0
++    for (tag in tags) {
++        if (System.currentTimeMillis() > deadlineEpochMs) {
++            System.err.println("[client] deadline reached")
++            break
++        }
++        if (tag in done) continue
++        val m = findMethod(cp, project, tag)
++        if (m == null) {
++            System.err.println("[client] method not found: $tag")
++            continue
++        }
++        runMethod(project, tag, solverName, m, methodTimeout, solverTimeoutMs, out)
++        n++
++        System.gc()
++        if (rssMb() > rssLimitMb) {
++            System.err.println("[client] RSS limit reached, restart requested")
++            System.exit(3)
++        }
++    }
++    System.err.println("[client] DONE $project solver=$solverName methods=$n")
++    System.exit(0)
++}
++
++private fun findMethod(cp: org.jacodb.api.jvm.JcClasspath, project: String, tag: String): JcMethod? {
++    val rest = tag.removePrefix("$project/")
++    val paren = rest.indexOf('(')
++    val dot = rest.lastIndexOf('.', paren)
++    val className = rest.substring(0, dot)
++    val name = rest.substring(dot + 1, paren)
++    val desc = rest.substring(paren)
++    val jc: JcClassOrInterface = runCatching { cp.findClassOrNull(className) }.getOrNull() ?: return null
++    return jc.declaredMethods.firstOrNull { it.name == name && it.description == desc }
++}
++
++private fun rssMb(): Long =
++    File("/proc/self/status").readLines().first { it.startsWith("VmRSS:") }.split(Regex("\\s+"))[1].toLong() / 1024
++
++private fun runMethod(
++    project: String,
++    tag: String,
++    solverName: String,
++    m: JcMethod,
++    timeoutMs: Long,
++    solverTimeoutMs: Long,
++    out: File,
++) {
++    ClientStats.reset()
++    val options = UMachineOptions(
++        pathSelectionStrategies = listOf(PathSelectionStrategy.FORK_DEPTH),
++        coverageZone = CoverageZone.TRANSITIVE,
++        exceptionsPropagation = true,
++        timeout = timeoutMs.milliseconds,
++        stepsFromLastCovered = 3500L,
++        solverTimeout = solverTimeoutMs.milliseconds,
++        typeOperationsTimeout = 1.seconds,
++    )
++    val os = java.lang.management.ManagementFactory.getOperatingSystemMXBean() as com.sun.management.OperatingSystemMXBean
++    val cpu0 = os.processCpuTime
++    val load1 = File("/proc/loadavg").readText().substringBefore(' ')
++    val t0 = System.nanoTime()
++    var tCtor = 0L
++    var tAnalyze = 0L
++    var status = "ok"
++    var states = 0
++    try {
++        val c0 = System.nanoTime()
++        JcMachine(m.enclosingClass.classpath, options).use { machine ->
++            tCtor = System.nanoTime() - c0
++            val a0 = System.nanoTime()
++            states = machine.analyze(m).size
++            tAnalyze = System.nanoTime() - a0
++        }
++    } catch (e: Throwable) {
++        status = "error:" + e.javaClass.simpleName
++        System.err.println("[client] ERROR in $tag: $e " + e.cause)
++    }
++    val wallMs = (System.nanoTime() - t0) / 1e6
++    val cpuMs = (os.processCpuTime - cpu0) / 1e6
++    val stats = ClientStats.snapshotAndReset()
++    val esc = tag.replace("\\", "\\\\").replace("\"", "\\\"")
++    synchronized(out) {
++        out.appendText(
++            "{\"tag\":\"$esc\",\"solver\":\"$solverName\",\"project\":\"$project\",\"status\":\"$status\",\"states\":$states," +
++                "\"wall_ms\":$wallMs,\"cpu_ms\":$cpuMs,\"load1\":$load1,\"ctor_ms\":${tCtor / 1e6},\"analyze_ms\":${tAnalyze / 1e6},\"stats\":$stats}\n"
++        )
++    }
++}
+diff --git a/usvm-jvm/src/test/kotlin/org/usvm/dataset/ModelProbe.kt b/usvm-jvm/src/test/kotlin/org/usvm/dataset/ModelProbe.kt
+new file mode 100644
+index 00000000..a7c2c376
+--- /dev/null
++++ b/usvm-jvm/src/test/kotlin/org/usvm/dataset/ModelProbe.kt
+@@ -0,0 +1,111 @@
++@file:Suppress("UNCHECKED_CAST")
++
++package org.usvm.dataset
++
++import io.ksmt.KContext
++import io.ksmt.solver.KSolverStatus
++import io.ksmt.solver.cvc5.KCvc5Solver
++import io.ksmt.solver.z3.KZ3SMTLibParser
++import io.ksmt.solver.z3.KZ3Solver
++import java.io.File
++import java.util.zip.GZIPInputStream
++import kotlin.time.Duration.Companion.seconds
++
++/**
++ * Minimal harness for the cvc5 model extraction cost: args FILE.smt2.gz SOLVER(cvc5|z3) REPS [what=detach|model|decls|eval|native|none].
++ * Times: parse, assert, check, model(), then the chosen extraction step, several times in one solver.
++ */
++fun main(args: Array<String>) {
++    val file = File(args[0])
++    val solverName = args[1]
++    val reps = args[2].toInt()
++    val what = args.getOrElse(3) { "detach" }
++    val text = (if (file.name.endsWith(".gz")) GZIPInputStream(file.inputStream()) else file.inputStream()).readBytes().decodeToString()
++    KContext().use { ctx ->
++        var t = System.nanoTime()
++        val parsed = KZ3SMTLibParser(ctx).parse(text)
++        // PROBE_ITE=1 applies the table -> ite rewriting (TableIteTransformer) before asserting
++        val asserts = if (System.getenv("PROBE_ITE") == "1") {
++            val tr = org.usvm.solver.TableIteTransformer(ctx)
++            parsed.map { tr.apply(it) }.also { println("table reads rewritten=${tr.rewritten}") }
++        } else {
++            parsed
++        }
++        println("parse ms=${(System.nanoTime() - t) / 1e6} asserts=${asserts.size}")
++        if (what == "bisect") {
++            // leave one assertion out at a time and time the first getValue after check-sat
++            for (k in asserts.indices) {
++                val sub = asserts.filterIndexed { j, _ -> j != k }
++                KCvc5Solver(ctx).use { c ->
++                    c.assert(sub)
++                    val st0 = c.check(10.seconds)
++                    val t1 = System.nanoTime()
++                    if (st0 == KSolverStatus.SAT) c.model().detach()
++                    println("   without assert $k: $st0 detach ms=${(System.nanoTime() - t1) / 1e6}")
++                }
++            }
++            return
++        }
++        val s: io.ksmt.solver.KSolver<*> = if (solverName == "cvc5") KCvc5Solver(ctx).also { c ->
++            // PROBE_OPTS="name=value,name=value" native cvc5 options applied before the first assertion
++            System.getenv("PROBE_OPTS")?.split(",")?.filter { it.isNotBlank() }?.forEach { c.nativeSolver().setOption(it.substringBefore('='), it.substringAfter('=')) }
++        } else KZ3Solver(ctx)
++        t = System.nanoTime()
++        s.assert(asserts)
++        println("assert ms=${(System.nanoTime() - t) / 1e6}")
++        t = System.nanoTime()
++        val st = s.check(10.seconds)
++        println("check $st ms=${(System.nanoTime() - t) / 1e6}")
++        if (st != KSolverStatus.SAT) return
++        repeat(reps) { i ->
++            t = System.nanoTime()
++            val m = s.model()
++            val tModel = (System.nanoTime() - t) / 1e6
++            t = System.nanoTime()
++            var info = ""
++            when (what) {
++                "detach" -> m.detach()
++                "decls" -> info = "decls=${m.declarations.size}"
++                "eval" -> {
++                    // evaluate only the constants that occur in the assertions
++                    var n = 0
++                    for (d in m.declarations) { if (d.argSorts.isEmpty()) { m.eval(ctx.mkApp(d, emptyList()), true); n++ } }
++                    info = "evaluated=$n"
++                }
++                "evalasserts" -> {
++                    // lazy alternative: evaluate only the terms the engine needs (here: every assertion)
++                    for ((k, a) in asserts.withIndex()) {
++                        val t1 = System.nanoTime()
++                        val v = m.eval(a, true)
++                        println("   assert $k -> $v".take(60) + " ms=${(System.nanoTime() - t1) / 1e6}")
++                    }
++                }
++                "evalselect" -> {
++                    // evaluate select(length, x) for each address constant instead of the whole array
++                    val len = m.declarations.first { it.name.startsWith("length<") }
++                    val lenExpr = ctx.mkApp(len, emptyList()) as io.ksmt.expr.KExpr<io.ksmt.sort.KArraySort<io.ksmt.sort.KUninterpretedSort, io.ksmt.sort.KBv32Sort>>
++                    for (d in m.declarations.filter { it.sort is io.ksmt.sort.KUninterpretedSort && it.argSorts.isEmpty() }) {
++                        val t1 = System.nanoTime()
++                        val idx = ctx.mkApp(d, emptyList()) as io.ksmt.expr.KExpr<io.ksmt.sort.KUninterpretedSort>
++                        val v = m.eval(ctx.mkArraySelect(lenExpr, idx), true)
++                        println("   select(length, ${d.name}) = $v ms=${(System.nanoTime() - t1) / 1e6}")
++                    }
++                }
++                "perdecl" -> {
++                    for (d in m.declarations) {
++                        val t1 = System.nanoTime()
++                        m.interpretation(d)
++                        println("   decl ${d.name.take(60)} : ${d.sort.toString().take(80)} ms=${(System.nanoTime() - t1) / 1e6}")
++                    }
++                }
++                "native" -> {
++                    val ns = (s as KCvc5Solver).nativeSolver()
++                    val n = ns.getAssertions().size
++                    info = "nativeAssertions=$n"
++                }
++                else -> {}
++            }
++            println("rep $i model() ms=$tModel step($what) ms=${(System.nanoTime() - t) / 1e6} $info")
++        }
++    }
++}
+diff --git a/usvm-jvm/src/test/kotlin/org/usvm/dataset/ReplayDriver.kt b/usvm-jvm/src/test/kotlin/org/usvm/dataset/ReplayDriver.kt
+new file mode 100644
+index 00000000..cb15ac93
+--- /dev/null
++++ b/usvm-jvm/src/test/kotlin/org/usvm/dataset/ReplayDriver.kt
+@@ -0,0 +1,222 @@
++package org.usvm.dataset
++
++import io.ksmt.KContext
++import io.ksmt.expr.KExpr
++import io.ksmt.solver.KSolver
++import io.ksmt.solver.KSolverConfiguration
++import io.ksmt.solver.KSolverStatus
++import io.ksmt.solver.cvc5.KCvc5Solver
++import io.ksmt.solver.z3.KZ3SMTLibParser
++import io.ksmt.solver.z3.KZ3Solver
++import io.ksmt.sort.KBoolSort
++import java.io.File
++import java.util.zip.GZIPInputStream
++import kotlin.time.Duration.Companion.milliseconds
++
++/**
++ * Experiment driver (not part of upstream USVM): replays the recorded solver checks of each method in order against a KSMT solver.
++ * Arguments are key=value: queries=DIR (unpacked dataset directory of the project, contains queries.jsonl and the method dirs)
++ * methods=FILE (tags, one per line) out=FILE.jsonl solver=cvc5|z3 timeoutMs=N warmup=N modes=fresh,usvm,incr
++ *   fresh: new solver for every check
++ *   usvm:  one solver per method, push, assert everything, check, pop (what USVM does today)
++ *   incr:  one solver per method, one scope per assertion, pop to the common prefix with the previous check and assert only the new suffix
++ * Every successful check is followed by model().detach() as in USVM.
++ */
++fun main(args: Array<String>) {
++    val a = args.associate { it.substringBefore('=') to it.substringAfter('=') }
++    val dir = File(a.getValue("queries"))
++    val tags = File(a.getValue("methods")).readLines().filter { it.isNotBlank() }.toSet()
++    val out = File(a.getValue("out"))
++    val solverName = a["solver"] ?: "cvc5"
++    val timeoutMs = (a["timeoutMs"] ?: "3000").toLong()
++    val warmup = (a["warmup"] ?: "3").toInt()
++    val modes = (a["modes"] ?: "fresh,usvm,incr").split(",")
++    // finished (method, query) pairs: the run is resumable at query level
++    val done = HashMap<String, MutableSet<Int>>()
++    if (out.exists()) {
++        out.forEachLine { l ->
++            done.getOrPut(l.substringAfter("\"tag\":\"").substringBefore("\",\"qid\"")) { HashSet() }
++                .add(l.substringAfter("\"qid\":").substringBefore(",").toInt())
++        }
++    }
++
++    val byTag = LinkedHashMap<String, MutableList<Pair<Int, String>>>()
++    dir.resolve("queries.jsonl").forEachLine { line ->
++        val tag = line.substringAfter("\"tag\": \"").substringBefore("\", \"qid\"")
++        val unesc = tag.replace("\\\"", "\"").replace("\\\\", "\\")
++        if (unesc in tags) {
++            val qid = line.substringAfter("\"qid\": ").substringBefore(",").toInt()
++            val file = line.substringAfter("\"file\": \"").substringBefore("\"")
++            byTag.getOrPut(unesc) { ArrayList() }.add(qid to file)
++        }
++    }
++    val order = tags.filter { it in byTag }
++    println("[replay] methods=${order.size} solver=$solverName modes=$modes")
++    val rssLimitMb = (a["rssLimitMb"] ?: "2200").toLong()
++    var warmed = warmup == 0
++    for (tag in order) {
++        val esc = tag.replace("\\", "\\\\").replace("\"", "\\\"")
++        val skip = done[esc] ?: emptySet<Int>()
++        val queries = byTag.getValue(tag).sortedBy { it.first }.filter { it.first !in skip }
++        if (queries.isEmpty()) continue
++        if (!warmed) {
++            // JIT and native library warm-up on the first queries of the first method, results are discarded
++            replayMethod(dir, queries.take(warmup), solverName, timeoutMs, modes) { }
++            warmed = true
++        }
++        replayMethod(dir, queries, solverName, timeoutMs, modes) { r ->
++            out.appendText("{\"tag\":\"$esc\"," + r + "}\n")
++            if (rssMb() > rssLimitMb) {
++                println("[replay] RSS limit reached, restart requested")
++                System.exit(3)
++            }
++        }
++        System.gc()
++    }
++    println("[replay] DONE")
++    System.exit(0)
++}
++
++private fun rssMb(): Long =
++    File("/proc/self/status").readLines().first { it.startsWith("VmRSS:") }.split(Regex("\\s+"))[1].toLong() / 1024
++
++@Suppress("UNCHECKED_CAST")
++private fun mk(name: String, ctx: KContext): KSolver<KSolverConfiguration> = when (name) {
++    "cvc5" -> KCvc5Solver(ctx).also { s ->
++        // REPLAY_LOGIC (e.g. QF_AUFBVFPLIA) makes cvc5 use a concrete logic instead of ALL; REPLAY_CVC5_OPTS="name=value,name=value" sets native options
++        System.getenv("REPLAY_LOGIC")?.takeIf { it.isNotBlank() }?.let { s.nativeSolver().setLogic(it) }
++        System.getenv("REPLAY_CVC5_OPTS")?.split(",")?.filter { it.isNotBlank() }?.forEach {
++            s.nativeSolver().setOption(it.substringBefore('='), it.substringAfter('='))
++        }
++    } as KSolver<KSolverConfiguration>
++    else -> KZ3Solver(ctx) as KSolver<KSolverConfiguration>
++}
++
++private class Timing {
++    var create = 0L
++    var assertN = 0L
++    var check = 0L
++    var model = 0L
++    var pushPop = 0L
++    var status = "X"
++    private val tmx = java.lang.management.ManagementFactory.getThreadMXBean()
++    private val cpu0 = tmx.currentThreadCpuTime
++    fun total() = create + assertN + check + model + pushPop
++    /** [wall total, create, assert, check, model, push/pop, thread CPU time of the whole block], microseconds. */
++    fun json(prefix: String) =
++        "\"${prefix}\":[${total() / 1000},${create / 1000},${assertN / 1000},${check / 1000},${model / 1000},${pushPop / 1000},${(tmx.currentThreadCpuTime - cpu0) / 1000}],\"${prefix}s\":\"$status\""
++}
++
++private fun checkAndModel(s: KSolver<KSolverConfiguration>, t: Timing, timeoutMs: Long) {
++    val c0 = System.nanoTime()
++    val st = s.check(timeoutMs.milliseconds)
++    t.check += System.nanoTime() - c0
++    t.status = when (st) { KSolverStatus.SAT -> "S"; KSolverStatus.UNSAT -> "U"; else -> "?" }
++    if (st == KSolverStatus.SAT) {
++        val m0 = System.nanoTime()
++        s.model().detach()
++        t.model += System.nanoTime() - m0
++    }
++}
++
++private fun replayMethod(
++    dir: File,
++    queries: List<Pair<Int, String>>,
++    solverName: String,
++    timeoutMs: Long,
++    modes: List<String>,
++    emit: (String) -> Unit,
++) {
++    KContext().use { ctx ->
++        val parser = KZ3SMTLibParser(ctx)
++        val parsed = queries.map { (qid, file) ->
++            val text = GZIPInputStream(dir.resolve(file).inputStream()).readBytes().decodeToString()
++            qid to runCatching { parser.parse(text) }.getOrNull()
++        }
++        var usvmSolver: KSolver<KSolverConfiguration>? = if ("usvm" in modes) mk(solverName, ctx) else null
++        var incrSolver: KSolver<KSolverConfiguration>? = if ("incr" in modes) mk(solverName, ctx) else null
++        var incrStack = ArrayList<KExpr<KBoolSort>>()
++        var incrDepth = 0
++        try {
++            for ((qid, exprs) in parsed) {
++                if (exprs == null) {
++                    emit("\"qid\":$qid,\"err\":1")
++                    // the incremental stack is no longer valid for the next query
++                    continue
++                }
++                val sb = StringBuilder("\"qid\":$qid,\"n\":${exprs.size}")
++                try {
++                // "fresh2" repeats the fresh mode once more to measure run-to-run variation
++                for (fm in listOf("fresh" to "f", "fresh2" to "g")) {
++                    if (fm.first !in modes) continue
++                    val t = Timing()
++                    val c0 = System.nanoTime()
++                    val s = mk(solverName, ctx)
++                    t.create += System.nanoTime() - c0
++                    try {
++                        val a0 = System.nanoTime()
++                        s.assert(exprs)
++                        t.assertN += System.nanoTime() - a0
++                        checkAndModel(s, t, timeoutMs)
++                    } finally {
++                        val d0 = System.nanoTime()
++                        s.close()
++                        t.create += System.nanoTime() - d0
++                    }
++                    sb.append(",").append(t.json(fm.second))
++                }
++                if (usvmSolver != null) {
++                    val s = usvmSolver
++                    val t = Timing()
++                    val p0 = System.nanoTime()
++                    s.push()
++                    t.pushPop += System.nanoTime() - p0
++                    val a0 = System.nanoTime()
++                    s.assert(exprs)
++                    t.assertN += System.nanoTime() - a0
++                    checkAndModel(s, t, timeoutMs)
++                    val q0 = System.nanoTime()
++                    s.pop()
++                    t.pushPop += System.nanoTime() - q0
++                    sb.append(",").append(t.json("u"))
++                }
++                if (incrSolver != null) {
++                    val s = incrSolver
++                    val t = Timing()
++                    var k = 0
++                    while (k < exprs.size && k < incrStack.size && exprs[k] == incrStack[k]) k++
++                    val p0 = System.nanoTime()
++                    if (incrStack.size > k) {
++                        s.pop((incrStack.size - k).toUInt())
++                        while (incrStack.size > k) incrStack.removeAt(incrStack.size - 1)
++                    }
++                    t.pushPop += System.nanoTime() - p0
++                    for (j in k until exprs.size) {
++                        val q0 = System.nanoTime()
++                        s.push()
++                        t.pushPop += System.nanoTime() - q0
++                        val a0 = System.nanoTime()
++                        s.assert(exprs[j])
++                        t.assertN += System.nanoTime() - a0
++                        incrStack += exprs[j]
++                    }
++                    checkAndModel(s, t, timeoutMs)
++                    sb.append(",").append(t.json("i")).append(",\"ik\":$k")
++                }
++                emit(sb.toString())
++                } catch (e: Throwable) {
++                    // e.g. KSolverUnsupportedFeatureException (fp.to_ieee_bv): record the failure and restart the persistent solvers
++                    emit("\"qid\":$qid,\"err\":2,\"msg\":\"${e.javaClass.simpleName}\"")
++                    runCatching { usvmSolver?.close() }
++                    runCatching { incrSolver?.close() }
++                    usvmSolver = if ("usvm" in modes) mk(solverName, ctx) else null
++                    incrSolver = if ("incr" in modes) mk(solverName, ctx) else null
++                    incrStack = ArrayList()
++                }
++            }
++        } finally {
++            usvmSolver?.close()
++            incrSolver?.close()
++        }
++    }
++}

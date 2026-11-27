@@ -1,0 +1,43 @@
+{
+  "at": "2026-11-23T09:24:32+03:00",
+  "historical_archive_files": {
+    "pre-restart": 360,
+    "quarantine": 71
+  },
+  "historical_selection_files": 1452,
+  "array_independent_families_per_split": [
+    4,
+    4,
+    4
+  ],
+  "array_raw_outcomes": {
+    "A": {
+      "method_repeats": 32,
+      "full_outcomes": 0,
+      "expected_categories": 96,
+      "retrieved_categories": 40,
+      "solver_unknown": 160
+    },
+    "E": {
+      "method_repeats": 32,
+      "full_outcomes": 32,
+      "expected_categories": 96,
+      "retrieved_categories": 96,
+      "solver_unknown": 0
+    },
+    "X1": {
+      "method_repeats": 32,
+      "full_outcomes": 32,
+      "expected_categories": 96,
+      "retrieved_categories": 96,
+      "solver_unknown": 0
+    },
+    "X2": {
+      "method_repeats": 32,
+      "full_outcomes": 32,
+      "expected_categories": 96,
+      "retrieved_categories": 96,
+      "solver_unknown": 0
+    }
+  }
+}

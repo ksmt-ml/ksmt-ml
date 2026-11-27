@@ -12,6 +12,7 @@ from ksmt_ml.search import (
     SearchError,
     TrialResult,
     _claim_real_evaluation_number,
+    _total_cost_profile_scales,
 )
 
 
@@ -165,6 +166,7 @@ def experiment_contract(seed=0):
             "baselineManifestSha256": "e" * 64,
             "workload": workload,
             "scoringPolicy": {
+                "aggregation": "workload-macro-mean-log-speedup-v0",
                 "timeoutPenalty": 10.0,
                 "rewardClip": 5.0,
                 "excludeRecordedFailures": True,
@@ -178,6 +180,22 @@ def experiment_contract(seed=0):
 
 
 class RandomSearchStrategyTest(unittest.TestCase):
+    def test_smac_profile_scales_reconstruct_total_workload_cost(self):
+        scales = _total_cost_profile_scales(
+            [
+                {"profileId": "slow", "baselineCostNanos": 900.0},
+                {"profileId": "fast", "baselineCostNanos": 100.0},
+            ]
+        )
+        candidate_ratios = {"slow": 0.5, "fast": 2.0}
+
+        smac_mean_cost = sum(
+            scales[profile_id] * ratio
+            for profile_id, ratio in candidate_ratios.items()
+        ) / len(candidate_ratios)
+
+        self.assertAlmostEqual(smac_mean_cost, (900 * 0.5 + 100 * 2.0) / 1000)
+
     def test_resumed_process_does_not_consume_another_evaluation_slot(self):
         state = {"actualEvaluationCount": 0}
         pending = {}

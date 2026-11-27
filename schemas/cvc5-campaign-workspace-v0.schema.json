@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-campaign-workspace-v0.schema.json",
+  "title": "Materialized multi-seed cvc5 campaign workspace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "campaignId", "campaign", "corpus", "runSlots"],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-campaign-workspace-v0" },
+    "campaignId": { "type": "string", "minLength": 1 },
+    "campaign": { "$ref": "#/$defs/fileBinding" },
+    "corpus": { "$ref": "#/$defs/fileBinding" },
+    "runSlots": {
+      "type": "array", "minItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["algorithm", "seed", "path"],
+        "properties": {
+          "algorithm": { "enum": ["random", "evolution", "smac"] },
+          "seed": { "type": "integer", "minimum": 0 },
+          "path": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "fileBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

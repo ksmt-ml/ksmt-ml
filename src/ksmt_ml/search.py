@@ -28,9 +28,12 @@ from ksmt_ml.evaluator import (
     EvaluatorError,
     ExperimentInterrupted,
     InvalidReplayReportError,
+    PROFILE_MACRO_AGGREGATION,
     PROTECTED_CVC5_OPTIONS,
     ReplayProcessError,
     ReplayTimeoutError,
+    SUPPORTED_SCORE_AGGREGATIONS,
+    WORKLOAD_TOTAL_AGGREGATION,
     active_option_names,
     aggregate_profile_trial_reports,
     canonical_json,
@@ -1253,6 +1256,7 @@ class RealCvc5ProfileTrialEvaluator:
         timeout_penalty: float,
         reward_clip: float,
         exclude_recorded_failures: bool,
+        aggregation: str = PROFILE_MACRO_AGGREGATION,
     ):
         validate_workload_manifest(workload)
         self.tsa_cli_jar = tsa_cli_jar
@@ -1267,7 +1271,21 @@ class RealCvc5ProfileTrialEvaluator:
         self.timeout_penalty = timeout_penalty
         self.reward_clip = reward_clip
         self.exclude_recorded_failures = exclude_recorded_failures
+        if aggregation not in SUPPORTED_SCORE_AGGREGATIONS:
+            raise EvaluatorError(f"unsupported score aggregation: {aggregation}")
+        self.aggregation = aggregation
         self._profiles = {entry["profileId"]: entry for entry in workload["profiles"]}
+        baseline_self_score = score_reports(
+            baseline_report,
+            baseline_report,
+            timeout_penalty=timeout_penalty,
+            reward_clip=reward_clip,
+            exclude_recorded_failures=exclude_recorded_failures,
+            aggregation=WORKLOAD_TOTAL_AGGREGATION,
+        )
+        self._total_cost_scales = _total_cost_profile_scales(
+            baseline_self_score["profiles"]
+        )
 
     def evaluate(
         self,
@@ -1314,6 +1332,7 @@ class RealCvc5ProfileTrialEvaluator:
             timeout_penalty=self.timeout_penalty,
             reward_clip=self.reward_clip,
             exclude_recorded_failures=self.exclude_recorded_failures,
+            aggregation=self.aggregation,
         )
         return self.validate_artifacts(request, report, score)
 
@@ -1353,10 +1372,18 @@ class RealCvc5ProfileTrialEvaluator:
             timeout_penalty=self.timeout_penalty,
             reward_clip=self.reward_clip,
             exclude_recorded_failures=self.exclude_recorded_failures,
+            aggregation=self.aggregation,
         )
         if score != expected_score:
             raise EvaluatorError("profile trial score does not match its replay report")
-        result = _trial_result_from_score(request, report, score, cache_hit=False)
+        cost_scale = (
+            self._total_cost_scales[request.instance_id]
+            if self.aggregation == WORKLOAD_TOTAL_AGGREGATION
+            else 1.0
+        )
+        result = _trial_result_from_score(
+            request, report, score, cache_hit=False, cost_scale=cost_scale
+        )
         return ProfileTrialEvaluation(
             request=request,
             report=dict(report),
@@ -1374,6 +1401,27 @@ class RealCvc5ProfileTrialEvaluator:
         if request.candidate.get("parameterSpaceId") != self.parameter_space["parameterSpaceId"]:
             raise EvaluatorError("profile trial candidate uses another parameter space")
         return entry
+
+
+def _total_cost_profile_scales(
+    profile_scores: Sequence[Mapping[str, Any]],
+) -> dict[str, float]:
+    """Scale SMAC instance ratios so their mean equals total workload cost."""
+
+    baseline_costs = {
+        str(item["profileId"]): float(item["baselineCostNanos"])
+        for item in profile_scores
+    }
+    if not baseline_costs or len(baseline_costs) != len(profile_scores):
+        raise EvaluatorError("baseline profile costs must be non-empty and unique")
+    baseline_total = sum(baseline_costs.values())
+    if not math.isfinite(baseline_total) or baseline_total <= 0:
+        raise EvaluatorError("baseline profile total cost must be positive")
+    instance_count = len(baseline_costs)
+    return {
+        profile_id: instance_count * cost / baseline_total
+        for profile_id, cost in baseline_costs.items()
+    }
 
 
 class RealCvc5ReplayEvaluator:
@@ -1397,6 +1445,7 @@ class RealCvc5ReplayEvaluator:
         timeout_penalty: float,
         reward_clip: float,
         exclude_recorded_failures: bool,
+        aggregation: str = PROFILE_MACRO_AGGREGATION,
     ):
         self.tsa_cli_jar = tsa_cli_jar
         self.parameter_space = parameter_space
@@ -1413,6 +1462,7 @@ class RealCvc5ReplayEvaluator:
         self.timeout_penalty = timeout_penalty
         self.reward_clip = reward_clip
         self.exclude_recorded_failures = exclude_recorded_failures
+        self.aggregation = aggregation
         self.profile_trial_evaluator = RealCvc5ProfileTrialEvaluator(
             tsa_cli_jar=tsa_cli_jar,
             parameter_space=parameter_space,
@@ -1426,6 +1476,7 @@ class RealCvc5ReplayEvaluator:
             timeout_penalty=timeout_penalty,
             reward_clip=reward_clip,
             exclude_recorded_failures=exclude_recorded_failures,
+            aggregation=aggregation,
         )
 
     def evaluate(
@@ -1510,6 +1561,7 @@ class RealCvc5ReplayEvaluator:
             timeout_penalty=self.timeout_penalty,
             reward_clip=self.reward_clip,
             exclude_recorded_failures=self.exclude_recorded_failures,
+            aggregation=self.aggregation,
         )
         self.validate_artifacts(candidate, report, score)
         result = _trial_result_from_score(request, report, score, cache_hit=False)
@@ -1544,6 +1596,7 @@ def _trial_result_from_score(
     score: Mapping[str, Any],
     *,
     cache_hit: bool,
+    cost_scale: float = 1.0,
 ) -> TrialResult:
     totals = score["totals"]
     status = (
@@ -1573,7 +1626,11 @@ def _trial_result_from_score(
         repetition=request.repetition,
         budget=request.budget,
         status=status,
-        cost=math.exp(-float(score["reward"])) if score["eligible"] else None,
+        cost=(
+            cost_scale * math.exp(-float(score["reward"]))
+            if score["eligible"]
+            else None
+        ),
         duration_nanos=duration_nanos,
         censored=bool(totals["knownStatusTimeoutCount"]),
         correctness=correctness,
@@ -1913,7 +1970,12 @@ def _trial_request_from_pending(value: Mapping[str, Any]) -> TrialRequest:
 
 
 def _validate_scoring_policy(value: Any, label: str) -> None:
-    required = {"timeoutPenalty", "rewardClip", "excludeRecordedFailures"}
+    required = {
+        "aggregation",
+        "timeoutPenalty",
+        "rewardClip",
+        "excludeRecordedFailures",
+    }
     if not isinstance(value, dict) or set(value) != required:
         raise SearchError(f"{label} fields do not match the v0 contract")
     timeout_penalty = value.get("timeoutPenalty")
@@ -1934,6 +1996,8 @@ def _validate_scoring_policy(value: Any, label: str) -> None:
         raise SearchError(f"{label} has invalid rewardClip")
     if not isinstance(value.get("excludeRecordedFailures"), bool):
         raise SearchError(f"{label} has invalid excludeRecordedFailures")
+    if value.get("aggregation") not in SUPPORTED_SCORE_AGGREGATIONS:
+        raise SearchError(f"{label} has invalid aggregation")
 
 
 def _validate_host_identity(value: Any, label: str) -> None:
@@ -2152,8 +2216,14 @@ def _validate_experiment_contract(experiment: Mapping[str, Any]) -> None:
     except EvaluatorError as failure:
         raise SearchError(f"search experiment has invalid workload: {failure}") from failure
     objective = experiment.get("objective")
+    aggregation = evaluator["scoringPolicy"]["aggregation"]
+    expected_objective_name = (
+        "workload-total-normalized-effective-cost-v0"
+        if aggregation == WORKLOAD_TOTAL_AGGREGATION
+        else "workload-geometric-normalized-cost-v0"
+    )
     if objective != {
-        "name": "workload-geometric-normalized-cost-v0",
+        "name": expected_objective_name,
         "direction": "minimize",
     }:
         raise SearchError("search experiment has invalid objective")
@@ -2247,6 +2317,7 @@ def run_search(arguments: argparse.Namespace) -> dict[str, Any]:
     baseline_hash = sha256_json(baseline)
     jar_hash = sha256_file(arguments.tsa_cli_jar)
     scoring_policy = {
+        "aggregation": arguments.score_aggregation,
         "timeoutPenalty": arguments.timeout_penalty,
         "rewardClip": arguments.reward_clip,
         "excludeRecordedFailures": not arguments.include_recorded_failures,
@@ -2304,7 +2375,11 @@ def run_search(arguments: argparse.Namespace) -> dict[str, Any]:
             "scoringPolicy": scoring_policy,
         },
         "objective": {
-            "name": "workload-geometric-normalized-cost-v0",
+            "name": (
+                "workload-total-normalized-effective-cost-v0"
+                if arguments.score_aggregation == WORKLOAD_TOTAL_AGGREGATION
+                else "workload-geometric-normalized-cost-v0"
+            ),
             "direction": "minimize",
         },
     }
@@ -2373,6 +2448,7 @@ def run_search(arguments: argparse.Namespace) -> dict[str, Any]:
         timeout_penalty=arguments.timeout_penalty,
         reward_clip=arguments.reward_clip,
         exclude_recorded_failures=not arguments.include_recorded_failures,
+        aggregation=arguments.score_aggregation,
     )
 
     invocation_started = time.monotonic_ns()
@@ -2816,6 +2892,11 @@ def _build_parser() -> argparse.ArgumentParser:
     run.add_argument("--max-consecutive-duplicates", type=int, default=1000)
     run.add_argument("--timeout-penalty", type=float, default=10.0)
     run.add_argument("--reward-clip", type=float, default=5.0)
+    run.add_argument(
+        "--score-aggregation",
+        choices=sorted(SUPPORTED_SCORE_AGGREGATIONS),
+        default=PROFILE_MACRO_AGGREGATION,
+    )
     run.add_argument("--include-recorded-failures", action="store_true")
     run.add_argument("--progress-interval-seconds", type=int, default=15)
     run.add_argument("--quiet-child-output", action="store_true")

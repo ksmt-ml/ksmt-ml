@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-finalist-index-v0.schema.json",
+  "title": "Multi-seed configurator finalist index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "campaignId", "qualificationPolicy", "slotResults",
+    "finalists"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-finalist-index-v0" },
+    "campaignId": { "type": "string", "minLength": 1 },
+    "qualificationPolicy": {
+      "const": "complete-development-workload-success-v0"
+    },
+    "slotResults": {
+      "type": "array", "minItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": [
+          "algorithm", "seed", "status", "reason", "finalistId",
+          "candidateId", "developmentCost", "developmentCoverage", "sourceRun"
+        ],
+        "properties": {
+          "algorithm": { "enum": ["random", "evolution", "smac"] },
+          "seed": { "type": "integer", "minimum": 0 },
+          "status": {
+            "enum": ["QUALIFIED", "NO_FEASIBLE_CANDIDATE"]
+          },
+          "reason": {
+            "enum": [
+              "FULL_DEVELOPMENT_WORKLOAD_SUCCESS",
+              "NO_INCUMBENT",
+              "INCUMBENT_INELIGIBLE_ON_DEVELOPMENT"
+            ]
+          },
+          "finalistId": { "type": ["string", "null"], "minLength": 1 },
+          "candidateId": { "type": ["string", "null"], "minLength": 1 },
+          "developmentCost": { "type": ["number", "null"], "minimum": 0 },
+          "developmentCoverage": {
+            "type": "object", "additionalProperties": false,
+            "required": [
+              "expectedProfileCount", "observedProfileCount",
+              "successfulProfileCount"
+            ],
+            "properties": {
+              "expectedProfileCount": { "type": "integer", "minimum": 1 },
+              "observedProfileCount": { "type": "integer", "minimum": 0 },
+              "successfulProfileCount": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "sourceRun": { "$ref": "#/$defs/directoryBinding" }
+        }
+      }
+    },
+    "finalists": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": [
+          "finalistId", "algorithm", "seed", "candidateId", "developmentCost",
+          "candidate", "sourceRun"
+        ],
+        "properties": {
+          "finalistId": { "type": "string", "minLength": 1 },
+          "algorithm": { "enum": ["random", "evolution", "smac"] },
+          "seed": { "type": "integer", "minimum": 0 },
+          "candidateId": { "type": "string", "minLength": 1 },
+          "developmentCost": { "type": "number", "minimum": 0 },
+          "candidate": { "$ref": "#/$defs/fileBinding" },
+          "sourceRun": { "$ref": "#/$defs/directoryBinding" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "fileBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "directoryBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "manifestSha256", "stateSha256", "eventsSha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "manifestSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "stateSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "eventsSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

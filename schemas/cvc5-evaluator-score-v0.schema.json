@@ -37,7 +37,12 @@
         "excludeRecordedFailureProfiles"
       ],
       "properties": {
-        "aggregation": { "const": "workload-macro-mean-log-speedup-v0" },
+        "aggregation": {
+          "enum": [
+            "workload-macro-mean-log-speedup-v0",
+            "workload-total-effective-cost-log-speedup-v0"
+          ]
+        },
         "objective": { "const": "non-check-plus-known-check-time-v0" },
         "timeoutPenalty": { "type": "number", "minimum": 1 },
         "rewardClip": { "type": "number", "exclusiveMinimum": 0 },

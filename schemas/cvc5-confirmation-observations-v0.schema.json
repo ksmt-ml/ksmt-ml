@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-confirmation-observations-v0.schema.json",
+  "title": "Measured cvc5 confirmation observations",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "scheduleSha256", "scoreAggregation", "complete", "results"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-confirmation-observations-v0" },
+    "scheduleSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "scoreAggregation": {
+      "enum": [
+        "workload-macro-mean-log-speedup-v0",
+        "workload-total-effective-cost-log-speedup-v0"
+      ]
+    },
+    "complete": { "type": "boolean" },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": [
+          "pairId", "candidateId", "workloadGroupId", "repetition",
+          "defaultReport", "candidateReport", "reward", "eligible",
+          "wrongAnswerCount", "timeoutCount", "failureCount"
+        ],
+        "properties": {
+          "pairId": { "type": "string", "minLength": 1 },
+          "candidateId": { "type": "string", "minLength": 1 },
+          "workloadGroupId": { "type": "string", "minLength": 1 },
+          "repetition": { "type": "integer", "minimum": 0 },
+          "defaultReport": { "$ref": "#/$defs/fileBinding" },
+          "candidateReport": { "$ref": "#/$defs/fileBinding" },
+          "reward": { "type": "number" },
+          "eligible": { "type": "boolean" },
+          "wrongAnswerCount": { "type": "integer", "minimum": 0 },
+          "timeoutCount": { "type": "integer", "minimum": 0 },
+          "failureCount": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "fileBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    }
+  }
+}

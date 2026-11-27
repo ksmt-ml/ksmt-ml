@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-confirmation-candidate-index-v0.schema.json",
+  "title": "Candidate bindings for a frozen confirmation schedule",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "scheduleSha256", "candidates"],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-confirmation-candidate-index-v0" },
+    "scheduleSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "candidates": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": [
+          "finalistId", "algorithm", "seed", "candidateId", "path", "sha256"
+        ],
+        "properties": {
+          "finalistId": { "type": "string", "minLength": 1 },
+          "algorithm": { "enum": ["random", "evolution", "smac"] },
+          "seed": { "type": "integer", "minimum": 0 },
+          "candidateId": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    }
+  }
+}

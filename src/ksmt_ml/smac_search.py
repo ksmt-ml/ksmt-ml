@@ -26,8 +26,11 @@ from ksmt_ml.evaluator import (
     EvaluatorError,
     ExperimentInterrupted,
     InvalidReplayReportError,
+    PROFILE_MACRO_AGGREGATION,
     ReplayProcessError,
     ReplayTimeoutError,
+    SUPPORTED_SCORE_AGGREGATIONS,
+    WORKLOAD_TOTAL_AGGREGATION,
     canonical_json,
     describe_workload,
     load_json,
@@ -603,6 +606,7 @@ def _validate_smac_experiment(experiment: Any) -> None:
         raise SmacSearchError("SMAC evaluator host identity values are invalid")
     policy = evaluator["scoringPolicy"]
     if not isinstance(policy, dict) or set(policy) != {
+        "aggregation",
         "timeoutPenalty",
         "rewardClip",
         "excludeRecordedFailures",
@@ -619,11 +623,18 @@ def _validate_smac_experiment(experiment: Any) -> None:
             raise SmacSearchError(f"SMAC scoring policy has invalid {field}")
     if not isinstance(policy["excludeRecordedFailures"], bool):
         raise SmacSearchError("SMAC recorded-failure policy is invalid")
+    if policy["aggregation"] not in SUPPORTED_SCORE_AGGREGATIONS:
+        raise SmacSearchError("SMAC score aggregation is invalid")
     from ksmt_ml.evaluator import validate_workload_manifest
 
     validate_workload_manifest(evaluator["workload"])
+    expected_objective_name = (
+        "smac-baseline-weighted-instance-cost-v0"
+        if policy["aggregation"] == WORKLOAD_TOTAL_AGGREGATION
+        else "smac-instance-mean-normalized-cost-v0"
+    )
     if experiment["objective"] != {
-        "name": "smac-instance-mean-normalized-cost-v0",
+        "name": expected_objective_name,
         "direction": "minimize",
     }:
         raise SmacSearchError("SMAC objective contract is invalid")
@@ -737,6 +748,7 @@ def _prepare_experiment(arguments: argparse.Namespace) -> tuple[
         raise SmacSearchError("SMAC scoring penalties are invalid")
 
     scoring_policy = {
+        "aggregation": arguments.score_aggregation,
         "timeoutPenalty": arguments.timeout_penalty,
         "rewardClip": arguments.reward_clip,
         "excludeRecordedFailures": not arguments.include_recorded_failures,
@@ -783,7 +795,11 @@ def _prepare_experiment(arguments: argparse.Namespace) -> tuple[
             "scoringPolicy": scoring_policy,
         },
         "objective": {
-            "name": "smac-instance-mean-normalized-cost-v0",
+            "name": (
+                "smac-baseline-weighted-instance-cost-v0"
+                if arguments.score_aggregation == WORKLOAD_TOTAL_AGGREGATION
+                else "smac-instance-mean-normalized-cost-v0"
+            ),
             "direction": "minimize",
         },
     }
@@ -873,6 +889,7 @@ def run_smac_search(arguments: argparse.Namespace) -> dict[str, Any]:
         timeout_penalty=arguments.timeout_penalty,
         reward_clip=arguments.reward_clip,
         exclude_recorded_failures=not arguments.include_recorded_failures,
+        aggregation=arguments.score_aggregation,
     )
     evaluator_contract = experiment["evaluator"]
     host = evaluator_contract["host"]
@@ -1284,6 +1301,11 @@ def _build_parser() -> argparse.ArgumentParser:
     run.add_argument("--per-trial-timeout-seconds", type=float)
     run.add_argument("--timeout-penalty", type=float, default=10.0)
     run.add_argument("--reward-clip", type=float, default=5.0)
+    run.add_argument(
+        "--score-aggregation",
+        choices=sorted(SUPPORTED_SCORE_AGGREGATIONS),
+        default=PROFILE_MACRO_AGGREGATION,
+    )
     run.add_argument("--include-recorded-failures", action="store_true")
     run.add_argument("--progress-interval-seconds", type=int, default=15)
     run.add_argument("--quiet-child-output", action="store_true")

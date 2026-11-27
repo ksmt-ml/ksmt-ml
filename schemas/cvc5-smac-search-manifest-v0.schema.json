@@ -113,8 +113,17 @@
             "scoringPolicy": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["timeoutPenalty", "rewardClip", "excludeRecordedFailures"],
+              "required": [
+                "aggregation", "timeoutPenalty", "rewardClip",
+                "excludeRecordedFailures"
+              ],
               "properties": {
+                "aggregation": {
+                  "enum": [
+                    "workload-macro-mean-log-speedup-v0",
+                    "workload-total-effective-cost-log-speedup-v0"
+                  ]
+                },
                 "timeoutPenalty": { "type": "number", "minimum": 1 },
                 "rewardClip": { "type": "number", "exclusiveMinimum": 0 },
                 "excludeRecordedFailures": { "type": "boolean" }
@@ -127,7 +136,12 @@
           "additionalProperties": false,
           "required": ["name", "direction"],
           "properties": {
-            "name": { "const": "smac-instance-mean-normalized-cost-v0" },
+            "name": {
+              "enum": [
+                "smac-instance-mean-normalized-cost-v0",
+                "smac-baseline-weighted-instance-cost-v0"
+              ]
+            },
             "direction": { "const": "minimize" }
           }
         }

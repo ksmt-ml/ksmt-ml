@@ -7,7 +7,11 @@ from pathlib import Path
 from typing import Sequence
 
 from ksmt_ml import search, smac_search
-from ksmt_ml.evaluator import load_json
+from ksmt_ml.evaluator import (
+    PROFILE_MACRO_AGGREGATION,
+    SUPPORTED_SCORE_AGGREGATIONS,
+    load_json,
+)
 
 
 def _translated_run_argv(arguments: argparse.Namespace) -> tuple[str, list[str]]:
@@ -41,6 +45,8 @@ def _translated_run_argv(arguments: argparse.Namespace) -> tuple[str, list[str]]
         str(arguments.timeout_penalty),
         "--reward-clip",
         str(arguments.reward_clip),
+        "--score-aggregation",
+        arguments.score_aggregation,
         "--progress-interval-seconds",
         str(arguments.progress_interval_seconds),
         "--java",
@@ -111,6 +117,11 @@ def _build_parser() -> argparse.ArgumentParser:
     run.add_argument("--per-trial-timeout-seconds", type=float, required=True)
     run.add_argument("--timeout-penalty", type=float, default=10.0)
     run.add_argument("--reward-clip", type=float, default=5.0)
+    run.add_argument(
+        "--score-aggregation",
+        choices=sorted(SUPPORTED_SCORE_AGGREGATIONS),
+        default=PROFILE_MACRO_AGGREGATION,
+    )
     run.add_argument("--include-recorded-failures", action="store_true")
     run.add_argument("--progress-interval-seconds", type=int, default=15)
     run.add_argument("--quiet-child-output", action="store_true")

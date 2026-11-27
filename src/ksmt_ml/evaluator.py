@@ -27,6 +27,11 @@ CANDIDATE_SCHEMA_VERSION = "cvc5-replay-candidate-v0"
 REPORT_SCHEMA_VERSION = "tsa-cvc5-profile-replay-report-v0"
 RESULT_SCHEMA_VERSION = "tsa-cvc5-profile-replay-result-v0"
 SCORE_SCHEMA_VERSION = "cvc5-evaluator-score-v0"
+PROFILE_MACRO_AGGREGATION = "workload-macro-mean-log-speedup-v0"
+WORKLOAD_TOTAL_AGGREGATION = "workload-total-effective-cost-log-speedup-v0"
+SUPPORTED_SCORE_AGGREGATIONS = frozenset(
+    {PROFILE_MACRO_AGGREGATION, WORKLOAD_TOTAL_AGGREGATION}
+)
 BASELINE_MANIFEST_SCHEMA_VERSION = "cvc5-baseline-manifest-v0"
 DEFAULT_TIMEOUT_PENALTY = 10.0
 WORKLOAD_MANIFEST_SCHEMA_VERSION = "cvc5-workload-manifest-v0"
@@ -1219,11 +1224,14 @@ def score_reports(
     timeout_penalty: float = 10.0,
     reward_clip: float = 5.0,
     exclude_recorded_failures: bool = True,
+    aggregation: str = PROFILE_MACRO_AGGREGATION,
 ) -> dict[str, Any]:
     if timeout_penalty < 1.0 or not math.isfinite(timeout_penalty):
         raise EvaluatorError("timeout penalty must be finite and at least 1")
     if reward_clip <= 0.0 or not math.isfinite(reward_clip):
         raise EvaluatorError("reward clip must be finite and positive")
+    if aggregation not in SUPPORTED_SCORE_AGGREGATIONS:
+        raise EvaluatorError(f"unsupported score aggregation: {aggregation}")
 
     validate_report(baseline)
     validate_report(candidate)
@@ -1308,6 +1316,19 @@ def score_reports(
             {"profileId": profile_id, "reason": "missing-from-baseline"}
         )
 
+    if eligible and aggregation == WORKLOAD_TOTAL_AGGREGATION:
+        baseline_total = sum(item["baselineCostNanos"] for item in profile_scores)
+        candidate_total = sum(item["candidateCostNanos"] for item in profile_scores)
+        aggregate_reward = _clamp(
+            math.log(baseline_total / candidate_total), reward_clip
+        )
+    elif eligible:
+        aggregate_reward = statistics.fmean(
+            item["reward"] for item in profile_scores
+        )
+    else:
+        aggregate_reward = -reward_clip
+
     return {
         "schemaVersion": SCORE_SCHEMA_VERSION,
         "baselineCandidateId": baseline_candidate["candidateId"],
@@ -1315,9 +1336,9 @@ def score_reports(
         "parameterSpaceId": evaluated_candidate["parameterSpaceId"],
         "backendRole": baseline["backendRole"],
         "eligible": eligible,
-        "reward": statistics.fmean(item["reward"] for item in profile_scores),
+        "reward": aggregate_reward,
         "policy": {
-            "aggregation": "workload-macro-mean-log-speedup-v0",
+            "aggregation": aggregation,
             "objective": "non-check-plus-known-check-time-v0",
             "timeoutPenalty": timeout_penalty,
             "rewardClip": reward_clip,
@@ -1420,7 +1441,8 @@ def validate_score(
     }
     if not isinstance(policy, dict) or set(policy) != required_policy:
         raise EvaluatorError("score policy fields do not match the v0 contract")
-    if policy.get("aggregation") != "workload-macro-mean-log-speedup-v0":
+    aggregation = policy.get("aggregation")
+    if aggregation not in SUPPORTED_SCORE_AGGREGATIONS:
         raise EvaluatorError("score policy has an unsupported aggregation")
     if policy.get("objective") != "non-check-plus-known-check-time-v0":
         raise EvaluatorError("score policy has an unsupported objective")
@@ -1516,8 +1538,20 @@ def validate_score(
         has_failure = any(profile[field] for field in accumulated)
         if (candidate_cost is None) != has_failure:
             raise EvaluatorError("score profile cost does not match its failure counters")
+    if score["eligible"] and aggregation == WORKLOAD_TOTAL_AGGREGATION:
+        expected_reward = _clamp(
+            math.log(
+                sum(float(item["baselineCostNanos"]) for item in profiles)
+                / sum(float(item["candidateCostNanos"]) for item in profiles)
+            ),
+            float(policy["rewardClip"]),
+        )
+    elif score["eligible"]:
+        expected_reward = statistics.fmean(profile_rewards)
+    else:
+        expected_reward = -float(policy["rewardClip"])
     if not math.isclose(
-        float(reward), statistics.fmean(profile_rewards), rel_tol=1e-12, abs_tol=1e-12
+        float(reward), expected_reward, rel_tol=1e-12, abs_tol=1e-12
     ):
         raise EvaluatorError("score reward does not match profile rewards")
     for field, value in accumulated.items():
@@ -1840,6 +1874,11 @@ def _build_parser() -> argparse.ArgumentParser:
     score.add_argument("--candidate", type=Path, required=True)
     score.add_argument("--timeout-penalty", type=float, default=10.0)
     score.add_argument("--reward-clip", type=float, default=5.0)
+    score.add_argument(
+        "--aggregation",
+        choices=sorted(SUPPORTED_SCORE_AGGREGATIONS),
+        default=PROFILE_MACRO_AGGREGATION,
+    )
     score.add_argument("--include-recorded-failures", action="store_true")
     score.add_argument("--output", type=Path, required=True)
     return parser
@@ -1906,6 +1945,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             timeout_penalty=arguments.timeout_penalty,
             reward_clip=arguments.reward_clip,
             exclude_recorded_failures=not arguments.include_recorded_failures,
+            aggregation=arguments.aggregation,
         )
         validate_score(score)
         write_json(arguments.output, score)

@@ -12,6 +12,7 @@ from typing import Any, Sequence
 
 from ksmt_ml.evaluator import (
     DEFAULT_TIMEOUT_PENALTY,
+    PROFILE_MACRO_AGGREGATION,
     describe_workload,
     load_json,
     normalize_candidate,
@@ -101,6 +102,7 @@ def validate_score_artifact(
     timeout_penalty: float = DEFAULT_TIMEOUT_PENALTY,
     reward_clip: float = 5.0,
     exclude_recorded_failures: bool = True,
+    aggregation: str = PROFILE_MACRO_AGGREGATION,
 ) -> None:
     """Reject a stale score instead of trusting only its candidate identifier."""
 
@@ -111,6 +113,7 @@ def validate_score_artifact(
         timeout_penalty=timeout_penalty,
         reward_clip=reward_clip,
         exclude_recorded_failures=exclude_recorded_failures,
+        aggregation=aggregation,
     )
     validate_score(actual, expected_candidate_id=expected["candidateId"])
     if actual != expected:

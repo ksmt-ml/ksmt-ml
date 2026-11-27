@@ -22,6 +22,7 @@ from ksmt_ml.evaluator import (
     validate_baseline_manifest,
     validate_baseline_preflight,
     validate_report,
+    validate_score,
 )
 
 
@@ -150,6 +151,39 @@ class RewardTest(unittest.TestCase):
 
         self.assertTrue(score["eligible"])
         self.assertAlmostEqual(score["reward"], math.log(2.0))
+
+    def test_total_cost_aggregation_weights_profiles_by_baseline_cost(self):
+        baseline = report(
+            "default-v0",
+            [
+                result("default-v0", "slow", non_check=10, known_check=990),
+                result("default-v0", "fast", non_check=10, known_check=90),
+            ],
+        )
+        evaluated = report(
+            "candidate-v0",
+            [
+                result("candidate-v0", "slow", non_check=10, known_check=790),
+                result("candidate-v0", "fast", non_check=10, known_check=190),
+            ],
+        )
+
+        macro = score_reports(baseline, evaluated)
+        total = score_reports(
+            baseline,
+            evaluated,
+            aggregation="workload-total-effective-cost-log-speedup-v0",
+        )
+
+        self.assertAlmostEqual(
+            macro["reward"], (math.log(1000 / 800) + math.log(100 / 200)) / 2
+        )
+        self.assertAlmostEqual(total["reward"], math.log(1100 / 1000))
+        self.assertEqual(
+            total["policy"]["aggregation"],
+            "workload-total-effective-cost-log-speedup-v0",
+        )
+        validate_score(total)
 
     def test_known_status_timeout_is_hard_failure(self):
         baseline = report("default-v0", [result("default-v0", "profile-1")])

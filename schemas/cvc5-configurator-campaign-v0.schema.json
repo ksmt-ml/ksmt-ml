@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ksmt.io/schemas/cvc5-configurator-campaign-v0.schema.json",
+  "title": "Multi-seed cvc5 configurator campaign",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "campaignId", "corpus", "defaultCandidateId",
+    "objective", "algorithms", "budget", "confirmation", "gate"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "cvc5-configurator-campaign-v0" },
+    "campaignId": { "type": "string", "minLength": 1 },
+    "corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "corpusId"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "corpusId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "defaultCandidateId": { "type": "string", "minLength": 1 },
+    "objective": {
+      "enum": [
+        "workload-macro-mean-log-speedup-v0",
+        "workload-total-effective-cost-log-speedup-v0"
+      ]
+    },
+    "algorithms": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "seeds"],
+        "properties": {
+          "name": { "enum": ["random", "evolution", "smac"] },
+          "seeds": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wallClockSeconds", "maximumEvaluations", "perTrialTimeoutSeconds"
+      ],
+      "properties": {
+        "wallClockSeconds": { "type": "number", "exclusiveMinimum": 0 },
+        "maximumEvaluations": { "type": "integer", "minimum": 1 },
+        "perTrialTimeoutSeconds": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "confirmation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repetitions", "scheduleSeed", "orderPolicy"],
+      "properties": {
+        "repetitions": { "type": "integer", "minimum": 2 },
+        "scheduleSeed": { "type": "integer", "minimum": 0 },
+        "orderPolicy": { "const": "paired-randomized-interleaved-v0" }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimumRelativeImprovement", "minimumPositiveGroupFraction",
+        "requirePositiveBootstrap95LowerBound", "requireFailureFree"
+      ],
+      "properties": {
+        "minimumRelativeImprovement": {
+          "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1
+        },
+        "minimumPositiveGroupFraction": {
+          "type": "number", "exclusiveMinimum": 0, "maximum": 1
+        },
+        "requirePositiveBootstrap95LowerBound": { "const": true },
+        "requireFailureFree": { "const": true }
+      }
+    }
+  }
+}
